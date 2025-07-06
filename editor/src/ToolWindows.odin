@@ -259,13 +259,15 @@ texture_tool :: proc(ct: CameraTool) {
     if (oe.gui_button("OK", oe.gui_window("Texture tool").width - 40, 90, 30, 30)) {
         active := oe.ecs_world.physics.mscs.data[ct._active_msc_id].tris[ct._active_id];
 
-        tag := oe.str_add(active.texture_tag, oe.str_add("_tiling_", tiling));
-        oe.reg_asset(
-            tag,
-            oe.tile_texture(oe.get_asset_var(active.texture_tag, oe.Texture), i32(tiling))
-        );
+        active.division_level = i32(tiling);
 
-        active.texture_tag = tag;
+        // tag := oe.str_add(active.texture_tag, oe.str_add("_tiling_", tiling));
+        // oe.reg_asset(
+        //     tag,
+        //     oe.tile_texture(oe.get_asset_var(active.texture_tag, oe.Texture), i32(tiling))
+        // );
+        //
+        // active.texture_tag = tag;
         oe.gui.text_boxes["TilingTextBox"].text = "";
     }
 
@@ -325,7 +327,7 @@ data_id_tool :: proc(ct: CameraTool) {
                 tag, 
                 id, 
                 oe.Transform{msc_target_pos(ct), {}, oe.vec3_one()},
-                fa.fixed_array(u32, 16),
+                fa.fixed_array(int, 16),
                 fa.fixed_array(oe.ComponentMarshall, 16),
             }
         );
@@ -369,7 +371,7 @@ data_id_mod_tool :: proc(ct: CameraTool) {
     @static tag: string;
     @static id: u32;
     @static position, scale: oe.Vec3;
-    @static d_flags: [16]u32;
+    @static d_flags: [16]int;
     @static d_flags_len: i32;
 
     grid := oe.gui_grid(0, 0, 40, wr.width * 0.75, 10);
@@ -483,7 +485,7 @@ data_id_mod_tool :: proc(ct: CameraTool) {
     if (oe.gui_button("Add", grid.x, grid.y, grid.width * 0.25, grid.height)) {
         val, ok := sc.parse_int(flag_parse);
         if (ok) {
-            d_flags[d_flags_len] = u32(val);
+            d_flags[d_flags_len] = val;
             d_flags_len += 1;
         }
         oe.gui.text_boxes["ModFlagsTextBox"].text = "";

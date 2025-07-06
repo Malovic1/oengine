@@ -536,7 +536,7 @@ save_msc :: proc(
         rot: i32,
         flipped: bool,
         normal: ODVec3,
-        division_level: i32,
+        division: i32,
     }
 
     i := 0;
@@ -550,7 +550,7 @@ save_msc :: proc(
             rot = t.rot,
             flipped = t.flipped,
             normal = vec3_to_od(t.normal),
-            division_level = t.division_level,
+            division = t.division_level,
         };
         data := od.marshal(tm, TriangleColliderMarshal, str_add("triangle", i));
 
@@ -638,7 +638,7 @@ msc_to_json :: proc(
         rot: i32,
         flipped: bool,
         normal: Vec3,
-        division_level: i32,
+        division: i32,
     }
 
     i := 0;
@@ -652,7 +652,7 @@ msc_to_json :: proc(
             rot = t.rot,
             flipped = t.flipped,
             normal = t.normal,
-            division_level = t.division_level,
+            division = t.division_level,
         };
         data, ok := json.marshal(tm, {pretty = true});
 
