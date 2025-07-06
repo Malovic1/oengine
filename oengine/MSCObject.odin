@@ -215,6 +215,7 @@ pack_atlas :: proc(atlas: Atlas, path: string) {
 
 MSCObject :: struct {
     tris: [dynamic]^TriangleCollider,
+    mesh_tris: [dynamic]TriangleCollider,
     _aabb: AABB,
     tree: ^OctreeNode,
     mesh: rl.Mesh,
@@ -227,6 +228,7 @@ msc_init :: proc() -> ^MSCObject {
     using self := new(MSCObject);
 
     tris = make([dynamic]^TriangleCollider);
+    mesh_tris = make([dynamic]TriangleCollider);
     render = true;
 
     fa.append(&ecs_world.physics.mscs, self);
@@ -281,7 +283,10 @@ msc_append_tri :: proc(
         }
     }
 
-    if (add) { append(&tris, t); }
+    if (add) { 
+        append(&tris, t);
+        subdivide_triangle_coll(t^, t.division_level, &mesh_tris);
+    }
     tri_count += 1;
     mesh_tri_count += i32(math.pow(4.0, f32(t.division_level)));
 
@@ -319,7 +324,10 @@ msc_append_quad :: proc(
         }
     }
 
-    if (add) { append(&tris, t); }
+    if (add) { 
+        append(&tris, t);
+        subdivide_triangle_coll(t^, t.division_level, &mesh_tris);
+    }
 
     t2 := new(TriangleCollider);
     t2.pts = {b + offs, c + offs, d + offs};
@@ -345,7 +353,10 @@ msc_append_quad :: proc(
         }
     }
 
-    if (add2) { append(&tris, t2); }
+    if (add2) { 
+        append(&tris, t2);
+        subdivide_triangle_coll(t2^, t2.division_level, &mesh_tris);
+    }
 
     tri_count += 2;
     mesh_tri_count += 2 * (i32(math.pow(4.0, f32(t.division_level))));
@@ -358,12 +369,6 @@ tri_recalc_uvs :: proc(t: ^TriangleCollider, #any_int uv_rot: i32 = 0) {
 }
 
 msc_gen_mesh :: proc(using self: ^MSCObject, gen_tree := true) {
-    mesh_tris := make([dynamic]TriangleCollider, mesh_tri_count);
-    defer delete(mesh_tris);
-    for i in 0..<len(tris) {
-        subdivide_triangle_coll(tris[i]^, tris[i].division_level, &mesh_tris);
-    }
-
     mesh.triangleCount = i32(len(mesh_tris));
     mesh.vertexCount = mesh.triangleCount * 3;
     allocate_mesh(&mesh);
@@ -906,35 +911,32 @@ load_map :: proc(path: string, atlas: Atlas, use_json := false) {
 }
 
 update_msc :: proc(old, new: ^MSCObject) {
-    res := make([dynamic]^TriangleCollider);
-    tri_count -= i32(len(old.tris));
-    old.mesh_tri_count = 0;
-
-    for i in 0..<len(old.tris) {
-        tri_i := old.tris[i];
-        append(&res, new_clone(tri_i^));
-        tri_count += 1;
-        old.mesh_tri_count += (i32(math.pow(4.0, f32(tri_i.division_level))));
-    }
-
     for i in 0..<len(new.tris) {
-        tri_i := new.tris[i];
-        add := true;
-        for j in 0..<len(res) {
-            tri_j := res[j];
-            if (tri_i.pts == tri_j.pts) {
-                add = false;
+        new_tri := new.tris[i];
+        for j in 0..<len(old.tris) {
+            old_tri := old.tris[j];
+            if (new_tri.pts == old_tri.pts) {
+                continue;
             }
         }
 
-        if (add) {
-            append(&res, new_clone(tri_i^));
-            tri_count += 1;
-            old.mesh_tri_count += (i32(math.pow(4.0, f32(tri_i.division_level))));
-        }
+        msc_append_tri(
+            old, 
+            new_tri.pts[0],
+            new_tri.pts[1],
+            new_tri.pts[2],
+            offs = {},
+            color = new_tri.color,
+            texture_tag = new_tri.texture_tag,
+            is_lit = new_tri.is_lit,
+            use_fog = new_tri.use_fog,
+            rot = new_tri.rot,
+            normal = new_tri.normal,
+            flipped = new_tri.flipped,
+            division_level = new_tri.division_level,
+        );
     }
 
-    old.tris = res;
     old._aabb = tris_to_aabb(old.tris);
 }
 
