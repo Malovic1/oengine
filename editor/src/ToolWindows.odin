@@ -260,6 +260,7 @@ texture_tool :: proc(ct: CameraTool) {
         active := oe.ecs_world.physics.mscs.data[ct._active_msc_id].tris[ct._active_id];
 
         active.division_level = i32(tiling);
+        oe.reload_mesh_tris(oe.ecs_world.physics.mscs.data[ct._active_msc_id]);
 
         // tag := oe.str_add(active.texture_tag, oe.str_add("_tiling_", tiling));
         // oe.reg_asset(

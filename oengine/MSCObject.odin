@@ -364,6 +364,19 @@ msc_append_quad :: proc(
     _aabb = tris_to_aabb(tris);
 }
 
+reload_mesh_tris :: proc(using self: ^MSCObject) {
+    if (OE_DEBUG) {
+        dbg_log("Reloading mesh", .INFO);
+    }
+    mesh_tri_count = 0;
+    clear(&mesh_tris);
+
+    for tri in tris {
+        subdivide_triangle_coll(tri^, tri.division_level, &mesh_tris);
+        mesh_tri_count += i32(math.pow(4.0, f32(tri.division_level)));
+    }
+}
+
 tri_recalc_uvs :: proc(t: ^TriangleCollider, #any_int uv_rot: i32 = 0) {
     t.rot = uv_rot;
 }
@@ -1336,7 +1349,7 @@ msc_render :: proc(using self: ^MSCObject) {
 }
 
 msc_old_render :: proc(using self: ^MSCObject) {
-    for tri in tris {
+    for tri in mesh_tris {
         t := tri.pts;
 
         v1 := t[0];

@@ -389,6 +389,7 @@ render_tri :: proc(using self: ^CameraTool) {
             oe.tri_count -= 1;
             _active_id = ACTIVE_EMPTY;
             _active_msc_id = ACTIVE_EMPTY;
+            oe.reload_mesh_tris(msc);
         }
     }
 }
