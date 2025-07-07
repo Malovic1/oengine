@@ -518,12 +518,40 @@ CompArrayMarshal :: struct {
     c15: ComponentMarshall,
 }
 
+FlagsArrayMarshal :: struct {
+    c0: i32,
+    c1: i32,
+    c2: i32,
+    c3: i32,
+    c4: i32,
+    c5: i32,
+    c6: i32,
+    c7: i32,
+    c8: i32,
+    c9: i32,
+    c10: i32,
+    c11: i32,
+    c12: i32,
+    c13: i32,
+    c14: i32,
+    c15: i32,
+}
+
 comps_to_od :: proc(s: [16]ComponentMarshall) -> CompArrayMarshal {
     return CompArrayMarshal {
         s[0], s[1], s[2], s[3],
         s[4], s[5], s[6], s[7],
         s[8], s[9], s[10], s[11],
         s[12], s[13], s[14], s[15],
+    };
+}
+
+flags_to_od :: proc(s: [16]i32) -> FlagsArrayMarshal {
+    return FlagsArrayMarshal {
+        i32(s[0]), i32(s[1]), i32(s[2]), i32(s[3]),
+        i32(s[4]), i32(s[5]), i32(s[6]), i32(s[7]),
+        i32(s[8]), i32(s[9]), i32(s[10]), i32(s[11]),
+        i32(s[12]), i32(s[13]), i32(s[14]), i32(s[15]),
     };
 }
 
@@ -580,6 +608,7 @@ save_msc :: proc(
             scale: ODVec3,
         },
         components: CompArrayMarshal,
+        flags: FlagsArrayMarshal,
     };
 
     if (save_dids) {
@@ -596,6 +625,7 @@ save_msc :: proc(
                     scale = vec3_to_od(data_id.transform.scale),
                 },
                 components = comps_to_od(data_id.comps.data),
+                flags = flags_to_od(data_id.flags.data),
             };
 
             data := od.marshal(mrshl, DataIDMarshal, str_add("data_id", j));
@@ -683,7 +713,8 @@ msc_to_json :: proc(
         tag: string,
         id: u32,
         transform: Transform,
-        components: []ComponentMarshall, 
+        components: []ComponentMarshall,
+        flags: []i32,
     };
 
     if (save_dids) {
@@ -696,6 +727,7 @@ msc_to_json :: proc(
                 data_id.id, 
                 data_id.transform,
                 fa.slice(new_clone(data_id.comps)),
+                fa.slice(new_clone(data_id.flags)),
             };
             data, ok := json.marshal(mrshl, {pretty = true});
 
@@ -814,6 +846,7 @@ save_data_ids_od :: proc(
             scale: ODVec3,
         },
         components: CompArrayMarshal,
+        flags: FlagsArrayMarshal,
     };
 
     j := 0;
@@ -829,6 +862,7 @@ save_data_ids_od :: proc(
                 scale = vec3_to_od(data_id.transform.scale),
             },
             components = comps_to_od(data_id.comps.data),
+            flags = flags_to_od(data_id.flags.data),
         };
 
         data := od.marshal(mrshl, DataIDMarshal, str_add("data_id", j));
@@ -852,7 +886,7 @@ save_data_ids_json :: proc(
         tag: string,
         id: u32,
         transform: Transform,
-        flags: []int,
+        flags: []i32,
         components: []ComponentMarshall, 
     };
 
@@ -982,6 +1016,15 @@ msc_load_data_id_od :: proc(tag: string, obj: od.Object) {
     if (asset_manager.registry[reg_tag] != nil) { 
         reg_tag = str_add(reg_tag, rl.GetRandomValue(1000, 9999)); 
     }
+    
+    flags := fa.fixed_array(i32, 16);
+    if (obj["flags"] != nil) {
+        flags_handle := obj["flags"].(od.Object);
+        for i in 0..<16 {
+            flag := od.target_type(flags_handle[str_add("c", i)], i32);
+            fa.append(&flags, flag);
+        }
+    }
 
     comps_arr := fa.fixed_array(ComponentMarshall, 16);
 
@@ -1010,6 +1053,10 @@ msc_load_data_id_od :: proc(tag: string, obj: od.Object) {
                 );
             }
         }
+
+        for i in 0..<16 {
+            ent.flags[i] = flags.data[i];
+        }
     } else {
         if (od_contains(obj, "components")) {
             comps_handle := obj["components"].(od.Object);
@@ -1037,7 +1084,7 @@ msc_load_data_id_od :: proc(tag: string, obj: od.Object) {
             tag, 
             u32(id), 
             transform,
-            {},
+            flags,
             comps_arr,
         }
     );
@@ -1058,11 +1105,11 @@ msc_load_data_id_json :: proc(tag: string, obj: json.Value) {
     reg_tag := str_add("data_id_", tag);
     if (asset_manager.registry[reg_tag] != nil) do reg_tag = str_add(reg_tag, rl.GetRandomValue(1000, 9999));
 
-    flags := fa.fixed_array(int, 16);
+    flags := fa.fixed_array(i32, 16);
     if (obj.(json.Object)["flags"] != nil) {
         flags_handle := obj.(json.Object)["flags"].(json.Array);
         for i in flags_handle {
-            fa.append(&flags, int(i.(json.Float)));
+            fa.append(&flags, i32(i.(json.Float)));
         }
     }
 
@@ -1074,7 +1121,7 @@ msc_load_data_id_json :: proc(tag: string, obj: json.Value) {
         ent_tr^ = transform;
 
         for i in 0..<flags.len {
-            ent.flags |= {flags.data[i]};
+            ent.flags[i] = flags.data[i];
         }
 
         if (obj.(json.Object)["components"] != nil) {

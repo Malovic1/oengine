@@ -127,7 +127,7 @@ ct_render :: proc(using self: ^CameraTool) {
                             oe.Transform{
                                 position, {}, tile_size
                             },
-                            fa.fixed_array(int, 16),
+                            fa.fixed_array(i32, 16),
                             comps,
                         }
                     );

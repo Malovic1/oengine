@@ -53,7 +53,7 @@ registry_tool :: proc(ct: CameraTool) {
                 rl.ChangeDirectory(strs.clone_to_cstring(paths[0]));
             }
             if (paths[1] != oe.STR_EMPTY) {
-                if (filepath.ext(paths[1]) == ".json") {
+                if (filepath.ext(paths[1]) == ".json" || filepath.ext(paths[1]) == ".od") {
                     oe.load_registry(paths[1]);
 
                     if (paths[2] == oe.STR_EMPTY) {
@@ -328,7 +328,7 @@ data_id_tool :: proc(ct: CameraTool) {
                 tag, 
                 id, 
                 oe.Transform{msc_target_pos(ct), {}, oe.vec3_one()},
-                fa.fixed_array(int, 16),
+                fa.fixed_array(i32, 16),
                 fa.fixed_array(oe.ComponentMarshall, 16),
             }
         );
@@ -372,7 +372,7 @@ data_id_mod_tool :: proc(ct: CameraTool) {
     @static tag: string;
     @static id: u32;
     @static position, scale: oe.Vec3;
-    @static d_flags: [16]int;
+    @static d_flags: [16]i32;
     @static d_flags_len: i32;
 
     grid := oe.gui_grid(0, 0, 40, wr.width * 0.75, 10);
@@ -486,7 +486,7 @@ data_id_mod_tool :: proc(ct: CameraTool) {
     if (oe.gui_button("Add", grid.x, grid.y, grid.width * 0.25, grid.height)) {
         val, ok := sc.parse_int(flag_parse);
         if (ok) {
-            d_flags[d_flags_len] = val;
+            d_flags[d_flags_len] = i32(val);
             d_flags_len += 1;
         }
         oe.gui.text_boxes["ModFlagsTextBox"].text = "";

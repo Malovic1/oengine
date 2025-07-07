@@ -10,7 +10,7 @@ ECS_FIXED :: 2
 
 MAX_CMPNTS :: 64
 
-EntFlags :: distinct bit_set[0..=127]
+EntFlags :: [16]i32;
 
 FrustumType :: enum {
     INTERNAL = 0,

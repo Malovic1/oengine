@@ -25,7 +25,7 @@ DataID :: struct {
     tag: string,
     id: u32,
     transform: Transform,
-    flags: fa.FixedArray(int, 16),
+    flags: fa.FixedArray(i32, 16),
     comps: fa.FixedArray(ComponentMarshall, 16),
 }
 
