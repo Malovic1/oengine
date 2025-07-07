@@ -3,6 +3,7 @@ package oengine
 import rl "vendor:raylib"
 import "core:math"
 import "core:math/linalg"
+import "core:fmt"
 
 Raycast :: struct {
     position, target: Vec3,
@@ -23,7 +24,13 @@ rc_is_colliding :: proc(using self: Raycast, transform: Transform, shape: ShapeT
             transform.rotation.z * rl.DEG2RAD,
         );
 
-        rayDirection: Vec3 = vec3_normalize(target - position);
+        rayDirRaw: Vec3 = target - position;
+        ray_length := vec3_length(rayDirRaw);
+        if (ray_length <= 0.0001) {
+            return false, {}; // No valid direction
+        }
+
+        rayDirection: Vec3 = vec3_normalize(rayDirRaw);
         rotatedRayDirection: Vec3 = vec3_transform(rayDirection, rotationMatrix);
         
         boxSize: Vec3 = transform.scale;
@@ -73,6 +80,10 @@ rc_is_colliding :: proc(using self: Raycast, transform: Transform, shape: ShapeT
 
         if (tzmax < tmax) {
             tmax = tzmax;
+        }
+
+        if (tmin < 0.0 || tmin > ray_length) {
+            return false, {};
         }
 
         // Calculate contact point for a box

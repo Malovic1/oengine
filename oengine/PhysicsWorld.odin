@@ -134,6 +134,12 @@ pw_update :: proc(using self: ^PhysicsWorld, dt: f32) {
                 if (rb2 == nil) { continue; }
 
                 if (ignored(rb, rb2)) { continue; }
+
+                coll, _ := rc_is_colliding(rb._down, rb2.transform, .BOX);
+                if (coll) {
+                    rb.grounded = true;
+                }
+
                 if (!collision_transforms(rb.transform, rb2.transform)) { continue; }
 
                 // Narrowphase

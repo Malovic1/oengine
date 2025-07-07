@@ -87,7 +87,7 @@ vec3_one :: proc() -> Vec3 {
 }
 
 vec3_length :: proc(v: Vec3) -> f32 {
-    return f32(math.sqrt(v.x*v.x + v.y*v.y * v.z*v.z));
+    return f32(math.sqrt(v.x*v.x + v.y*v.y + v.z*v.z));
 }
 
 vec3_normalize :: proc(v: Vec3) -> Vec3 {

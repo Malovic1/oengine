@@ -51,6 +51,11 @@ query_octree :: proc(node: ^OctreeNode, rb: ^RigidBody) {
 
     if (node.is_leaf) {
         for tri in node.triangles {
+            coll, _ := ray_tri_collision(rb._down, tri);
+            if (coll) {
+                rb.grounded = true;
+            }
+
             resolve_tri_collision(rb, tri);
         }
         return;

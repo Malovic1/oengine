@@ -219,6 +219,8 @@ main :: proc() {
             oe.attach_sound_filter(.LOWPASS);
         }
 
+        fmt.println(player_rb.grounded);
+
         if (oe.key_down(oe.Key.LEFT)) {
             player_rb.velocity.x = -7.5;
         } else if (oe.key_down(oe.Key.RIGHT)) {

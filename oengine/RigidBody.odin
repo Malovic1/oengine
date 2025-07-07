@@ -41,6 +41,8 @@ RigidBody :: struct {
     transform: Transform,
     starting: Transform,
     _difference: Transform,
+    grounded: bool,
+    _down: Raycast,
 
     acceleration, velocity, force: Vec3,
     mass, restitution, friction: f32,
@@ -151,7 +153,18 @@ rb_starting_transform :: proc(using self: ^RigidBody, trans: Transform) {
 rb_fixed_update :: proc(using self: ^RigidBody, dt: f32) {
     if (is_static) do return;
 
-    acceleration.y = -ecs_world.physics.gravity.y;
+    _down = {
+        position = transform.position,
+        target = transform.position - {0, transform.scale.y * 0.5 + 0.5, 0},
+    }
+    
+    if (!grounded) {
+        acceleration.y = -ecs_world.physics.gravity.y;
+    } else {
+        acceleration.y = 0;
+    }
+
+    grounded = false;
 
     velocity.x = math.clamp(velocity.x, -MAX_VEL, MAX_VEL);
     velocity.y = math.clamp(velocity.y, -MAX_VEL, MAX_VEL);
