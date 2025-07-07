@@ -6,6 +6,7 @@ import oe "../../oengine"
 import "../../oengine/fa"
 import "core:math"
 import "core:math/linalg"
+import "core:strconv"
 
 GRID_SPACING :: 25
 GRID_COLOR :: oe.Color {255, 255, 255, 125}
@@ -100,7 +101,9 @@ ct_render :: proc(using self: ^CameraTool) {
 
             if (!oe.gui_mouse_over() && !oe.gui_text_active()) {
                 if (oe.mouse_pressed(.LEFT)) {
-                    id := u32(72);
+                    id_parse := oe.gui.text_boxes["IDTextBox"].text;
+                    parsed, ok := strconv.parse_int(id_parse);
+                    id := u32(parsed);
                     tag := "csg_box";
                     reg_tag := oe.str_add("data_id_", tag);
                     if (oe.asset_manager.registry[reg_tag] != nil) {
