@@ -395,56 +395,56 @@ sm_loader :: proc(ent: AEntity, tag: string) {
             clone.tex = tiled;
         }
         if (clone.shape == .BOX) {
-            // tiling := i32(linalg.max(linalg.abs(ent_tr.scale)));
-            // tiled := tile_texture(clone.texture, tiling);
-            // sm_set_texture(&clone, tiled);
+            tiling := i32(linalg.max(linalg.abs(ent_tr.scale)));
+            tiled := tile_texture(clone.texture, tiling);
+            sm_set_texture(&clone, tiled);
 
-            get_tile_count :: proc(s: f32) -> i32 {
-                if (s >= 1) { return i32(s); }
-                else if (s > 0) { return i32(1.0 / s + 0.5); }
-
-                return 1;
-            }
-
-            scale := linalg.abs(ent_tr.scale);
-
-            tiling := Vec3i {
-                get_tile_count(scale.x),
-                get_tile_count(scale.y),
-                get_tile_count(scale.z),
-            };
-
-            if (cache.tiling.textures[tiling.xy] == {}) {
-                cache.tiling.textures[tiling.xy] = tile_texture_xy(clone.texture, tiling.x, tiling.y);
-            }
-            if (cache.tiling.textures[tiling.zy] == {}) {
-                cache.tiling.textures[tiling.zy] = tile_texture_xy(clone.texture, tiling.z, tiling.y);
-            }
-            if (cache.tiling.textures[tiling.xz] == {}) {
-                cache.tiling.textures[tiling.xz] = tile_texture_xy(clone.texture, tiling.x, tiling.z);
-            }
-
-            tiled := CubeMap {
-                cache.tiling.textures[tiling.xy],
-                cache.tiling.textures[tiling.xy],
-                cache.tiling.textures[tiling.zy],
-                cache.tiling.textures[tiling.zy],
-                cache.tiling.textures[tiling.xz],
-                cache.tiling.textures[tiling.xz],
-            };
-
-            if (cache.tiling.cubemaps[scale] == {}) {
-                cache.tiling.cubemaps[scale] = gen_cubemap_texture(tiled, false);
-            }
-            res_tex := cache.tiling.cubemaps[scale];
-
-            if (cache.tiling.meshes[res_tex] == {}) {
-                cache.tiling.meshes[res_tex] = gen_mesh_cubemap(vec3_one(), res_tex);
-            }
-            mesh := cache.tiling.meshes[res_tex];
-
-            clone.tex = load_model(rl.LoadModelFromMesh(mesh));
-            sm_set_texture(&clone, res_tex);
+            // get_tile_count :: proc(s: f32) -> i32 {
+            //     if (s >= 1) { return i32(s); }
+            //     else if (s > 0) { return i32(1.0 / s + 0.5); }
+            //
+            //     return 1;
+            // }
+            //
+            // scale := linalg.abs(ent_tr.scale);
+            //
+            // tiling := Vec3i {
+            //     get_tile_count(scale.x),
+            //     get_tile_count(scale.y),
+            //     get_tile_count(scale.z),
+            // };
+            //
+            // if (cache.tiling.textures[tiling.xy] == {}) {
+            //     cache.tiling.textures[tiling.xy] = tile_texture_xy(clone.texture, tiling.x, tiling.y);
+            // }
+            // if (cache.tiling.textures[tiling.zy] == {}) {
+            //     cache.tiling.textures[tiling.zy] = tile_texture_xy(clone.texture, tiling.z, tiling.y);
+            // }
+            // if (cache.tiling.textures[tiling.xz] == {}) {
+            //     cache.tiling.textures[tiling.xz] = tile_texture_xy(clone.texture, tiling.x, tiling.z);
+            // }
+            //
+            // tiled := CubeMap {
+            //     cache.tiling.textures[tiling.xy],
+            //     cache.tiling.textures[tiling.xy],
+            //     cache.tiling.textures[tiling.zy],
+            //     cache.tiling.textures[tiling.zy],
+            //     cache.tiling.textures[tiling.xz],
+            //     cache.tiling.textures[tiling.xz],
+            // };
+            //
+            // if (cache.tiling.cubemaps[scale] == {}) {
+            //     cache.tiling.cubemaps[scale] = gen_cubemap_texture(tiled, false);
+            // }
+            // res_tex := cache.tiling.cubemaps[scale];
+            //
+            // if (cache.tiling.meshes[res_tex] == {}) {
+            //     cache.tiling.meshes[res_tex] = gen_mesh_cubemap(vec3_one(), res_tex);
+            // }
+            // mesh := cache.tiling.meshes[res_tex];
+            //
+            // clone.tex = load_model(rl.LoadModelFromMesh(mesh));
+            // sm_set_texture(&clone, res_tex);
         }
     }
 

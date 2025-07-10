@@ -219,8 +219,6 @@ main :: proc() {
             oe.attach_sound_filter(.LOWPASS);
         }
 
-        fmt.println(player_rb.grounded);
-
         if (oe.key_down(oe.Key.LEFT)) {
             player_rb.velocity.x = -7.5;
         } else if (oe.key_down(oe.Key.RIGHT)) {
@@ -321,6 +319,5 @@ main :: proc() {
     }
 
     // reset_track_allocator(&track_allocator);
-    oe.ew_deinit();
     oe.w_close();
 }

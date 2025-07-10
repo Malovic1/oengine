@@ -131,10 +131,13 @@ tile_texture :: proc(texture: Texture, tx: i32) -> Texture {
 }
 
 tile_texture_xy :: proc(texture: Texture, tx, ty: i32) -> Texture {
-    width := f32(texture.width) / f32(tx);
-    height := f32(texture.height) / f32(ty);
+    tex_width := texture.width * tx;
+    tex_height := texture.height * ty;
 
-    target := rl.LoadRenderTexture(texture.width, texture.height);
+    width := f32(texture.width);
+    height := f32(texture.height);
+
+    target := rl.LoadRenderTexture(tex_width, tex_height);
 
     rl.BeginTextureMode(target);
     rl.ClearBackground(rl.WHITE);
@@ -160,73 +163,137 @@ tile_texture_xy :: proc(texture: Texture, tx, ty: i32) -> Texture {
 
 // wip, works for textures of same size
 gen_cubemap_texture :: proc(cubemap: CubeMap, fullres := true) -> Texture {
-    tex_width := cubemap[0].width;
-    tex_height := cubemap[0].height;
-
-    tile_width := f32(tex_width) / 3;
-    tile_height := f32(tex_height) / 3;
-
-    full_width := 4 * tex_width / 3;
-    full_height := tex_height;
-    if (fullres) {
-        full_width = tex_width * 4;
-        full_height = tex_height * 3;
-
-        tile_width = f32(tex_width);
-        tile_height = f32(tex_height);
+    widths: [6]f32;
+    heights: [6]f32;
+    for i in 0..<6 {
+        tex := cubemap[i];
+        widths[i] = f32(tex.width);
+        heights[i] = f32(tex.height);
     }
 
-    target := rl.LoadRenderTexture(full_width, full_height);
+    tile_w := widths[CubeMapSide.FRONT];  // used as base width
+    tile_h := heights[CubeMapSide.FRONT]; // used as base height
+
+    if !fullres {
+        tile_w = linalg.max(widths) / 3;
+        tile_h = linalg.max(heights) / 3;
+    }
+
+    full_width := tile_w * 4;
+    full_height := tile_h * 3;
+
+    target := rl.LoadRenderTexture(i32(full_width), i32(full_height));
+    rl.BeginTextureMode(target);
+    rl.ClearBackground(rl.WHITE);
+
+    draw_face :: proc(
+        cubemap: CubeMap,
+        side: CubeMapSide, dst_x: f32, dst_y: f32,
+        tile_w: f32, tile_h: f32,
+        flip_x := false, flip_y := false) {
+        tex := cubemap[side];
+        src := rl.Rectangle{0, 0, f32(tex.width), f32(tex.height)};
+        if flip_x { src.width *= -1; }
+        if flip_y { src.height *= -1; }
+
+        dst := rl.Rectangle{dst_x, dst_y, tile_w, tile_h};
+        rl.DrawTexturePro(tex, src, dst, {}, 0.0, rl.WHITE);
+    }
+
+    // TOP
+    draw_face(cubemap, CubeMapSide.BOTTOM, tile_w, 0, tile_w, tile_h, true, true);
+    // BOTTOM
+    draw_face(cubemap, CubeMapSide.TOP, tile_w, 2 * tile_h,
+    tile_w, tile_h);
+
+    // LEFT
+    draw_face(cubemap, CubeMapSide.LEFT, 0, tile_h, tile_w, tile_h, true);
+    // BACK
+    draw_face(cubemap, CubeMapSide.BACK, tile_w, tile_h, tile_w, tile_h, true);
+    // RIGHT
+    draw_face(cubemap, CubeMapSide.RIGHT, 2 * tile_w, tile_h, tile_w, tile_h);
+    // FRONT
+    draw_face(cubemap, CubeMapSide.FRONT, 3 * tile_w, tile_h, tile_w, tile_h);
+
+    rl.EndTextureMode();
+
+    return load_texture(target.texture);
+}
+
+/* 
+tex_widths: [6]f32;
+    tex_heights: [6]f32;
+    for i in 0..<6 {
+        tex := cubemap[i];
+        tex_widths[i] = f32(tex.width);
+        tex_heights[i] = f32(tex.height);
+    }
+
+    full_width := tex_widths[CubeMapSide.LEFT] + 
+                tex_widths[CubeMapSide.FRONT] + 
+                tex_widths[CubeMapSide.RIGHT] + 
+                tex_widths[CubeMapSide.BACK];
+    full_height := tex_heights[CubeMapSide.TOP] + 
+                tex_heights[CubeMapSide.FRONT] +
+                tex_heights[CubeMapSide.BOTTOM];
+
+    target := rl.LoadRenderTexture(i32(full_width), i32(full_height));
 
     rl.BeginTextureMode(target);
     rl.ClearBackground(rl.WHITE);
 
     rl.DrawTexturePro(
         cubemap[CubeMapSide.BOTTOM],
-        {0, 0, -f32(tex_width), -f32(tex_height)},
-        {tile_width, 0, tile_width, tile_height},
+        {0, 0, -tex_widths[CubeMapSide.BOTTOM], -tex_heights[CubeMapSide.BOTTOM]},
+        {tex_widths[CubeMapSide.BOTTOM], 0, 
+        tex_widths[CubeMapSide.BOTTOM], tex_heights[CubeMapSide.BOTTOM]},
         {}, 0, rl.WHITE
     );
 
     rl.DrawTexturePro(
         cubemap[CubeMapSide.LEFT],
-        {0, 0, -f32(tex_width), f32(tex_height)},
-        {0, tile_height, tile_width, tile_height},
+        {0, 0, -tex_widths[CubeMapSide.LEFT], tex_heights[CubeMapSide.LEFT]},
+        {0, tex_heights[CubeMapSide.LEFT], 
+        tex_widths[CubeMapSide.LEFT], tex_heights[CubeMapSide.LEFT]},
         {}, 0, rl.WHITE
     );
 
     rl.DrawTexturePro(
         cubemap[CubeMapSide.BACK],
-        {0, 0, -f32(tex_width), f32(tex_height)},
-        {tile_width, tile_height, tile_width, tile_height},
+        {0, 0, -tex_widths[CubeMapSide.BACK], tex_heights[CubeMapSide.BACK]},
+        {tex_widths[CubeMapSide.BACK], tex_heights[CubeMapSide.BACK], 
+        tex_widths[CubeMapSide.BACK], tex_heights[CubeMapSide.BACK]},
         {}, 0, rl.WHITE
     );
 
     rl.DrawTexturePro(
         cubemap[CubeMapSide.RIGHT],
-        {0, 0, f32(tex_width), f32(tex_height)},
-        {2 * tile_width, tile_height, tile_width, tile_height},
+        {0, 0, tex_widths[CubeMapSide.RIGHT], tex_heights[CubeMapSide.RIGHT]},
+        {2 * tex_widths[CubeMapSide.RIGHT], tex_heights[CubeMapSide.RIGHT], 
+        tex_widths[CubeMapSide.RIGHT], tex_heights[CubeMapSide.RIGHT]},
         {}, 0, rl.WHITE
     );
 
     rl.DrawTexturePro(
         cubemap[CubeMapSide.FRONT],
-        {0, 0, f32(tex_width), f32(tex_height)},
-        {3 * tile_width, tile_height, tile_width, tile_height},
+        {0, 0, tex_widths[CubeMapSide.FRONT], tex_heights[CubeMapSide.FRONT]},
+        {3 * tex_widths[CubeMapSide.FRONT], tex_heights[CubeMapSide.FRONT], 
+        tex_widths[CubeMapSide.FRONT], tex_heights[CubeMapSide.FRONT]},
         {}, 0, rl.WHITE
     );
 
     rl.DrawTexturePro(
         cubemap[CubeMapSide.TOP],
-        {0, 0, f32(tex_width), f32(tex_height)},
-        {tile_width, 2 * tile_height, tile_width, tile_height},
+        {0, 0, tex_widths[CubeMapSide.TOP], tex_heights[CubeMapSide.TOP]},
+        {tex_widths[CubeMapSide.TOP], 2 * tex_heights[CubeMapSide.TOP], 
+        tex_widths[CubeMapSide.TOP], tex_heights[CubeMapSide.TOP]},
         {}, 0, rl.WHITE
     );
 
     rl.EndTextureMode();
 
     return load_texture(target.texture);
-}
+*/
 
 TextPosition :: enum {
     LEFT,

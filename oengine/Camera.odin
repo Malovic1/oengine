@@ -125,3 +125,39 @@ cm_look_at :: proc(using self: ^Camera, target_position: Vec3) {
     self.right = vec3_normalize(vec3_cross(world_up, self.front));
     self.up = vec3_cross(self.front, self.right);
 }
+
+cm_set_third_person :: proc(
+    using self: ^Camera, 
+    player_position: Vec3, 
+    sensitivity: f32, 
+    is_mouse_locked: bool, 
+    distance_from_player: f32,
+    offset: Vec3 = {0, 1, 0}) {
+    if (is_mouse_locked) {
+        rl.HideCursor();
+        curr_mp = rl.GetMousePosition();
+        mouseDelta := Vec2 {curr_mp.x - prev_mp.x, -(curr_mp.y - prev_mp.y)};
+        rotation.y += mouseDelta.x * sensitivity;
+        rotation.x -= mouseDelta.y * sensitivity;
+
+        // Clamp pitch
+        if (rotation.x > 89.0) do rotation.x = 89.0;
+        if (rotation.x < -89.0) do rotation.x = -89.0;
+
+        prev_mp = curr_mp;
+        rl.SetMousePosition(rl.GetScreenWidth() / 2, rl.GetScreenHeight() / 2);
+        prev_mp = rl.GetMousePosition();
+    } else {
+        rl.ShowCursor();
+    }
+
+    // Build camera rotation matrix
+    cameraRotation: Mat4 = mat4_rotate_XYZ(rl.DEG2RAD * rotation.x, rl.DEG2RAD * rotation.y, rl.DEG2RAD * rotation.z);
+    front = vec3_transform(-vec3_z(), cameraRotation); // Direction the camera looks at
+    right = vec3_transform(vec3_x(), cameraRotation);
+    up = vec3_transform(vec3_y(), cameraRotation);
+
+    // Set camera position to be behind the player
+    position = player_position - front * distance_from_player + offset;
+    target = player_position; // Look at player
+}
