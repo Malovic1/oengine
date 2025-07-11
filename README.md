@@ -29,7 +29,7 @@ The engine uses the **[Raylib](https://www.raylib.com/)** framework (currently v
 
 1. **Requirements**:
    - [Odin compiler](https://odin-lang.org/) (version `dev-2025-06` recommended)
-   - Python (for running `run.py` but also optional beacues .bat and .sh files can be executed)
+   - Python (for running `run.py` but also optional because .bat and .sh files can be executed)
 
 2. **Compiling**:
    - Run `run.py`, or use the `.bat`/`.sh` scripts in the platform-specific directories (`windows`, `linux`, `mac`).
