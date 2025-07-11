@@ -65,15 +65,10 @@ pw_debug :: proc(using self: ^PhysicsWorld) {
     }
 }
 
-ContactPair :: struct {
-    a, b: int,
-}
-
 pw_update :: proc(using self: ^PhysicsWorld, dt: f32) {
     delta_time = dt;
     if (paused) { return; }
 
-    @static narrow_pairs: [dynamic]ContactPair;
     @static candidates: [dynamic]int;
 
     for n: i32; n < iterations; n += 1 {
@@ -103,21 +98,6 @@ pw_update :: proc(using self: ^PhysicsWorld, dt: f32) {
                     query_octree(msc.tree, rb);
                 }
             }
-
-
-            // // clear narrow phase
-            // clear(&narrow_pairs);
-            //
-            // // broadphase
-            // for j := i + 1; j < fa.range(bodies); j += 1 {
-            //     rb2 := bodies.data[j];
-            //     if (rb2 == nil) { continue; }
-            //
-            //     if (ignored(rb, rb2)) do continue;
-            //     if (!collision_transforms(rb.transform, rb2.transform)) do continue;
-            //
-            //     append(&narrow_pairs, ContactPair{i, j});
-            // }
 
         }
 
@@ -157,25 +137,6 @@ pw_update :: proc(using self: ^PhysicsWorld, dt: f32) {
             }
         }
 
-        // narrow phase
-        // for i in 0..<len(narrow_pairs) {
-        //     pair := narrow_pairs[i];
-        //     rb := bodies.data[pair.a];
-        //     rb2 := bodies.data[pair.b];
-        //
-        //     if (rb.shape == ShapeType.HEIGHTMAP) {
-        //         resolve_heightmap_collision(rb, rb2);
-        //     } else if (rb2.shape == ShapeType.HEIGHTMAP) {
-        //         resolve_heightmap_collision(rb2, rb);
-        //     } else if (rb.shape == ShapeType.SLOPE) {
-        //         resolve_slope_collision(self, rb, rb2);
-        //     } else if (rb2.shape == ShapeType.SLOPE) {
-        //         resolve_slope_collision(self, rb2, rb);
-        //     } else {
-        //         resolve_aabb_collision(self, rb, rb2);
-        //     }
-        // }
-
         for i in 0..<fa.range(joints) {
             joint := joints.data[i];
             if (joint == nil) { continue; }
@@ -190,12 +151,15 @@ pw_deinit :: proc(using self: ^PhysicsWorld) {
         free(joint);
     }
 
-    for i in 0..<fa.range(bodies) {
-        free(bodies.data[i]);
-    }
+    // bug on windows
+    if (sys_os() == .Linux) {
+        for i in 0..<fa.range(bodies) {
+            free(bodies.data[i]);
+        }
 
-    for i in 0..<fa.range(mscs) {
-        free(mscs.data[i]);
+        for i in 0..<fa.range(mscs) {
+            free(mscs.data[i]);
+        }
     }
 }
 

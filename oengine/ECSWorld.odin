@@ -344,13 +344,10 @@ ew_deinit :: proc() {
     using ecs_world;
 
     thread.join(physics_thread);
-    thread.destroy(physics_thread);
 
     nfd.Quit();
 
     pw_deinit(&physics);
 
     deinit_assets();
-
-    delete(asset_manager.registry);
 }

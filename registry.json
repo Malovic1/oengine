@@ -31,18 +31,6 @@
 		"path": "../assets/orm.png",
 		"type": "Texture"
 	},
-    "dudlic": {
-        "path": "../assets/dudlic.png",
-        "type": "Texture"
-    },
-    "vesna": {
-        "path": "../assets/vesna.png",
-        "type": "Texture"
-    },
-    "leon": {
-        "path": "../assets/leon.png",
-        "type": "Texture"
-    },
     "huh": {
         "path": "../assets/jump.mp3",
         "volume": "1.0",

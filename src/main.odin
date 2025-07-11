@@ -66,9 +66,6 @@ main :: proc() {
     troll := oe.get_asset_var("troll", oe.Texture);
     water_tex := oe.get_asset_var("water", oe.Texture);
     jump_sfx := oe.get_asset_var("huh", oe.Sound);
-    dudlic := oe.get_asset_var("dudlic", oe.Texture);
-    vesna := oe.get_asset_var("vesna", oe.Texture);
-    leon := oe.get_asset_var("leon", oe.Texture);
     celsium := oe.get_asset_var("celsium_man", oe.Model);
     swat := oe.get_asset_var("swat", oe.Model);
     lara := oe.get_asset_var("lara", oe.Model);
