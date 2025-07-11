@@ -342,7 +342,12 @@ sm_parse :: proc(asset: od.Object) -> rawptr {
         return new_clone(sm);
     }
 
-    sm := sm_init(texture, shape, color);
+    sm: SimpleMesh;
+    if (texture == {}) {
+        sm = sm_init(shape, color);
+    } else {
+        sm = sm_init(texture, shape, color);
+    }
     sm.is_lit = is_lit;
     sm.use_fog = use_fog;
     sm.cached = cached;
