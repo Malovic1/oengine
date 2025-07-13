@@ -248,6 +248,7 @@ msc_init_atlas :: proc(using self: ^MSCObject, path: string) {
 remove_msc :: proc(using self: ^MSCObject) {
     fa.remove(&ecs_world.physics.mscs, fa.get_id(ecs_world.physics.mscs, self));
     tri_count -= i32(len(tris));
+    free(self);
 }
 
 msc_append_tri :: proc(

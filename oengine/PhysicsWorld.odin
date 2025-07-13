@@ -190,15 +190,10 @@ pw_deinit :: proc(using self: ^PhysicsWorld) {
         free(joint);
     }
 
-    if (sys_os() == .Linux) {
-        for i in 0..<fa.range(bodies) {
-            free(bodies.data[i]);
-        }
-
-        for i in 0..<fa.range(mscs) {
-            free(mscs.data[i]);
-        }
-    }
+    // do something with this
+    // for i in 0..<fa.range(mscs) {
+    //     free(mscs.data[i]);
+    // }
 }
 
 @(private = "file")
