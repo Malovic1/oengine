@@ -1262,19 +1262,36 @@ draw_cube_texture_rl :: proc(texture: rl.Texture, position: Vec3, width, height,
     rl.rlSetTexture(0);
 }
 
-draw_heightmap_wireframe :: proc(heightmap: HeightMap, pos, rot, scale: Vec3, color: Color) {
+draw_heightmap_wireframe :: proc(
+    handle: HeightMapHandle, 
+    pos, rot, scale: Vec3, 
+    color: Color) {
+    
+    heightmap := handle.hmap;
+    width := len(heightmap[0]);
+    depth := len(heightmap);
+
+    // Total size in X and Z
+    total_width := f32(width - 1) * handle.size.x;
+    total_depth := f32(depth - 1) * handle.size.z;
+
     rl.rlPushMatrix();
     rl.rlTranslatef(pos.x, pos.y, pos.z);
     rl.rlRotatef(rot.x, 1, 0, 0);
     rl.rlRotatef(rot.y, 0, 1, 0);
     rl.rlRotatef(rot.z, 0, 0, 1);
-    rl.rlScalef(scale.x, scale.y, scale.z);
 
     rl.rlBegin(rl.RL_LINES);
-    for z := 0; z < len(heightmap); z += 1 {
-        for x := 0; x < len(heightmap[z]); x += 1 {
-            rl.rlVertex3f(f32(x) * HEIGHTMAP_SCALE, heightmap[z][x] * HEIGHTMAP_SCALE, f32(z) * HEIGHTMAP_SCALE);
-            rl.DrawSphereWires({f32(x), heightmap[z][x] * HEIGHTMAP_SCALE, f32(z)} * HEIGHTMAP_SCALE, 0.1, DEF_RINGS, DEF_SLICES, color);
+    for z := 0; z < depth; z += 1 {
+        for x := 0; x < width; x += 1 {
+            world_x := f32(x) * handle.size.x - total_width / 2.0;
+            world_z := f32(z) * handle.size.z - total_depth / 2.0;
+            world_y := heightmap[z][x] * handle.size.y - scale.y * 0.5;
+
+            rl.rlVertex3f(world_x, world_y, world_z);
+            rl.DrawSphereWires(
+                {world_x, world_y, world_z},
+                0.1, DEF_RINGS, DEF_SLICES, color);
         }
     }
     rl.rlEnd();

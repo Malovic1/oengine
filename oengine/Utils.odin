@@ -596,10 +596,9 @@ str_add_any :: proc(buf: string, elem: $E, _fmt: string = "%v%.2f") -> string {
 
 to_cstr :: proc(
     s: string,
-    allocator := context.allocator,
+    allocator := context.temp_allocator,
     loc := #caller_location) -> cstring {
 	c := make([]byte, len(s) + 1, allocator, loc);
-    defer delete(c);
 	copy(c, s);
 	c[len(s)] = 0;
 	return cstring(&c[0]);

@@ -29,6 +29,10 @@ main :: proc() {
             err = true;
         }
 
+        if (!err) {
+            fmt.println("No memory allocated");
+        }
+
         mem.tracking_allocator_clear(a);
         return err;
     }
@@ -69,6 +73,7 @@ main :: proc() {
     celsium := oe.get_asset_var("celsium_man", oe.Model);
     swat := oe.get_asset_var("swat", oe.Model);
     lara := oe.get_asset_var("lara", oe.Model);
+    heightmap_tex := oe.get_asset_var("heightmap", oe.Texture);
 
     skybox := oe.gen_skybox(oe.gen_cubemap_texture(skybox_tex));
 
@@ -189,6 +194,19 @@ main :: proc() {
     s_triangles := make([dynamic][3]oe.Vec3);
     oe.subdivide_triangle(test_tri.x, test_tri.y, test_tri.z, 2, &s_triangles);
 
+    img := oe.load_image(rl.LoadImageFromTexture(heightmap_tex));
+    heightmap := oe.load_model(rl.LoadModelFromMesh(rl.GenMeshHeightmap(img.data, {1, 1, 1})));
+    heightmap.materials[0].maps[rl.MaterialMapIndex.ALBEDO].texture = heightmap_tex;
+    heightmap.materials[0].shader = oe.world().ray_ctx.shader;
+
+    terrain := oe.aent_init("terrain");
+    terrain_tr := oe.get_component(terrain, oe.Transform);
+    terrain_tr.position = {-33, 0, 0};
+    terrain_tr.scale = {16, 8, 16};
+    terrain_rb := oe.add_component(terrain, oe.rb_init(terrain_tr^, 1.0, 0.5, oe.load_heights(img)));
+    rl.UnloadImage(img.data);
+
+
     // reset_track_allocator(&track_allocator);
     for (oe.w_tick()) {
         oe.ew_update();
@@ -308,6 +326,10 @@ main :: proc() {
             tri := s_triangles[i];
             rl.DrawTriangle3D(tri.x, tri.y, tri.z, {0, u8(i) * 50, 100, 255});
         }
+
+        h_tr := terrain_tr^;
+        h_tr.position = terrain_tr.position - terrain_tr.scale * 0.5;
+        oe.draw_model(heightmap, h_tr, oe.WHITE);
 
         rl.EndMode3D();
 

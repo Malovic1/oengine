@@ -11,11 +11,11 @@ import od "object_data"
 MASS_SCALAR :: 100
 MAX_VEL :: 50
 
-MAX_HEIGHTMAP_SIZE :: 64
-MAX_HEIGHTMAP_SIZE_S :: MAX_HEIGHTMAP_SIZE * MAX_HEIGHTMAP_SIZE
-
-HeightMap :: [MAX_HEIGHTMAP_SIZE][MAX_HEIGHTMAP_SIZE]f32
-HEIGHTMAP_SCALE :: 1
+HeightMap :: [][]f32
+HeightMapHandle :: struct {
+    hmap: HeightMap,
+    size: Vec3, 
+}
 
 Slope :: [2][2]f32
 
@@ -51,7 +51,7 @@ RigidBody :: struct {
 
     shape_variant: union {
         u8,         // primitive
-        HeightMap,
+        HeightMapHandle,
         Slope,
     },
 
@@ -120,11 +120,21 @@ rb_init_def :: proc(s_starting: Transform, s_density, s_restitution: f32, s_stat
     return rb;
 }
 
-rb_init_terrain :: proc(s_starting: Transform, s_density, s_restitution: f32, s_heightmap: HeightMap) -> RigidBody {
+rb_init_terrain :: proc(
+    s_starting: Transform, 
+    s_density, s_restitution: f32, 
+    s_heightmap: HeightMap) -> RigidBody {
     using rb: RigidBody;
 
     rb_init_all(&rb, s_density, s_restitution, true, ShapeType.HEIGHTMAP);
-    rb.shape_variant = s_heightmap;
+    rb.shape_variant = HeightMapHandle{
+        hmap = s_heightmap,
+        size = {
+            s_starting.scale.x / f32(len(s_heightmap[0])), 
+            s_starting.scale.y,
+            s_starting.scale.z / f32(len(s_heightmap)),
+        }
+    };
     rb_starting_transform(&rb, s_starting);
 
     return rb;
@@ -142,6 +152,29 @@ rb_init_slope :: proc(s_starting: Transform, s_density, s_restitution: f32, s_sl
     }
 
     return rb;
+}
+
+load_heights :: proc(img: Image) -> HeightMap {
+    res := make(HeightMap, img.data.height);
+    for i in 0..<len(res) {
+        res[i] = make([]f32, img.data.width);
+    }
+
+    colors_len := img.data.width * img.data.height;
+    colors := rl.LoadImageColors(img.data);
+
+    for i in 0..<colors_len {
+        row := i / img.data.width;
+        col := i % img.data.width;
+
+        c := colors[i];
+        // Convert RGB to grayscale float between 0 and 1
+        gray := (f32(c.r) + f32(c.g) + f32(c.b)) / (3 * 255.0);
+
+        res[row][col] = gray;
+    }
+
+    return res;
 }
 
 rb_starting_transform :: proc(using self: ^RigidBody, trans: Transform) {
@@ -197,11 +230,9 @@ rb_render :: proc(ctx: ^ecs.Context, ent: ^ecs.Entity) {
         draw_capsule_wireframe(transform.position, transform.rotation, transform.scale.x * 0.5, transform.scale.y * 0.5, PHYS_DEBUG_COLOR);
     } else if (shape == .SLOPE) {
         draw_slope_wireframe(shape_variant.(Slope), transform.position, transform.rotation, transform.scale, PHYS_DEBUG_COLOR);
+    } else if (shape == .HEIGHTMAP) {
+        // draw_heightmap_wireframe(shape_variant.(HeightMapHandle), transform.position, transform.rotation, transform.scale, PHYS_DEBUG_COLOR);
     }
-
-    //else if (shape == .HEIGHTMAP) {
-    //     draw_heightmap_wireframe(shape_variant.(HeightMap), transform.position, transform.rotation, transform.scale, PHYS_DEBUG_COLOR);
-    // }
 }
 
 rb_clear :: proc(using self: ^RigidBody) {
@@ -233,39 +264,45 @@ rb_shape :: proc(using self: ^RigidBody, $T: typeid) -> T {
 }
 
 rb_get_height_terrain_at :: proc(using self: ^RigidBody, x, z: f32) -> f32 {
-    terrain_x := x - transform.position.x;
-    terrain_z := z - transform.position.z;
+    handle := shape_variant.(HeightMapHandle);
+    
+    half_width := (f32(len(handle.hmap[0])) - 1) * handle.size.x / 2.0;
+    half_depth := (f32(len(handle.hmap)) - 1) * handle.size.z / 2.0;
 
-    grid_x := i32(math.floor(terrain_x / HEIGHTMAP_SCALE));
-    grid_z := i32(math.floor(terrain_z / HEIGHTMAP_SCALE));
+    terrain_x := x - (transform.position.x - half_width);
+    terrain_z := z - (transform.position.z - half_depth);
 
-    if (grid_x >= i32(len(shape_variant.(HeightMap))) - 1 ||
-        grid_z >= i32(len(shape_variant.(HeightMap))) - 1 ||
+    grid_x := i32(math.floor(terrain_x / handle.size.x));
+    grid_z := i32(math.floor(terrain_z / handle.size.z));
+
+    if (grid_x >= i32(len(handle.hmap[0])) - 1 ||
+        grid_z >= i32(len(handle.hmap)) - 1 ||
         grid_x < 0 || grid_z < 0) {
-        return 0;
+        return transform.position.y;
     }
 
-    x_coord := (i32(terrain_x) % HEIGHTMAP_SCALE) / HEIGHTMAP_SCALE;
-    z_coord := (i32(terrain_z) % HEIGHTMAP_SCALE) / HEIGHTMAP_SCALE;
-    res: f32;
+    x_coord := (math.mod(terrain_x, handle.size.x)) / handle.size.x;
+    z_coord := (math.mod(terrain_z, handle.size.z)) / handle.size.z;
 
+    local_height: f32;
     if (x_coord <= (1 - z_coord)) {
-        res = barry_centric(
-            {0, shape_variant.(HeightMap)[grid_x][grid_z], 0},
-            {1, shape_variant.(HeightMap)[grid_x + 1][grid_z], 0},
-            {1, shape_variant.(HeightMap)[grid_x][grid_z + 1], 1},
-            {f32(x_coord), f32(z_coord)},
+        local_height = barry_centric(
+            {0, handle.hmap[grid_z][grid_x], 0},
+            {1, handle.hmap[grid_z][grid_x + 1], 0},
+            {0, handle.hmap[grid_z + 1][grid_x], 1},
+            {x_coord, z_coord},
         );
     } else {
-        res = barry_centric(
-            {1, shape_variant.(HeightMap)[grid_x + 1][grid_z], 0},
-            {1, shape_variant.(HeightMap)[grid_x + 1][grid_z + 1], 1},
-            {0, shape_variant.(HeightMap)[grid_x][grid_z + 1], 1},
-            {f32(x_coord), f32(z_coord)},
+        local_height = barry_centric(
+            {1, handle.hmap[grid_z][grid_x + 1], 0},
+            {1, handle.hmap[grid_z + 1][grid_x + 1], 1},
+            {0, handle.hmap[grid_z + 1][grid_x], 1},
+            {x_coord, z_coord},
         );
     }
 
-    return res;
+    return transform.position.y + 
+    local_height * handle.size.y - transform.scale.y * 0.5;
 }
 
 rb_slope_get_height_at :: proc(slope: Slope, s_x: f32) -> f32{

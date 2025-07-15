@@ -135,12 +135,14 @@ gui_text :: proc(text: string, size: f32, x: f32 = 10, y: f32 = 10, standalone: 
         ry = active.y;
     }
 
+    text := to_cstr(text);
     rl.DrawTextEx(
         gui_default_font, 
-        to_cstr(text), 
+        text, 
         Vec2 {rx + x, ry + y}, 
         size, gui_text_spacing, color
     );
+    // delete(text);
 }
 
 GuiTextPositioning :: enum i32 {

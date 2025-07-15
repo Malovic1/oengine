@@ -207,9 +207,10 @@ ignored :: proc(rb, rb2: ^RigidBody) -> bool {
 
 @(private = "file") 
 resolve_heightmap_collision :: proc(rb, rb2: ^RigidBody) {
-    terrain_height := rb_get_height_terrain_at(rb, rb2.transform.position.x, rb2.transform.position.z);
-    if (rb2.transform.position.y < terrain_height * HEIGHTMAP_SCALE) {
-        rb2.transform.position.y = terrain_height * HEIGHTMAP_SCALE;
+    terrain_height := rb_get_height_terrain_at(
+        rb, rb2.transform.position.x, rb2.transform.position.z);
+    if (rb2.transform.position.y - rb2.transform.scale.y * 0.5 < terrain_height) {
+        rb2.transform.position.y = terrain_height + rb2.transform.scale.y * 0.5;
     }
 }
 

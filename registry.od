@@ -11,6 +11,11 @@ object albedo {
 	string type = "Texture"
 }
 
+object heightmap {
+	string path = "../assets/heightmap.png"
+	string type = "Texture"
+}
+
 object skybox {
 	string type = "CubeMap"
 	string path_front = "../assets/skybox/frontx.png"

@@ -119,7 +119,7 @@ handle_mouse_ray :: proc(distances: ^[dynamic]f32, collided_dids: ^[dynamic]oe.D
 
     editor_data.hovered_data_id = collided_dids[did].reg_tag;
 
-    if (oe.mouse_pressed(.LEFT)) {
+    if (oe.mouse_pressed(.LEFT) && !oe.gui_mouse_over()) {
         editor_data.active_data_id = editor_data.hovered_data_id;
         did := oe.get_asset_var(editor_data.active_data_id, oe.DataID);
 
