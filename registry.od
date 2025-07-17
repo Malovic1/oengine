@@ -188,3 +188,16 @@ object fluid_component {
 	}
 	string type = "Fluid"
 }
+
+object height_sm {
+	i32 shape = 13
+	string texture = "heightmap"
+    string heightmap = "heightmap"
+	object color {
+		i32 r = 255
+		i32 g = 255
+		i32 b = 255
+		i32 a = 255
+	}
+	string type = "SimpleMesh"
+}

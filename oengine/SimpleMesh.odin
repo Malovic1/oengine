@@ -375,6 +375,22 @@ sm_parse :: proc(asset: od.Object) -> rawptr {
         sm.cached = cached;
 
         return new_clone(sm);
+    } else if (shape == .HEIGHTMAP) {
+        heightmap_tex: Texture;
+        if (od_contains(asset, "heightmap")) {
+            heightmap_tag := asset["heightmap"].(string);
+            heightmap_tex = get_asset_var(heightmap_tag, Texture);
+        }
+
+        img := load_image(rl.LoadImageFromTexture(heightmap_tex));
+        heightmap := load_model(rl.LoadModelFromMesh(rl.GenMeshHeightmap(img.data, {1, 1, 1})));
+        heightmap.materials[0].maps[rl.MaterialMapIndex.ALBEDO].texture = heightmap_tex;
+
+        sm := sm_init(heightmap);
+        sm.shape = .HEIGHTMAP;
+        rl.UnloadImage(img.data);
+
+        return new_clone(sm);
     }
 
     sm: SimpleMesh;
@@ -393,6 +409,7 @@ sm_parse :: proc(asset: od.Object) -> rawptr {
 sm_loader :: proc(ent: AEntity, tag: string) {
     comp := get_component_data(tag, SimpleMesh);
     clone := comp^;
+    ent_tr := get_component(ent, Transform);
 
     if (!clone.cached) {
         if (int(clone.shape) < 10) {
@@ -403,10 +420,17 @@ sm_loader :: proc(ent: AEntity, tag: string) {
         if (clone.shape == .MODEL) {
             clone.tex = model_clone(comp.tex.(Model));
         }
+
+        if (clone.shape == .HEIGHTMAP) {
+            clone.tex = model_clone(comp.tex.(Model));
+        }
+    }
+
+    if (clone.shape == .HEIGHTMAP) {
+        clone.offset.position = -ent_tr.scale * 0.5;
     }
 
     if (tag == CSG_SM) {
-        ent_tr := get_component(ent, Transform);
         if (clone.shape == .CUBEMAP) {
             get_tile_count :: proc(s: f32) -> i32 {
                 if (s >= 1) { return i32(s); }

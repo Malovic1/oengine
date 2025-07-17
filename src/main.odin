@@ -204,8 +204,7 @@ main :: proc() {
     terrain_tr.position = {-33, 0, 0};
     terrain_tr.scale = {16, 8, 16};
     terrain_rb := oe.add_component(terrain, oe.rb_init(terrain_tr^, 1.0, 0.5, oe.load_heights(img)));
-    terrain_sm := oe.add_component(terrain, oe.sm_init(heightmap));
-    terrain_sm.offset.position = {-8, -4, -8};
+    oe.sm_loader(terrain, "height_sm");
     rl.UnloadImage(img.data);
 
     // reset_track_allocator(&track_allocator);
