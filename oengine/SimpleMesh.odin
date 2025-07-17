@@ -333,6 +333,21 @@ sm_parse :: proc(asset: od.Object) -> rawptr {
         cached = asset["cached"].(bool);
     }
 
+    offset := transform_default();
+    if (od_contains(asset, "offset")) {
+        offset_data := asset["offset"].(od.Object);
+        
+        if (od_contains(offset_data, "position")) { 
+            offset.position = od_vec3(offset_data["position"].(od.Object));
+        }
+        if (od_contains(offset_data, "rotation")) { 
+            offset.rotation = od_vec3(offset_data["rotation"].(od.Object));
+        }
+        if (od_contains(offset_data, "scale")) { 
+            offset.scale = od_vec3(offset_data["scale"].(od.Object));
+        }
+    }
+
     color := od_color(asset["color"].(od.Object));
 
     if (shape == .MODEL) {

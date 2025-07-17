@@ -204,8 +204,9 @@ main :: proc() {
     terrain_tr.position = {-33, 0, 0};
     terrain_tr.scale = {16, 8, 16};
     terrain_rb := oe.add_component(terrain, oe.rb_init(terrain_tr^, 1.0, 0.5, oe.load_heights(img)));
+    terrain_sm := oe.add_component(terrain, oe.sm_init(heightmap));
+    terrain_sm.offset.position = {-8, -4, -8};
     rl.UnloadImage(img.data);
-
 
     // reset_track_allocator(&track_allocator);
     for (oe.w_tick()) {
@@ -326,10 +327,6 @@ main :: proc() {
             tri := s_triangles[i];
             rl.DrawTriangle3D(tri.x, tri.y, tri.z, {0, u8(i) * 50, 100, 255});
         }
-
-        h_tr := terrain_tr^;
-        h_tr.position = terrain_tr.position - terrain_tr.scale * 0.5;
-        oe.draw_model(heightmap, h_tr, oe.WHITE);
 
         rl.EndMode3D();
 
