@@ -43,6 +43,14 @@ ew_init :: proc(s_gravity: Vec3, s_iter: i32 = 8) {
     ray_ctx.shader = load_shader_data(
         rl.LoadShaderFromMemory(DEFAULT_VERT, DEFAULT_FRAG)
     );
+    t_loc := rl.GetShaderLocation(ray_ctx.shader, "tiling");
+    t_value := vec2_one();
+    rl.SetShaderValue(ray_ctx.shader, t_loc, &t_value, .VEC2);
+
+    tu_loc := rl.GetShaderLocation(ray_ctx.shader, "use_triplanar");
+    tu_value := 0;
+    rl.SetShaderValue(ray_ctx.shader, tu_loc, &tu_value, .INT);
+
     ray_ambient(ray_ctx.shader, DARK_GRAY);
     ray_view_loc(ray_ctx.shader);
     ray_fog_density(ray_ctx.shader, 0);
@@ -95,6 +103,31 @@ ew_toggle_physics :: proc() {
 
 world :: proc() -> type_of(ecs_world) {
     return ecs_world;
+}
+
+ray_set_tiling :: proc(tiling: Vec2) {
+    using ecs_world;
+    t_loc := rl.GetShaderLocation(ray_ctx.shader, "tiling");
+    t_value := tiling;
+    rl.SetShaderValue(ray_ctx.shader, t_loc, &t_value, .VEC2);
+}
+
+ray_reset_tiling :: proc() {
+    ray_set_tiling(vec2_one());
+}
+
+ray_enable_triplanar :: proc() {
+    using ecs_world;
+    tu_loc := rl.GetShaderLocation(ray_ctx.shader, "use_triplanar");
+    tu_value := 1;
+    rl.SetShaderValue(ray_ctx.shader, tu_loc, &tu_value, .INT);
+}
+
+ray_disable_triplanar :: proc() {
+    using ecs_world;
+    tu_loc := rl.GetShaderLocation(ray_ctx.shader, "use_triplanar");
+    tu_value := 0;
+    rl.SetShaderValue(ray_ctx.shader, tu_loc, &tu_value, .INT);
 }
 
 ew_clear :: proc() {

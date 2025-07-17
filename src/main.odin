@@ -82,7 +82,7 @@ main :: proc() {
     floor_tr.scale = {50, 1, 50};
     floor_rb := oe.add_component(floor, oe.rb_init(floor_tr^, 1.0, 0.5, true, oe.ShapeType.BOX));
     floor_sm := oe.add_component(floor, oe.sm_init(orm));
-    oe.sm_set_tiling(floor_sm, 5);
+    floor_sm.tiling = {5, 5};
 
     wall := oe.aent_init();
     wall_tr := oe.get_component(wall, oe.Transform);

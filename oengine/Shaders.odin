@@ -62,15 +62,18 @@ out vec2 fragTexCoord;
 out vec4 fragColor;
 out vec3 fragNormal;
 
-// NOTE: Add your custom variables here
+uniform vec2 tiling;
+
+out vec2 fragTiling;
 
 void main()
 {
     // Send vertex attributes to fragment shader
     fragPosition = vec3(matModel*vec4(vertexPosition, 1.0));
-    fragTexCoord = vertexTexCoord;
+    fragTexCoord = vertexTexCoord * tiling;
     fragColor = vertexColor;
     fragNormal = normalize(vec3(matNormal*vec4(vertexNormal, 1.0)));
+    fragTiling = tiling;
 
     // Calculate final vertex position
     gl_Position = mvp*vec4(vertexPosition, 1.0);
@@ -84,6 +87,7 @@ in vec3 fragPosition;
 in vec2 fragTexCoord;
 in vec4 fragColor;
 in vec3 fragNormal;
+in vec2 fragTiling;
 
 uniform sampler2D texture0;
 uniform vec4 colDiffuse;
@@ -111,12 +115,33 @@ uniform vec3 viewPos;
 uniform int light_count;
 uniform float fogDensity;
 uniform vec4 fogColor;
+uniform int use_triplanar;
 
 out vec4 finalColor;
 
 void main()
 {
-    vec4 texelColor = texture(texture0, fragTexCoord);
+    vec4 texelColor;
+
+    if (use_triplanar == 1) {
+        // triplanar mapping
+        vec3 blending = abs(normalize(fragNormal));
+        blending = pow(blending, vec3(4.0)); // Sharpen blend
+        blending /= (blending.x + blending.y + blending.z); // Normalize
+
+        vec2 uvX = fragPosition.zy * fragTiling;
+        vec2 uvY = fragPosition.xz * fragTiling;
+        vec2 uvZ = fragPosition.xy * fragTiling;
+
+        vec4 texX = texture(texture0, uvX);
+        vec4 texY = texture(texture0, uvY);
+        vec4 texZ = texture(texture0, uvZ);
+
+        texelColor = texX * blending.x + texY * blending.y + texZ * blending.z;
+    } else {
+        texelColor = texture(texture0, fragTexCoord);
+    }
+
     vec3 normal = normalize(fragNormal);
     vec3 viewDir = normalize(viewPos - fragPosition);
     vec3 lightSum = vec3(0.0);

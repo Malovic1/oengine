@@ -60,6 +60,8 @@ SimpleMesh :: struct {
     color: Color,
     starting_color: Color,
     shader: Shader,
+    tiling: Vec2,
+    use_triplanar: bool,
     cached: bool, // internal loading stuff
     user_call: bool, // allows the user to specify when to render it using the render func
 }
@@ -183,7 +185,25 @@ sm_custom_render :: proc(t: ^Transform, sm: ^SimpleMesh) {
     #partial switch v in tex {
         case Model:
             sm_set_shader(sm, ecs_world.ray_ctx.shader);
+
+            use_tiling := tiling != {};
+            if (use_tiling) {
+                ray_set_tiling(tiling); 
+            }
+
+            if (use_triplanar) {
+                ray_enable_triplanar();
+            }
+
             draw_model(v, target, color, is_lit, offset);
+
+            if (use_triplanar) {
+                ray_disable_triplanar();
+            }
+
+            if (use_tiling) {
+                ray_reset_tiling();
+            }
         case CubeMap:
             draw_cube_map(v, target, color);
         case Slope:
@@ -400,56 +420,7 @@ sm_loader :: proc(ent: AEntity, tag: string) {
             clone.tex = tiled;
         }
         if (clone.shape == .BOX) {
-            tiling := i32(linalg.max(linalg.abs(ent_tr.scale)));
-            tiled := tile_texture(clone.texture, tiling);
-            sm_set_texture(&clone, tiled);
-
-            // get_tile_count :: proc(s: f32) -> i32 {
-            //     if (s >= 1) { return i32(s); }
-            //     else if (s > 0) { return i32(1.0 / s + 0.5); }
-            //
-            //     return 1;
-            // }
-            //
-            // scale := linalg.abs(ent_tr.scale);
-            //
-            // tiling := Vec3i {
-            //     get_tile_count(scale.x),
-            //     get_tile_count(scale.y),
-            //     get_tile_count(scale.z),
-            // };
-            //
-            // if (cache.tiling.textures[tiling.xy] == {}) {
-            //     cache.tiling.textures[tiling.xy] = tile_texture_xy(clone.texture, tiling.x, tiling.y);
-            // }
-            // if (cache.tiling.textures[tiling.zy] == {}) {
-            //     cache.tiling.textures[tiling.zy] = tile_texture_xy(clone.texture, tiling.z, tiling.y);
-            // }
-            // if (cache.tiling.textures[tiling.xz] == {}) {
-            //     cache.tiling.textures[tiling.xz] = tile_texture_xy(clone.texture, tiling.x, tiling.z);
-            // }
-            //
-            // tiled := CubeMap {
-            //     cache.tiling.textures[tiling.xy],
-            //     cache.tiling.textures[tiling.xy],
-            //     cache.tiling.textures[tiling.zy],
-            //     cache.tiling.textures[tiling.zy],
-            //     cache.tiling.textures[tiling.xz],
-            //     cache.tiling.textures[tiling.xz],
-            // };
-            //
-            // if (cache.tiling.cubemaps[scale] == {}) {
-            //     cache.tiling.cubemaps[scale] = gen_cubemap_texture(tiled, false);
-            // }
-            // res_tex := cache.tiling.cubemaps[scale];
-            //
-            // if (cache.tiling.meshes[res_tex] == {}) {
-            //     cache.tiling.meshes[res_tex] = gen_mesh_cubemap(vec3_one(), res_tex);
-            // }
-            // mesh := cache.tiling.meshes[res_tex];
-            //
-            // clone.tex = load_model(rl.LoadModelFromMesh(mesh));
-            // sm_set_texture(&clone, res_tex);
+            clone.use_triplanar = true;
         }
     }
 
