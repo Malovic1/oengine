@@ -188,7 +188,7 @@ main :: proc() {
 
     flashlight := oe.aent_init("flashlight");
     flashlight_tr := oe.get_component(flashlight, oe.Transform);
-    flashlight_lc := oe.add_component(flashlight, oe.lc_init(.Spot, oe.GREEN));
+    flashlight_lc := oe.add_component(flashlight, oe.lc_init(.Spot, oe.WHITE));
     oe.ray_light_cutoffs(oe.ecs_world.ray_ctx.shader, flashlight_lc.data, 12.5, 17.5);
 
     s_triangles := make([dynamic][3]oe.Vec3);
@@ -206,6 +206,9 @@ main :: proc() {
     terrain_rb := oe.add_component(terrain, oe.rb_init(terrain_tr^, 1.0, 0.5, oe.load_heights(img)));
     oe.sm_loader(terrain, "height_sm");
     rl.UnloadImage(img.data);
+
+    pero := oe.shape_model_load("pero", "../assets/models/pero.od");
+    pero.transform.position = {-2.5, 4, 10};
 
     // reset_track_allocator(&track_allocator);
     for (oe.w_tick()) {
@@ -274,6 +277,7 @@ main :: proc() {
         oe.sm_apply_anim(animated_sm, &animated_ma, 0);
 
         lara_tr.rotation.y = -oe.look_at_vec2(lara_tr.position.xz, camera.position.xz) - 90;
+        pero.transform.rotation.y = -oe.look_at_vec2(pero.transform.position.xz, camera.position.xz) - 90;
 
         SPEED :: 10
         @static timer: f32 = oe.F32_MAX;
@@ -326,6 +330,8 @@ main :: proc() {
             tri := s_triangles[i];
             rl.DrawTriangle3D(tri.x, tri.y, tri.z, {0, u8(i) * 50, 100, 255});
         }
+
+        oe.shape_model_render(pero);
 
         rl.EndMode3D();
 

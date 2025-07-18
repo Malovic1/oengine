@@ -986,32 +986,31 @@ draw_model :: proc(
     color: Color,
     is_lit: bool = false,
     offset: Transform = {{}, {}, {1, 1, 1}},
+    use_pivot: bool = false,
+    pivot: Vec3 = {},
 ) {
-    rotation := transform.rotation + offset.rotation;
-    rotation_axis: Vec3;
-    angle: f32;
-    if (rotation.x != 0) { 
-        angle = rotation.x;
-        rotation_axis.x = 1;
+    full_rotation := (transform.rotation + offset.rotation) * Deg2Rad;
+
+    rot_quat := linalg.quaternion_from_euler_angles(full_rotation.x, full_rotation.y, full_rotation.z, linalg.Euler_Angle_Order.XYZ);
+    rot_quat = linalg.normalize(rot_quat);
+    rot_angle, rot_axis := linalg.angle_axis_from_quaternion(rot_quat);
+
+    final_position: Vec3;
+    if (use_pivot) {
+        original_pos := transform.position + offset.position;
+        vec_to_model := original_pos - pivot;
+        rotated_vec := rotate_vec3_by_quat(vec_to_model, rot_quat); // implement or use existing
+        final_position = pivot + rotated_vec;
+    } else {
+        final_position = transform.position + offset.position;
     }
-    if (rotation.y != 0) { 
-        angle = rotation.y;
-        rotation_axis.y = 1;
-    }
-    if (rotation.z != 0) { 
-        angle = rotation.z;
-        rotation_axis.z = 1;
-    }
-    if (rotation_axis.x + rotation_axis.y + rotation_axis.z > 1) {
-        rotation_axis = {};
-    } 
 
     if (is_lit) { 
         rl.BeginShaderMode(ecs_world.ray_ctx.shader);
         rl.DrawModelEx(
             model, 
-            transform.position + offset.position, 
-            rotation_axis, angle, 
+            final_position, 
+            rot_axis, rot_angle * Rad2Deg, 
             transform.scale * offset.scale, color
         ); 
         rl.EndShaderMode();
@@ -1019,8 +1018,8 @@ draw_model :: proc(
     else { 
         rl.DrawModelEx(
             model, 
-            transform.position + offset.position, 
-            rotation_axis, angle, 
+            final_position, 
+            rot_axis, rot_angle * Rad2Deg, 
             transform.scale * offset.scale, color
         );
     }

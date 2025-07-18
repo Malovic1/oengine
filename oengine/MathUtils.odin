@@ -481,3 +481,115 @@ look_at :: proc(pos, target: Vec3, up: Vec3 = {0, 1, 0}) -> Vec3 {
     // pitch yaw roll
     return {x, y, z};
 }
+
+rotate_vec3 :: proc(v, k: Vec3, angle: f32) -> Vec3 {
+    cos_theta := linalg.cos(angle);
+    sin_theta := linalg.sin(angle);
+    return v * cos_theta + linalg.cross(k, v) * sin_theta + k * linalg.dot(k, v) * (1 - cos_theta);
+}
+
+rotate_vec3_by_quat :: proc(v: Vec3, q: linalg.Quaternionf32) -> Vec3 {
+    // Quaternion components
+    x := q.x;
+    y := q.y;
+    z := q.z;
+    w := q.w;
+
+    // Calculate commonly reused terms
+    xx := x * x;
+    yy := y * y;
+    zz := z * z;
+    ww := w * w;
+
+    xy := x * y;
+    xz := x * z;
+    yz := y * z;
+    wx := w * x;
+    wy := w * y;
+    wz := w * z;
+
+    // Rotation matrix form from quaternion
+    m00 := 1.0 - 2.0 * (yy + zz);
+    m01 := 2.0 * (xy - wz);
+    m02 := 2.0 * (xz + wy);
+
+    m10 := 2.0 * (xy + wz);
+    m11 := 1.0 - 2.0 * (xx + zz);
+    m12 := 2.0 * (yz - wx);
+
+    m20 := 2.0 * (xz - wy);
+    m21 := 2.0 * (yz + wx);
+    m22 := 1.0 - 2.0 * (xx + yy);
+
+    // Apply rotation
+    result: Vec3;
+    result.x = m00 * v.x + m01 * v.y + m02 * v.z;
+    result.y = m10 * v.x + m11 * v.y + m12 * v.z;
+    result.z = m20 * v.x + m21 * v.y + m22 * v.z;
+
+    return result;
+}
+
+transform_to_matrix :: proc(t: Transform) -> linalg.Matrix4f32 {
+    translation := linalg.matrix4_translate(t.position);
+    rot := t.rotation * Deg2Rad;
+    rotation := linalg.matrix4_from_euler_angles_xyz(rot.x, rot.y, rot.z);
+    scale := linalg.matrix4_scale(t.scale);
+    return translation * rotation * scale;
+}
+
+matrix_to_transform :: proc(m: linalg.Matrix4f32) -> Transform {
+    position := matrix_get_translation(m);
+    scale    := matrix_get_scale(m);
+    rotation := matrix_get_rotation(m, scale);
+    return Transform{position, rotation, scale};
+}
+
+matrix_get_translation :: proc(m: linalg.Matrix4f32) -> Vec3 {
+    return Vec3{m[3][0], m[3][1], m[3][2]};
+}
+
+matrix_get_scale :: proc(m: linalg.Matrix4f32) -> Vec3 {
+    sx := linalg.length(Vec3{m[0][0], m[0][1], m[0][2]});
+    sy := linalg.length(Vec3{m[1][0], m[1][1], m[1][2]});
+    sz := linalg.length(Vec3{m[2][0], m[2][1], m[2][2]});
+    return Vec3{sx, sy, sz};
+}
+
+matrix_get_rotation :: proc(m: linalg.Matrix4f32, scale: Vec3) -> Vec3 {
+    m00 := m[0][0] / scale.x;
+    m01 := m[0][1] / scale.x;
+    m02 := m[0][2] / scale.x;
+
+    m10 := m[1][0] / scale.y;
+    m11 := m[1][1] / scale.y;
+    m12 := m[1][2] / scale.y;
+
+    m20 := m[2][0] / scale.z;
+    m21 := m[2][1] / scale.z;
+    m22 := m[2][2] / scale.z;
+
+    pitch: f32;
+    yaw: f32;
+    roll: f32;
+
+    if (abs(m20) < 1.0 - 1e-6) {
+        pitch = linalg.asin(clamp(-m20, -1.0, 1.0));
+        roll  = linalg.atan2(m21, m22);
+        yaw   = linalg.atan2(m10, m00);
+    } else {
+        pitch = linalg.asin(clamp(-m20, -1.0, 1.0));
+        roll  = 0;
+        if (m20 < 0) {
+            yaw = linalg.atan2(-m01, m11);
+        } else {
+            yaw = linalg.atan2(m01, -m11);
+        }
+    }
+
+    return Vec3{
+        pitch * Rad2Deg,
+        yaw   * Rad2Deg,
+        roll  * Rad2Deg
+    };
+}
