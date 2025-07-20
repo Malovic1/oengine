@@ -66,21 +66,21 @@ shape_model_load :: proc(tag, path: string) -> ShapeModel {
 
 shape_model_render :: proc(m: ShapeModel) {
     global := m.transform;
-    global_mat := transform_to_matrix(global);
+    // global_mat := transform_to_matrix(global);
 
     for k, v in m.meshes {
         mesh := m.meshes[k];
         local := mesh.transform;
         local_mat := transform_to_matrix(local);
 
-        combined_matrix := global_mat * local_mat;
-        combined := matrix_to_transform(combined_matrix);
+        // combined_matrix := global_mat * local_mat;
+        // combined := matrix_to_transform(combined_matrix);
 
-        // combined := Transform{
-        //     position = global.position + local.position,
-        //     rotation = global.rotation + local.rotation,
-        //     scale    = global.scale * local.scale,
-        // };
+        combined := Transform{
+            position = global.position + local.position,
+            rotation = global.rotation + local.rotation,
+            scale    = global.scale * local.scale,
+        };
         pivot := global.position + mesh.pivot;
         draw_model(mesh.mesh, combined, WHITE, use_pivot = true, pivot = pivot);
 

@@ -127,7 +127,8 @@ main :: proc() {
     sprite := oe.aent_init("sprite_test");
     sprite_tr := oe.get_component(sprite, oe.Transform);
     sprite_tr.position = {-5, 3, -10};
-    sprite_sm := oe.add_component(sprite, oe.sm_init(troll, 0));
+    sprite_sm := oe.add_component(sprite, oe.sm_init(oe.gen_sprite(tex = troll)));
+    sprite_sm.is_sprite = true;
     sprite_path := oe.FollowPath {{-5, 3, -10}, {0, 3, -11}, {5, 3, -10}, {5, 3, -15}, {-5, 3, -15}, {-5, 3, -10}};
 
     ps := oe.aent_init("ParticleSystem");
@@ -207,9 +208,6 @@ main :: proc() {
     oe.sm_loader(terrain, "height_sm");
     rl.UnloadImage(img.data);
 
-    pero := oe.shape_model_load("pero", "../assets/models/pero.od");
-    pero.transform.position = {-2.5, 4, 10};
-
     // reset_track_allocator(&track_allocator);
     for (oe.w_tick()) {
         oe.ew_update();
@@ -277,7 +275,6 @@ main :: proc() {
         oe.sm_apply_anim(animated_sm, &animated_ma, 0);
 
         lara_tr.rotation.y = -oe.look_at_vec2(lara_tr.position.xz, camera.position.xz) - 90;
-        pero.transform.rotation.y = -oe.look_at_vec2(pero.transform.position.xz, camera.position.xz) - 90;
 
         SPEED :: 10
         @static timer: f32 = oe.F32_MAX;
@@ -330,8 +327,6 @@ main :: proc() {
             tri := s_triangles[i];
             rl.DrawTriangle3D(tri.x, tri.y, tri.z, {0, u8(i) * 50, 100, 255});
         }
-
-        oe.shape_model_render(pero);
 
         rl.EndMode3D();
 

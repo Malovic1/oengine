@@ -124,10 +124,9 @@ void main()
     vec4 texelColor;
 
     if (use_triplanar == 1) {
-        // triplanar mapping
         vec3 blending = abs(normalize(fragNormal));
-        blending = pow(blending, vec3(4.0)); // Sharpen blend
-        blending /= (blending.x + blending.y + blending.z); // Normalize
+        blending = pow(blending, vec3(4.0));
+        blending /= (blending.x + blending.y + blending.z);
 
         vec2 uvX = fragPosition.zy * fragTiling;
         vec2 uvY = fragPosition.xz * fragTiling;
@@ -144,6 +143,12 @@ void main()
 
     vec3 normal = normalize(fragNormal);
     vec3 viewDir = normalize(viewPos - fragPosition);
+
+    // Double-sided normals: flip if back-facing
+    if (dot(normal, viewDir) < 0.0) {
+        normal = -normal;
+    }
+
     vec3 lightSum = vec3(0.0);
     vec3 specular = vec3(0.0);
     vec4 tint = colDiffuse * fragColor;
@@ -169,13 +174,12 @@ void main()
                 vec3 spotDir = normalize(lights[i].target - lights[i].position);
                 vec3 fragToLight = normalize(fragPosition - lights[i].position);
 
-                float theta = dot(spotDir, fragToLight);  // Don't invert fragToLight
+                float theta = dot(spotDir, fragToLight);
                 float epsilon = max(0.001, lights[i].inner_cutoff - lights[i].outer_cutoff);
                 float spotlightIntensity = clamp((theta - lights[i].outer_cutoff) / epsilon, 0.0, 1.0);
                 intensity *= spotlightIntensity;
             }
 
-            // Simple distance attenuation
             float dist = length(lights[i].position - fragPosition);
             attenuation = 1.0 / (0.5 + 0.025 * dist + 0.005 * dist * dist);
 
@@ -189,7 +193,7 @@ void main()
         if (NdotL > 0.0)
         {
             vec3 reflectDir = reflect(-lightDir, normal);
-            float spec = pow(max(dot(viewDir, reflectDir), 0.0), 16.0); // shininess = 16
+            float spec = pow(max(dot(viewDir, reflectDir), 0.0), 16.0);
             specular += spec * lights[i].color.rgb * 0.25 * intensity * attenuation;
         }
     }
@@ -199,22 +203,15 @@ void main()
 
     finalColor = vec4(lit, texelColor.a * tint.a);
 
-    // Gamma correction (comment out if your pipeline is sRGB)
     finalColor.rgb = pow(finalColor.rgb, vec3(1.0 / 2.2));
-
     finalColor.rgb = clamp(finalColor.rgb, 0.0, 1.0);
 
-    // Fog calculation
     float dist = length(viewPos - fragPosition);
-
-    // Exponential fog
     float fogFactor = 1.0/exp((dist*fogDensity)*(dist*fogDensity));
-
     fogFactor = clamp(fogFactor, 0.0, 1.0);
 
     finalColor = mix(fogColor, finalColor, fogFactor);
-}
-`;
+}`;
 
 shader_location :: proc(shader: rl.Shader, uniformName: cstring) -> rl.ShaderLocationIndex {
     loc := rl.GetShaderLocation(shader, uniformName);

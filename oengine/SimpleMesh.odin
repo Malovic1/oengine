@@ -61,6 +61,7 @@ SimpleMesh :: struct {
     starting_color: Color,
     shader: Shader,
     tiling: Vec2,
+    is_sprite: bool, // billboard behaviour
     use_triplanar: bool,
     cached: bool, // internal loading stuff
     user_call: bool, // allows the user to specify when to render it using the render func
@@ -180,6 +181,11 @@ sm_custom_render :: proc(t: ^Transform, sm: ^SimpleMesh) {
 
     if (sys_os() == .Linux && shape == .CYLINDER) {
         target.position.y = transform.position.y - 0.5;
+    }
+
+    if (is_sprite) {
+        target.rotation.y = -look_at_vec2(
+            target.position.xz, world().camera.position.xz) - 90;
     }
 
     #partial switch v in tex {

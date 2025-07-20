@@ -980,6 +980,84 @@ gen_mesh_triangle :: proc(verts: [3]Vec3, #any_int uv_rot: i32 = 0) -> rl.Mesh {
     return mesh;
 }
 
+gen_sprite :: proc(width: f32 = 1.0, height: f32 = 1.0, tex: Texture = {}) -> Model {
+    mesh := gen_mesh_quad(width, height);
+    res := load_model(rl.LoadModelFromMesh(mesh));
+    res.materials[0].shader = world().ray_ctx.shader;
+
+    if (tex != {}) {
+        res.materials[0].maps[rl.MaterialMapIndex.ALBEDO].texture = tex;
+    }
+
+    return res;
+}
+
+gen_mesh_quad :: proc(
+    width: f32, height: f32, flip_z := true, flip_uv_y := true) -> rl.Mesh {
+    mesh: rl.Mesh;
+    mesh.triangleCount = 2;
+    mesh.vertexCount = 6; // 2 triangles * 3
+    allocate_mesh(&mesh);
+
+    hw := width * 0.5;
+    hh := height * 0.5;
+
+    verts: [6]Vec3;
+    if (flip_z) {
+        verts = [6]Vec3{
+            {-hw, -hh, 0}, // bottom-left
+            { hw,  hh, 0}, // top-right
+            {-hw,  hh, 0}, // top-left
+            {-hw, -hh, 0}, // bottom-left
+            { hw, -hh, 0}, // bottom-right
+            { hw,  hh, 0}, // top-right
+        };
+    } else {
+        verts = [6]Vec3{
+            {-hw, -hh, 0}, // bottom-left
+            {-hw,  hh, 0}, // top-left
+            { hw,  hh, 0}, // top-right
+            {-hw, -hh, 0}, // bottom-left
+            { hw,  hh, 0}, // top-right
+            { hw, -hh, 0}, // bottom-right
+        };
+    }
+
+    uvs: [6]Vec2;
+    if (flip_z) {
+        uvs = [6]Vec2{
+            {0, 0}, {1, 1}, {0, 1},
+            {0, 0}, {1, 0}, {1, 1},
+        };
+    } else {
+        uvs = [6]Vec2{
+            {0, 0}, {0, 1}, {1, 1},
+            {0, 0}, {1, 1}, {1, 0},
+        };
+    }
+
+    for i in 0..<6 {
+        mesh.vertices[i*3+0] = verts[i].x;
+        mesh.vertices[i*3+1] = verts[i].y;
+        mesh.vertices[i*3+2] = verts[i].z;
+
+        mesh.normals[i*3+0] = 0;
+        mesh.normals[i*3+1] = 0;
+        mesh.normals[i*3+2] = 1;
+
+        mesh.texcoords[i*2+0] = uvs[i].x;
+        mesh.texcoords[i*2+1] = flip_uv_y ? 1.0 - uvs[i].y : uvs[i].y;
+
+        mesh.colors[i*4+0] = 255;  // R
+        mesh.colors[i*4+1] = 255;  // G
+        mesh.colors[i*4+2] = 255;  // B
+        mesh.colors[i*4+3] = 255;  // A (fully opaque)
+    }
+
+    rl.UploadMesh(&mesh, false);
+    return mesh;
+}
+
 draw_model :: proc(
     model: Model, 
     transform: Transform, 
