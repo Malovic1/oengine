@@ -322,6 +322,52 @@ msc_append_quad :: proc(
         msc_append_tri(self, pa, pb, pd, {}, color, texture_tag, is_lit, use_fog, rot, n2a, flipped, division_level);
         msc_append_tri(self, pb, pc, pd, {}, color, texture_tag, is_lit, use_fog, rot, n2b, flipped, division_level);
     }
+
+    _aabb = tris_to_aabb(tris);
+}
+
+msc_append_circle :: proc(
+    using self: ^MSCObject,
+    center: Vec3, edge: Vec3,
+    segments: i32 = 10,
+    color: Color = WHITE,
+    texture_tag: string = "",
+    is_lit: bool = true,
+    use_fog: bool = OE_FAE,
+    rot: i32 = 0,
+    flipped: bool = false,
+    division_level: i32 = 0
+) {
+    radius_vec := edge - center;
+    radius := linalg.length(radius_vec);
+
+    right := linalg.normalize(radius_vec);
+
+    up_guess := Vec3{0, 1, 0};
+    if (linalg.abs(linalg.dot(right, up_guess)) > 0.99) {
+        up_guess = Vec3{0, 0, 1};
+    }
+
+    normal := linalg.normalize(linalg.cross(right, up_guess));
+    up := linalg.normalize(linalg.cross(normal, right));
+
+    if (flipped) {
+        normal = -normal;
+    }
+
+    angle_step := 2.0 * math.PI / f32(segments);
+
+    for i in 0..<segments {
+        angle1 := angle_step * f32(i);
+        angle2 := angle_step * f32((i + 1) % segments);
+
+        p1 := center + (linalg.cos(angle1) * right + linalg.sin(angle1) * up) * radius;
+        p2 := center + (linalg.cos(angle2) * right + linalg.sin(angle2) * up) * radius;
+
+        msc_append_tri(self, center, p1, p2, {}, color, texture_tag, is_lit, use_fog, rot, normal, flipped, division_level);
+    }
+
+    _aabb = tris_to_aabb(tris);
 }
 
 reload_mesh_tris :: proc(using self: ^MSCObject) {

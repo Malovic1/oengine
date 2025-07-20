@@ -30,10 +30,11 @@ EditMode :: enum {
 ShapeMode :: enum {
     TRIANGLE,
     QUAD,
+    CIRCLE,
     MAX,
 }
 
-shape_mode_size := [ShapeMode.MAX]i32{3, 4};
+shape_mode_size := [ShapeMode.MAX]i32{3, 4, 2};
 
 CameraTool :: struct {
     camera_perspective: oe.Camera,
@@ -168,6 +169,8 @@ ct_msc_edit :: proc(using self: ^CameraTool) {
             case .QUAD:
                 points := [4]oe.Vec3{points_to_add[0], points_to_add[1], points_to_add[2], points_to_add[3]};
                 oe.msc_append_quad(msc, points[0], points[1], points[2], points[3]);
+            case .CIRCLE:
+                oe.msc_append_circle(msc, points_to_add[0], points_to_add[1]);
         }
 
         clear(&points_to_add);
