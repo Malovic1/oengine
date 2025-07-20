@@ -11,6 +11,7 @@ import sc "core:strconv"
 import strs "core:strings"
 
 BUTTON_WIDTH :: 180
+WINDOW_WIDTH :: 300
 WINDOW_HEIGHT :: 250
 
 registry_tool :: proc(ct: CameraTool) {
@@ -71,11 +72,11 @@ registry_tool :: proc(ct: CameraTool) {
     oe.gui_end();
 }
 
+new_instance: bool = false;
 msc_tool :: proc(ct: CameraTool) {
     oe.gui_begin("MSC tool", x = 0, y = WINDOW_HEIGHT + oe.gui_top_bar_height, h = WINDOW_HEIGHT, can_exit = false);
     wr := oe.gui_rect(oe.gui_window("MSC tool"));
 
-    @static new_instance: bool = false;
     // new_instance = oe.gui_tick(new_instance, 10, 10, 30, 30);
     //
     // oe.gui_text("New instance", 20, 50, 10);
@@ -573,6 +574,68 @@ did_component_tool :: proc(ct: CameraTool) {
     oe.gui_end();
 }
 
+edit_mode_tool :: proc(ct: ^CameraTool) {
+    @static edit_xy, edit_xz, edit_zy: bool;
+
+    oe.gui_begin("Edit mode", x = WINDOW_WIDTH, y = 0, h = WINDOW_HEIGHT, can_exit = false);
+
+    if (oe.key_down(.LEFT_SHIFT)) {
+        if (oe.key_pressed(.ONE)) {
+            edit_xy = !edit_xy;
+        }
+        if (oe.key_pressed(.TWO)) {
+            edit_xz = !edit_xz;
+        }
+        if (oe.key_pressed(.THREE)) {
+            edit_zy = !edit_zy;
+        }
+    }
+
+    grid := oe.gui_grid(0, 0, column_width = 30);
+    edit_xy = oe.gui_tick(edit_xy, grid.x, grid.y, grid.width, grid.height, "XY");
+    if (edit_xy) {
+        ct.edit_mode |= {.XY};
+    } else {
+        ct.edit_mode &= ~{.XY}; 
+    }
+
+    grid = oe.gui_grid(1, 0, column_width = 30);
+    edit_xz = oe.gui_tick(edit_xz, grid.x, grid.y, grid.width, grid.height, "XZ");
+    if (edit_xz) {
+        ct.edit_mode |= {.XZ};
+    } else {
+        ct.edit_mode &= ~{.XZ}; 
+    }
+
+    grid = oe.gui_grid(2, 0, column_width = 30);
+    edit_zy = oe.gui_tick(edit_zy, grid.x, grid.y, grid.width, grid.height, "ZY");
+    if (edit_zy) {
+        ct.edit_mode |= {.ZY};
+    } else {
+        ct.edit_mode &= ~{.ZY}; 
+    }
+
+    grid = oe.gui_grid(3, 0);
+    oe.gui_text(oe.str_add("XY: ", ct.edit_layer[EditMode.XY]), 20, grid.x, grid.y);
+
+    grid = oe.gui_grid(4, 0);
+    oe.gui_text(oe.str_add("XZ: ", ct.edit_layer[EditMode.XZ]), 20, grid.x, grid.y);
+
+    grid = oe.gui_grid(5, 0);
+    oe.gui_text(oe.str_add("ZY: ", ct.edit_layer[EditMode.ZY]), 20, grid.x, grid.y);
+
+    grid = oe.gui_grid(6, 0);
+    if (oe.gui_button(oe.str_add("", ct.shape_mode), grid.x, grid.y, grid.width, grid.height)) {
+        if (i32(ct.shape_mode) == i32(ShapeMode.MAX) - 1) {
+            ct.shape_mode = .TRIANGLE;
+        } else {
+            ct.shape_mode += ShapeMode(1);
+        }
+    }
+
+    oe.gui_end();
+}
+
 @(private = "file")
 msc_target_pos :: proc(ct: CameraTool) -> oe.Vec3 {
     if (ct.mode == .PERSPECTIVE) do return ct.camera_perspective.position;
@@ -649,7 +712,6 @@ load_config :: proc(path: string) -> [3]string {
     return res;
 }
 
-@(private = "file")
 msc_check :: proc(new_instance: bool) -> ^oe.MSCObject {
     msc: ^oe.MSCObject;
     if (new_instance) {

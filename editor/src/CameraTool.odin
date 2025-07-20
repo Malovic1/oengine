@@ -21,11 +21,30 @@ CameraMode :: enum {
     ORTHO_ZY
 }
 
+EditMode :: enum {
+    XY,
+    XZ,
+    ZY,
+}
+
+ShapeMode :: enum {
+    TRIANGLE,
+    QUAD,
+    MAX,
+}
+
+shape_mode_size := [ShapeMode.MAX]i32{3, 4};
+
 CameraTool :: struct {
     camera_perspective: oe.Camera,
     mouse_locked: bool,
     camera_orthographic: rl.Camera2D,
     mode: CameraMode,
+    edit_mode: bit_set[EditMode],
+    edit_layer: [3]f32,
+    active_axis: EditMode,
+    points_to_add: [dynamic]oe.Vec3,
+    shape_mode: ShapeMode,
     tile_edit: bool,
     tile_layer: f32,
     tile_size: oe.Vec3,
@@ -49,6 +68,8 @@ ct_init :: proc() -> CameraTool {
         _active_id = ACTIVE_EMPTY,
         _active_msc_id = ACTIVE_EMPTY,
         tile_size = {1, 1, 1},
+        points_to_add = make([dynamic]oe.Vec3),
+        shape_mode = .TRIANGLE,
     };
 }
 
@@ -61,7 +82,9 @@ ct_update :: proc(using self: ^CameraTool) {
 
     key := i32(oe.keycode_pressed());
     if (key >= 49 && key <= 52 && !oe.gui_mouse_over() && !oe.gui_text_active()) {
-        mode = CameraMode(key - 49);
+        if (!oe.key_down(.LEFT_SHIFT)) {
+            mode = CameraMode(key - 49);
+        }
     }
 
     update(self^);
@@ -74,86 +97,53 @@ ct_render :: proc(using self: ^CameraTool) {
         rl.BeginMode3D(camera_perspective.rl_matrix);
         oe.draw_debug_axis(3);
         oe.draw_debug_axis(-3);
-        rl.rlPushMatrix();
-        rl.rlTranslatef(0, tile_layer, 0);
-        oe.draw_grid3D(oe.OCTREE_SIZE, 1, {150, 150, 150, 255});
-        rl.rlPopMatrix();
+
+        UNACTIVE_ALPHA :: 0
+        if (oe.key_down(.LEFT_SHIFT) && !tile_edit) {
+            if (EditMode.XY in edit_mode) {
+                rl.rlPushMatrix();
+                rl.rlTranslatef(0, 0, edit_layer[EditMode.XY]);
+
+                alpha: u8 = UNACTIVE_ALPHA;
+                if (active_axis == .XY) { alpha = 255; }
+                oe.draw_grid3D(oe.OCTREE_SIZE, 1, {150, 150, 150, alpha}, .XY);
+                rl.rlPopMatrix();
+            }
+            if (EditMode.XZ in edit_mode) {
+                rl.rlPushMatrix();
+                rl.rlTranslatef(0, edit_layer[EditMode.XZ], 0);
+
+                alpha: u8 = UNACTIVE_ALPHA;
+                if (active_axis == .XZ) { alpha = 255; }
+                oe.draw_grid3D(oe.OCTREE_SIZE, 1, {150, 150, 150, alpha}, .XZ);
+                rl.rlPopMatrix();
+            }
+            if (EditMode.ZY in edit_mode) {
+                rl.rlPushMatrix();
+                rl.rlTranslatef(edit_layer[EditMode.ZY], 0, 0);
+
+                alpha: u8 = UNACTIVE_ALPHA;
+                if (active_axis == .ZY) { alpha = 255; }
+                oe.draw_grid3D(oe.OCTREE_SIZE, 1, {150, 150, 150, alpha}, .ZY);
+                rl.rlPopMatrix();
+            }
+        } else {
+            rl.rlPushMatrix();
+            rl.rlTranslatef(0, tile_layer, 0);
+            oe.draw_grid3D(oe.OCTREE_SIZE, 1, {150, 150, 150, 255});
+            rl.rlPopMatrix();
+        }
 
         oe.ew_render();
         render(self^);
         render_tri(self);
 
         if (tile_edit) {
-            mouse_ray := oe.get_mouse_rc(camera_perspective);
-            plane := oe.Transform {
-                {0, tile_layer, 0}, {}, {oe.OCTREE_SIZE, 0.25, oe.OCTREE_SIZE}
-            };
-            coll, point := oe.rc_is_colliding(mouse_ray, plane, .BOX);
-            snapped := oe.Vec3 {
-                math.floor(point.x),
-                tile_layer,
-                math.floor(point.z),
-            };
+            ct_tile_edit(self);
+        }
 
-            position := snapped + tile_size * 0.5;
-
-            rl.DrawCubeWiresV(position, tile_size, oe.GREEN);
-
-            if (!oe.gui_mouse_over() && !oe.gui_text_active()) {
-                if (oe.mouse_pressed(.LEFT)) {
-                    id_parse := oe.gui.text_boxes["IDTextBox"].text;
-                    parsed, ok := strconv.parse_int(id_parse);
-                    id := u32(parsed);
-                    tag := "csg_box";
-                    reg_tag := oe.str_add("data_id_", tag);
-                    if (oe.asset_manager.registry[reg_tag] != nil) {
-                        reg_tag = oe.str_add(reg_tag, oe.rand_digits(4));
-                    }
-
-                    comps := fa.fixed_array(oe.ComponentMarshall, 16);
-                    fa.append(
-                        &comps, oe.ComponentMarshall{oe.CSG_RB, "RigidBody"}
-                    );
-                    fa.append(
-                        &comps, oe.ComponentMarshall{oe.CSG_SM, "SimpleMesh"}
-                    );
-
-                    oe.reg_asset(
-                        reg_tag, 
-                        oe.DataID {
-                            reg_tag, 
-                            tag, 
-                            id, 
-                            oe.Transform{
-                                position, {}, tile_size
-                            },
-                            fa.fixed_array(i32, 16),
-                            comps,
-                        }
-                    );
-                    oe.dbg_log(
-                        oe.str_add(
-                            {"Added data id of tag: ", 
-                            tag, " and id: ", oe.str_add("", id)}
-                        )
-                    );
-
-                    if (editor_data.csg_textures[tile_size] == {}) {
-                        tiling := i32(linalg.max(tile_size));
-                        img := rl.GenImageChecked(
-                            2 * tiling, 2 * tiling, 
-                            1, 1, 
-                            oe.BLACK, oe.PINK
-                        );
-
-                        editor_data.csg_textures[tile_size] = oe.load_texture(
-                            rl.LoadTextureFromImage(img)
-                        );
-
-                        rl.UnloadImage(img);
-                    }
-                }
-            }
+        if (oe.key_down(.LEFT_SHIFT)) {
+            ct_msc_edit(self);
         }
 
         rl.EndMode3D();
@@ -161,6 +151,229 @@ ct_render :: proc(using self: ^CameraTool) {
         rl.BeginMode2D(camera_orthographic);
         ct_render_ortho(self);
         rl.EndMode2D();
+    }
+}
+
+@(private = "file")
+ct_msc_edit :: proc(using self: ^CameraTool) {
+    if (len(points_to_add) == int(shape_mode_size[shape_mode])) {
+        msc := msc_check(new_instance);
+
+        #partial switch shape_mode {
+            case .TRIANGLE:
+                points := [3]oe.Vec3{points_to_add[0], points_to_add[1], points_to_add[2]};
+                oe.msc_append_tri(
+                    msc, points[0], points[1], points[2], 
+                    normal = oe.surface_normal(points));
+            case .QUAD:
+                points := [4]oe.Vec3{points_to_add[0], points_to_add[1], points_to_add[2], points_to_add[3]};
+                oe.msc_append_quad(msc, points[0], points[1], points[2], points[3]);
+        }
+
+        clear(&points_to_add);
+    }
+
+    if (oe.key_pressed(.EQUAL)) {
+        if (.XY in edit_mode) {
+            edit_layer[EditMode.XY] += 0.5;
+        }
+        if (.XZ in edit_mode) {
+            edit_layer[EditMode.XZ] += 0.5;
+        }
+        if (.ZY in edit_mode) {
+            edit_layer[EditMode.ZY] += 0.5;
+        }
+    }
+    if (oe.key_pressed(.MINUS)) {
+        if (.XY in edit_mode) {
+            edit_layer[EditMode.XY] -= 0.5;
+        }
+        if (.XZ in edit_mode) {
+            edit_layer[EditMode.XZ] -= 0.5;
+        }
+        if (.ZY in edit_mode) {
+            edit_layer[EditMode.ZY] -= 0.5;
+        }
+    }
+
+    if (oe.key_pressed(.ENTER)) {
+        if (.XY in edit_mode) {
+            edit_layer[EditMode.XY] = 0;
+        }
+        if (.XZ in edit_mode) {
+            edit_layer[EditMode.XZ] = 0;
+        }
+        if (.ZY in edit_mode) {
+            edit_layer[EditMode.ZY] = 0;
+        }
+    }
+
+    mouse_ray := oe.get_mouse_rc(camera_perspective);
+
+    plane_xy := oe.Transform {
+        {0, 0, edit_layer[EditMode.XY]}, {}, {oe.OCTREE_SIZE, oe.OCTREE_SIZE, 0.25}
+    };
+    plane_xz := oe.Transform {
+        {0, edit_layer[EditMode.XZ], 0}, {}, {oe.OCTREE_SIZE, 0.25, oe.OCTREE_SIZE}
+    };
+    plane_zy := oe.Transform {
+        {edit_layer[EditMode.ZY], 0, 0}, {}, {0.25, oe.OCTREE_SIZE, oe.OCTREE_SIZE}
+    };
+
+    coll_xy, point_xy := oe.rc_is_colliding(mouse_ray, plane_xy, .BOX);
+    coll_xz, point_xz := oe.rc_is_colliding(mouse_ray, plane_xz, .BOX);
+    coll_zy, point_zy := oe.rc_is_colliding(mouse_ray, plane_zy, .BOX);
+
+    collision: bool;
+    closest: oe.Vec3;
+    axis: EditMode;
+    closest_dist := oe.F32_MAX;
+    if (.XY in edit_mode && coll_xy) {
+        dist := oe.vec3_dist(point_xy, camera_perspective.position);
+        if (dist < closest_dist) {
+            closest_dist = dist;
+            closest = point_xy;
+            collision = true;
+            axis = .XY;
+        }
+    }
+    if (.XZ in edit_mode && coll_xz) {
+        dist := oe.vec3_dist(point_xz, camera_perspective.position);
+        if (dist < closest_dist) {
+            closest_dist = dist;
+            closest = point_xz;
+            collision = true;
+            axis = .XZ;
+        }
+    }
+    if (.ZY in edit_mode && coll_zy) {
+        dist := oe.vec3_dist(point_zy, camera_perspective.position);
+        if (dist < closest_dist) {
+            closest_dist = dist;
+            closest = point_zy;
+            collision = true;
+            axis = .ZY;
+        }
+    }
+
+    snapped: oe.Vec3;
+    if (axis == .XY) {
+        snapped = oe.Vec3 {
+            math.round(closest.x),
+            math.round(closest.y),
+            edit_layer[axis],
+        };
+    }
+    if (axis == .XZ) {
+        snapped = oe.Vec3 {
+            math.round(closest.x),
+            edit_layer[axis],
+            math.round(closest.z),
+        };
+    }
+    if (axis == .ZY) {
+        snapped = oe.Vec3 {
+            edit_layer[axis],
+            math.round(closest.y),
+            math.round(closest.z),
+        };
+    }
+
+    active_axis = axis;
+    position := snapped;
+
+    for pt in points_to_add {
+        rl.DrawSphere(pt, 0.1, oe.BLUE);
+
+        if (pt.x == position.x) {
+            rl.DrawLine3D(pt, position, oe.WHITE);
+        }
+        if (pt.y == position.z) {
+            rl.DrawLine3D(pt, position, oe.WHITE);
+        }
+        if (pt.z == position.z) {
+            rl.DrawLine3D(pt, position, oe.WHITE);
+        }
+    }
+
+    rl.DrawSphere(position, 0.1, oe.RED);
+
+    if (oe.mouse_pressed(.LEFT) && !oe.gui_mouse_over() && !oe.gui_text_active()) {
+        append(&points_to_add, position);
+    }
+}
+
+@(private = "file")
+ct_tile_edit :: proc(using self: ^CameraTool) {
+    mouse_ray := oe.get_mouse_rc(camera_perspective);
+    plane := oe.Transform {
+        {0, tile_layer, 0}, {}, {oe.OCTREE_SIZE, 0.25, oe.OCTREE_SIZE}
+    };
+    coll, point := oe.rc_is_colliding(mouse_ray, plane, .BOX);
+    snapped := oe.Vec3 {
+        math.floor(point.x),
+        tile_layer,
+        math.floor(point.z),
+    };
+
+    position := snapped + tile_size * 0.5;
+
+    rl.DrawCubeWiresV(position, tile_size, oe.GREEN);
+
+    if (!oe.gui_mouse_over() && !oe.gui_text_active()) {
+        if (oe.mouse_pressed(.LEFT)) {
+            id_parse := oe.gui.text_boxes["IDTextBox"].text;
+            parsed, ok := strconv.parse_int(id_parse);
+            id := u32(parsed);
+            tag := "csg_box";
+            reg_tag := oe.str_add("data_id_", tag);
+            if (oe.asset_manager.registry[reg_tag] != nil) {
+                reg_tag = oe.str_add(reg_tag, oe.rand_digits(4));
+            }
+
+            comps := fa.fixed_array(oe.ComponentMarshall, 16);
+            fa.append(
+                &comps, oe.ComponentMarshall{oe.CSG_RB, "RigidBody"}
+            );
+            fa.append(
+                &comps, oe.ComponentMarshall{oe.CSG_SM, "SimpleMesh"}
+            );
+
+            oe.reg_asset(
+                reg_tag, 
+                oe.DataID {
+                    reg_tag, 
+                    tag, 
+                    id, 
+                    oe.Transform{
+                        position, {}, tile_size
+                    },
+                    fa.fixed_array(i32, 16),
+                    comps,
+                }
+            );
+            oe.dbg_log(
+                oe.str_add(
+                    {"Added data id of tag: ", 
+                    tag, " and id: ", oe.str_add("", id)}
+                )
+            );
+
+            if (editor_data.csg_textures[tile_size] == {}) {
+                tiling := i32(linalg.max(tile_size));
+                img := rl.GenImageChecked(
+                    2 * tiling, 2 * tiling, 
+                    1, 1, 
+                    oe.BLACK, oe.PINK
+                );
+
+                editor_data.csg_textures[tile_size] = oe.load_texture(
+                    rl.LoadTextureFromImage(img)
+                );
+
+                rl.UnloadImage(img);
+            }
+        }
     }
 }
 
@@ -503,12 +716,14 @@ ct_update_perspective :: proc(using self: ^CameraTool) {
         mouse_locked = !mouse_locked;
     }
 
-    if (!oe.gui_mouse_over() && !oe.gui_text_active()) {
-        if (oe.key_down(.LEFT_SHIFT)) {
-            if (oe.key_pressed(.T)) {
-                tile_edit = !tile_edit;
-            }
+    if (oe.key_down(.LEFT_SHIFT)) {
+        if (oe.key_pressed(.T)) {
+            tile_edit = !tile_edit;
+        }
+    }
 
+    if (!oe.gui_mouse_over() && !oe.gui_text_active() && tile_edit) {
+        if (oe.key_down(.LEFT_SHIFT)) {
             if (oe.key_pressed(.ENTER)) {
                 tile_layer = 0;
             }

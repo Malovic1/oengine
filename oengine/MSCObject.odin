@@ -295,74 +295,33 @@ msc_append_tri :: proc(
 }
 
 msc_append_quad :: proc(
-    using self: ^MSCObject, 
-    a, b, c, d: Vec3, 
-    offs: Vec3 = {}, color: Color = WHITE, 
-    texture_tag: string = "", is_lit: bool = true, 
+    using self: ^MSCObject,
+    a, b, c, d: Vec3,
+    offs: Vec3 = {}, color: Color = WHITE,
+    texture_tag: string = "", is_lit: bool = true,
     use_fog: bool = OE_FAE, rot: i32 = 0,
     flipped: bool = false, division_level: i32 = 0) {
-    t := new(TriangleCollider);
-    t.pts = {b + offs, a + offs, c + offs};
-    t.normal = surface_normal(t.pts);
-    t.color = color;
-    t.texture_tag = texture_tag;
-    t.rot = rot;
-    t.is_lit = is_lit;
-    t.use_fog = use_fog;
-    t.flipped = flipped;
-    t.division_level = division_level;
 
-    if (flipped) {
-        t.normal = -t.normal;
+    pa := a + offs;
+    pb := b + offs;
+    pc := c + offs;
+    pd := d + offs;
+
+    n1a := surface_normal({pa, pb, pc});
+    n1b := surface_normal({pa, pc, pd});
+    score1 := linalg.dot(n1a, n1b);
+
+    n2a := surface_normal({pa, pb, pd});
+    n2b := surface_normal({pb, pc, pd});
+    score2 := linalg.dot(n2a, n2b);
+
+    if score1 >= score2 {
+        msc_append_tri(self, pa, pb, pc, {}, color, texture_tag, is_lit, use_fog, rot, n1a, flipped, division_level);
+        msc_append_tri(self, pa, pc, pd, {}, color, texture_tag, is_lit, use_fog, rot, n1b, flipped, division_level);
+    } else {
+        msc_append_tri(self, pa, pb, pd, {}, color, texture_tag, is_lit, use_fog, rot, n2a, flipped, division_level);
+        msc_append_tri(self, pb, pc, pd, {}, color, texture_tag, is_lit, use_fog, rot, n2b, flipped, division_level);
     }
-
-    add := true;
-    for i in 0..<len(tris) {
-        _t := tris[i];
-        if (_t.pts == t.pts) {
-            add = false;
-            break;
-        }
-    }
-
-    if (add) { 
-        append(&tris, t);
-        subdivide_triangle_coll(t^, t.division_level, &mesh_tris);
-    }
-
-    t2 := new(TriangleCollider);
-    t2.pts = {b + offs, c + offs, d + offs};
-    t2.normal = surface_normal(t2.pts);
-    t2.color = color;
-    t2.texture_tag = texture_tag;
-    t2.rot = rot;
-    t2.is_lit = is_lit;
-    t2.use_fog = use_fog;
-    t2.flipped = flipped;
-    t2.division_level = division_level;
-
-    if (flipped) {
-        t2.normal = -t2.normal;
-    }
-
-    add2 := true;
-    for i in 0..<len(tris) {
-        _t := tris[i];
-        if (_t.pts == t2.pts) {
-            add2 = false;
-            break;
-        }
-    }
-
-    if (add2) { 
-        append(&tris, t2);
-        subdivide_triangle_coll(t2^, t2.division_level, &mesh_tris);
-    }
-
-    tri_count += 2;
-    mesh_tri_count += 2 * (i32(math.pow(4.0, f32(t.division_level))));
-
-    _aabb = tris_to_aabb(tris);
 }
 
 reload_mesh_tris :: proc(using self: ^MSCObject) {

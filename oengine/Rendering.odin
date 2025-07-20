@@ -571,7 +571,13 @@ draw_text_3d :: proc(font: rl.Font, text: string, position: Vec3, size: f32, col
     rl.rlPopMatrix();
 }
 
-draw_grid3D :: proc(slices, spacing: i32, color: Color) {
+GridAxis :: enum {
+    XY,
+    XZ,
+    ZY
+}
+
+draw_grid3D :: proc(slices, spacing: i32, color: Color, axis: GridAxis = .XZ) {
     halfSlices := slices / 2;
 
     rl.rlBegin(rl.RL_LINES);
@@ -582,11 +588,27 @@ draw_grid3D :: proc(slices, spacing: i32, color: Color) {
                 rl.rlColor4ub(color.r - 50, color.g - 50, color.b - 50, color.a);
             }
 
-            rl.rlVertex3f(f32(i*spacing), 0.0, f32(-halfSlices*spacing));
-            rl.rlVertex3f(f32(i*spacing), 0.0, f32(halfSlices*spacing));
+            // Determine grid axis
+            switch axis {
+                case .XZ:
+                    rl.rlVertex3f(f32(i*spacing), 0.0, f32(-halfSlices*spacing));
+                    rl.rlVertex3f(f32(i*spacing), 0.0, f32(halfSlices*spacing));
 
-            rl.rlVertex3f(f32(-halfSlices*spacing), 0.0, f32(i*spacing));
-            rl.rlVertex3f(f32(halfSlices*spacing), 0.0, f32(i*spacing));
+                    rl.rlVertex3f(f32(-halfSlices*spacing), 0.0, f32(i*spacing));
+                    rl.rlVertex3f(f32(halfSlices*spacing), 0.0, f32(i*spacing));
+                case .XY:
+                    rl.rlVertex3f(f32(i*spacing), f32(-halfSlices*spacing), 0.0);
+                    rl.rlVertex3f(f32(i*spacing), f32(halfSlices*spacing), 0.0);
+
+                    rl.rlVertex3f(f32(-halfSlices*spacing), f32(i*spacing), 0.0);
+                    rl.rlVertex3f(f32(halfSlices*spacing), f32(i*spacing), 0.0);
+                case .ZY:
+                    rl.rlVertex3f(0.0, f32(i*spacing), f32(-halfSlices*spacing));
+                    rl.rlVertex3f(0.0, f32(i*spacing), f32(halfSlices*spacing));
+
+                    rl.rlVertex3f(0.0, f32(-halfSlices*spacing), f32(i*spacing));
+                    rl.rlVertex3f(0.0, f32(halfSlices*spacing), f32(i*spacing));
+            }
         }
     rl.rlEnd();
 }

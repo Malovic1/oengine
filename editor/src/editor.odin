@@ -48,6 +48,7 @@ main :: proc() {
         texture_tool(camera_tool);
         data_id_mod_tool(camera_tool);
         did_component_tool(camera_tool);
+        edit_mode_tool(&camera_tool);
 
         oe.gui_text(
             oe.str_add("mode: ", camera_tool.mode), 
