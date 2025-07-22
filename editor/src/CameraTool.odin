@@ -7,6 +7,7 @@ import "../../oengine/fa"
 import "core:math"
 import "core:math/linalg"
 import "core:strconv"
+import "core:path/filepath"
 
 GRID_SPACING :: 25
 GRID_COLOR :: oe.Color {255, 255, 255, 125}
@@ -31,10 +32,11 @@ ShapeMode :: enum {
     TRIANGLE,
     QUAD,
     CIRCLE,
+    MODEL,
     MAX,
 }
 
-shape_mode_size := [ShapeMode.MAX]i32{3, 4, 2};
+shape_mode_size := [ShapeMode.MAX]i32{3, 4, 2, 1};
 
 CameraTool :: struct {
     camera_perspective: oe.Camera,
@@ -171,6 +173,16 @@ ct_msc_edit :: proc(using self: ^CameraTool) {
                 oe.msc_append_quad(msc, points[0], points[1], points[2], points[3]);
             case .CIRCLE:
                 oe.msc_append_circle(msc, points_to_add[0], points_to_add[1]);
+            case .MODEL:
+                path := oe.nfd_file();
+                model := oe.load_model(path);
+
+                if (filepath.ext(model.path) == ".obj") {
+                    oe.msc_append_model(msc, model, points_to_add[0]);
+                } else {
+                    oe.dbg_log("Unable to load model", .WARNING);
+                    oe.dbg_log("Make sure it is in .obj format", .WARNING);
+                }
         }
 
         clear(&points_to_add);

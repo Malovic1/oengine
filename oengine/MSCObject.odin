@@ -370,6 +370,51 @@ msc_append_circle :: proc(
     _aabb = tris_to_aabb(tris);
 }
 
+msc_append_model :: proc(
+    using self: ^MSCObject,
+    model: Model,
+    offs: Vec3 = {},
+    color: Color = WHITE,
+    texture_tag: string = "",
+    is_lit: bool = true,
+    use_fog: bool = OE_FAE,
+    rot: i32 = 0,
+    flipped: bool = false,
+    division_level: i32 = 0
+) {
+    scale: f32 = 1;
+    for i in 0..<model.meshCount {
+        mesh := model.meshes[i];
+
+        materialIndex := model.meshMaterial[i];
+        material := model.materials[materialIndex];
+        tag := str_add("mtl", materialIndex);
+        texture := material.maps[rl.MaterialMapIndex.ALBEDO].texture;
+        reg_asset(tag, load_texture(texture));
+
+        vertices := mesh.vertices;
+        for j := 0; j < int(mesh.vertexCount); j += 3 {
+            v0 := scale * Vec3 { vertices[j * 3], vertices[j * 3 + 1], vertices[j * 3 + 2] };
+            v1 := scale * Vec3 { vertices[(j + 1) * 3], vertices[(j + 1) * 3 + 1], vertices[(j + 1) * 3 + 2] };
+            v2 := scale * Vec3 { vertices[(j + 2) * 3], vertices[(j + 2) * 3 + 1], vertices[(j + 2) * 3 + 2] };
+
+            normal := Vec3 { 
+                mesh.normals[j * 3], 
+                mesh.normals[j * 3 + 1], 
+                mesh.normals[j * 3 + 2]
+            };
+
+            msc_append_tri(
+                self, v0, v1, v2, 
+                offs, 
+                texture_tag = tag, normal = normal,
+                is_lit = is_lit, use_fog = use_fog,
+                rot = rot, flipped = flipped, division_level = division_level
+            );
+        } 
+    }
+}
+
 reload_mesh_tris :: proc(using self: ^MSCObject) {
     if (OE_DEBUG) {
         dbg_log("Reloading mesh", .INFO);
