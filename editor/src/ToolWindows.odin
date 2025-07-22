@@ -399,7 +399,6 @@ data_id_mod_tool :: proc(ct: CameraTool) {
 
         editor_data.active_data_id = reg_tag;
 
-        fmt.println(flags);
         oe.reg_asset(reg_tag, 
             oe.DataID {
                 reg_tag, 

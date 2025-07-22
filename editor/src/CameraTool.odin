@@ -33,10 +33,11 @@ ShapeMode :: enum {
     QUAD,
     CIRCLE,
     MODEL,
+    DATA_ID,
     MAX,
 }
 
-shape_mode_size := [ShapeMode.MAX]i32{3, 4, 2, 1};
+shape_mode_size := [ShapeMode.MAX]i32{3, 4, 2, 1, 1};
 
 CameraTool :: struct {
     camera_perspective: oe.Camera,
@@ -183,6 +184,29 @@ ct_msc_edit :: proc(using self: ^CameraTool) {
                     oe.dbg_log("Unable to load model", .WARNING);
                     oe.dbg_log("Make sure it is in .obj format", .WARNING);
                 }
+
+                oe.deinit_model(model);
+            case .DATA_ID:
+                id: u32 = 0;
+                tag := "default";
+
+                reg_tag := oe.str_add("data_id_", tag);
+                if (oe.asset_manager.registry[reg_tag] != nil) {
+                    reg_tag = oe.str_add(reg_tag, oe.rand_digits(4));
+                }
+
+                oe.reg_asset(
+                    reg_tag, 
+                    oe.DataID {
+                        reg_tag, 
+                        tag, 
+                        id, 
+                        oe.Transform{points_to_add[0], {}, oe.vec3_one()},
+                        fa.fixed_array(i32, 16),
+                        fa.fixed_array(oe.ComponentMarshall, 16),
+                    }
+                );
+                oe.dbg_log(oe.str_add({"Added data id of tag: ", tag, " and id: ", oe.str_add("", id)}));
         }
 
         clear(&points_to_add);
