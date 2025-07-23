@@ -34,17 +34,22 @@ registry_tool :: proc(ct: CameraTool) {
     if (oe.gui_button("Load registry", grid.x, grid.y, grid.width, grid.height)) {
         path := oe.nfd_file();
         oe.load_registry(path);
-        globals.registry_atlas = oe.am_texture_atlas();
         rl.ChangeDirectory(oe.to_cstr(root));
     }
 
     grid = oe.gui_grid(3, 0, 40, wr.width * 0.75, 10);
+    if (oe.gui_button("Generate atlas", grid.x, grid.y, grid.width, grid.height)) {
+        path := oe.nfd_folder();
+        globals.registry_atlas = oe.am_texture_atlas();
+    }
+
+    grid = oe.gui_grid(4, 0, 40, wr.width * 0.75, 10);
     if (oe.gui_button("Load atlas", grid.x, grid.y, grid.width, grid.height)) {
         path := oe.nfd_folder();
         globals.registry_atlas = oe.load_atlas(path);
     }
 
-    grid = oe.gui_grid(4, 0, 40, wr.width * 0.75, 10);
+    grid = oe.gui_grid(5, 0, 40, wr.width * 0.75, 10);
     if (oe.gui_button("Load config", grid.x, grid.y, grid.width, grid.height)) {
         path := oe.nfd_file();
         if (filepath.ext(path) == ".oecfg") {
@@ -115,7 +120,7 @@ msc_tool :: proc(ct: CameraTool) {
 
     grid = oe.gui_grid(4, 0, 40, wr.width * 0.75, 10);
     if (oe.gui_button("Clear", grid.x, grid.y, grid.width, grid.height)) {
-        fa.clear(&oe.ecs_world.physics.mscs);
+        oe.ew_clear();
     }
 
     oe.gui_end();
@@ -240,7 +245,7 @@ texture_tool :: proc(ct: CameraTool) {
     if (ct._active_msc_id == ACTIVE_EMPTY || ct._active_id == ACTIVE_EMPTY) do return;
 
     oe.gui_begin("Texture tool", 
-        x = 0, y = WINDOW_HEIGHT * 3 + 10 + oe.gui_top_bar_height * 3, 
+        x = 0, y = WINDOW_HEIGHT * 3 + oe.gui_top_bar_height * 3, 
         h = WINDOW_HEIGHT, active = false);
 
     texs := oe.get_reg_textures_tags();
@@ -250,7 +255,7 @@ texture_tool :: proc(ct: CameraTool) {
         rot += 1;
         if (rot > 3) do rot = 0;
 
-        active := oe.ecs_world.physics.mscs.data[ct._active_msc_id].tris[ct._active_id];
+        active := &oe.ecs_world.physics.mscs.data[ct._active_msc_id].tris[ct._active_id];
         oe.tri_recalc_uvs(active, rot);
     }
 
@@ -297,7 +302,7 @@ texture_tool :: proc(ct: CameraTool) {
                     tag, x, y, w, h, 
                     texture = oe.get_asset_var(tag, oe.Texture)
                     )) {
-                    active := oe.ecs_world.physics.mscs.data[ct._active_msc_id].tris[ct._active_id];
+                    active := &oe.ecs_world.physics.mscs.data[ct._active_msc_id].tris[ct._active_id];
                     active.texture_tag = tag;
                 }
             }

@@ -121,7 +121,7 @@ point_in_aabb :: proc(point: Vec3, box: AABB) -> bool {
             point.z >= boxMinZ && point.z <= boxMaxZ);
 }
 
-tris_to_aabb :: proc(tris: [dynamic]^TriangleCollider) -> AABB {
+tris_to_aabb :: proc(tris: [dynamic]TriangleCollider) -> AABB {
     min := vec3_one() * math.F32_MAX;
     max := vec3_one() * -math.F32_MAX;
 

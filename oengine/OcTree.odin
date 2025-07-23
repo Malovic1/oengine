@@ -10,11 +10,11 @@ MAX_DEPTH :: 6
 OctreeNode :: struct {
     aabb: AABB,
     children:  [8]^OctreeNode,
-    triangles: [dynamic]^TriangleCollider,
+    triangles: [dynamic]TriangleCollider,
     is_leaf: bool,
 }
 
-build_octree :: proc(tris: [dynamic]^TriangleCollider, aabb: AABB, depth: i32) -> ^OctreeNode {
+build_octree :: proc(tris: [dynamic]TriangleCollider, aabb: AABB, depth: i32) -> ^OctreeNode {
     node := new(OctreeNode);
     node.aabb = aabb;
 
@@ -25,7 +25,7 @@ build_octree :: proc(tris: [dynamic]^TriangleCollider, aabb: AABB, depth: i32) -
     }
 
     child_boxes := split_aabb_8(aabb);
-    children_tris := make([][dynamic]^TriangleCollider, 8);
+    children_tris := make([][dynamic]TriangleCollider, 8);
 
     for tri in tris {
         tri_aabb := compute_aabb(tri.pts[0], tri.pts[1], tri.pts[2]);

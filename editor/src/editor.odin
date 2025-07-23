@@ -52,14 +52,18 @@ main :: proc() {
 
         oe.gui_text(
             oe.str_add("mode: ", camera_tool.mode), 
-            20, 10, f32(oe.w_render_height()) - 90, true
+            20, 10, f32(oe.w_render_height()) - 120, true
         );
         oe.gui_text(
             oe.str_add("tile edit: ", camera_tool.tile_edit), 
-            20, 10, f32(oe.w_render_height()) - 60, true
+            20, 10, f32(oe.w_render_height()) - 90, true
         );
         oe.gui_text(
             oe.str_add("tile layer: ", camera_tool.tile_layer), 
+            20, 10, f32(oe.w_render_height()) - 60, true
+        );
+        oe.gui_text(
+            oe.str_add("render mode: ", camera_tool.render_mode), 
             20, 10, f32(oe.w_render_height()) - 30, true
         );
 
@@ -224,6 +228,12 @@ update :: proc(camera_tool: CameraTool) {
 }
 
 render :: proc(camera_tool: CameraTool) {
+    for i in 0..<oe.world().physics.mscs.len {
+        msc := oe.world().physics.mscs.data[i];
+        msc.render = false;
+        oe.msc_old_render(msc, camera_tool.render_mode);
+    }
+
     if (editor_data.hovered_data_id != oe.STR_EMPTY) { 
         did := oe.get_asset_var(editor_data.hovered_data_id, oe.DataID);
         t := did.transform;

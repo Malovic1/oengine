@@ -125,7 +125,7 @@ rc_is_colliding :: proc(using self: Raycast, transform: Transform, shape: ShapeT
 }
 
 MSCCollisionInfo :: struct {
-    t: ^TriangleCollider,
+    t: TriangleCollider,
     point: Vec3,
     normal: Vec3,
     id: int,

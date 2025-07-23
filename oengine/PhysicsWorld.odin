@@ -338,7 +338,7 @@ resolve_collision :: proc(rb: ^RigidBody, normal: Vec3, depth: f32) {
 }
 
 @(private)
-resolve_tri_collision :: proc(rb: ^RigidBody, t: ^TriangleCollider) {
+resolve_tri_collision :: proc(rb: ^RigidBody, t: TriangleCollider) {
     // Get the dimensions of the cube
     cube_dimensions := rb.transform.scale; // Assuming `scale` is used to store dimensions here
 

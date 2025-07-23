@@ -146,7 +146,7 @@ main :: proc() {
         text_color = oe.WHITE,
         text_pos = {.LEFT, .BOTTOM},
     );
-    oe.load_msc(msc, "../assets/maps/test.od", load_dids = true);
+    oe.load_msc(msc, "../assets/maps/test_no_ptr.od", load_dids = true);
     msc.atlas = oe.load_atlas("../assets/atlas");
     // msc.atlas = oe.am_texture_atlas();
     // oe.pack_atlas(msc.atlas, "../assets/atlas");

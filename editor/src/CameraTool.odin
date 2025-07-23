@@ -52,6 +52,7 @@ CameraTool :: struct {
     tile_edit: bool,
     tile_layer: f32,
     tile_size: oe.Vec3,
+    render_mode: oe.MscRenderMode,
 
     _mouse_pos: oe.Vec2,
     _prev_mouse_pos: oe.Vec2,
@@ -88,6 +89,14 @@ ct_update :: proc(using self: ^CameraTool) {
     if (key >= 49 && key <= 52 && !oe.gui_mouse_over() && !oe.gui_text_active()) {
         if (!oe.key_down(.LEFT_SHIFT)) {
             mode = CameraMode(key - 49);
+        }
+    }
+
+    if (oe.key_pressed(.M)) {
+        render_mode += oe.MscRenderMode(1);
+
+        if (i32(render_mode) > i32(oe.MscRenderMode.BOTH)) {
+            render_mode = .COLLISION;
         }
     }
 
@@ -436,7 +445,7 @@ ct_render_ortho :: proc(using self: ^CameraTool) {
     for msc_id in 0..<oe.ecs_world.physics.mscs.len {
         msc := oe.ecs_world.physics.mscs.data[msc_id];
         for i in 0..<len(msc.tris) {
-            tri_render_ortho(self, msc.tris[i], i, msc_id);
+            tri_render_ortho(self, &msc.tris[i], i, msc_id);
         }
     }
 
@@ -628,7 +637,7 @@ render_tri :: proc(using self: ^CameraTool) {
             oe.gui_toggle_window("Texture tool");
         }
         msc := oe.ecs_world.physics.mscs.data[_active_msc_id];
-        t := msc.tris[_active_id];
+        t := &msc.tris[_active_id];
 
         clr := GRID_COLOR;
         if (t.color.r >= GRID_COLOR.r &&

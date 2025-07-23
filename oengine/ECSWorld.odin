@@ -149,25 +149,17 @@ ew_clear :: proc() {
         free(ent);
     }
 
-    // for i in 0..<physics.mscs.len {
-    //     msc := physics.mscs.data[i];
-    //
-    //     if (msc.tris != nil) {
-    //         for j in 0..<len(msc.tris) {
-    //             tri := msc.tris[j];
-    //             free(tri);
-    //         }
-    //         delete(msc.tris);
-    //     }
-    //
-    //     if (msc.tree != nil) {
-    //         free_octree(msc.tree);
-    //     }
-    //
-    //     // msc.mesh = {};
-    //     // free(msc);
-    // }
+    for i in 0..<physics.mscs.len {
+        msc := physics.mscs.data[i];
 
+        if (msc.tris != nil) {
+            delete(msc.tris);
+        }
+
+        if (msc.tree != nil) {
+            free_octree(msc.tree);
+        }
+    }
 
     fa.clear(&ecs_ctx.entities);
     fa.clear(&physics.bodies);

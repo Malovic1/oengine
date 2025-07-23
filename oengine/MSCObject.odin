@@ -214,7 +214,7 @@ pack_atlas :: proc(atlas: Atlas, path: string) {
 }
 
 MSCObject :: struct {
-    tris: [dynamic]^TriangleCollider,
+    tris: [dynamic]TriangleCollider,
     mesh_tris: [dynamic]TriangleCollider,
     _aabb: AABB,
     tree: ^OctreeNode,
@@ -227,7 +227,7 @@ MSCObject :: struct {
 msc_init :: proc() -> ^MSCObject {
     using self := new(MSCObject);
 
-    tris = make([dynamic]^TriangleCollider);
+    tris = make([dynamic]TriangleCollider);
     mesh_tris = make([dynamic]TriangleCollider);
     render = true;
 
@@ -260,7 +260,7 @@ msc_append_tri :: proc(
         is_lit: bool = true, 
         use_fog: bool = OE_FAE, rot: i32 = 0, normal: Vec3 = {},
         flipped := false, division_level: i32 = 0) {
-    t := new(TriangleCollider);
+    t: TriangleCollider;
     t.pts = {a + offs, b + offs, c + offs};
     t.normal = normal;
     t.color = color;
@@ -286,7 +286,7 @@ msc_append_tri :: proc(
 
     if (add) { 
         append(&tris, t);
-        subdivide_triangle_coll(t^, t.division_level, &mesh_tris);
+        subdivide_triangle_coll(t, t.division_level, &mesh_tris);
     }
     tri_count += 1;
     mesh_tri_count += i32(math.pow(4.0, f32(t.division_level)));
@@ -423,7 +423,7 @@ reload_mesh_tris :: proc(using self: ^MSCObject) {
     clear(&mesh_tris);
 
     for tri in tris {
-        subdivide_triangle_coll(tri^, tri.division_level, &mesh_tris);
+        subdivide_triangle_coll(tri, tri.division_level, &mesh_tris);
         mesh_tri_count += i32(math.pow(4.0, f32(tri.division_level)));
     }
 }
@@ -1408,7 +1408,13 @@ msc_load_tri_json :: proc(using self: ^MSCObject, obj: json.Value) {
     }
 }
 
-msc_render :: proc(using self: ^MSCObject) {
+MscRenderMode :: enum {
+    COLLISION,
+    MESH,
+    BOTH,
+}
+
+msc_render :: proc(using self: ^MSCObject, mode: MscRenderMode = .MESH) {
     if (!render) { return; }
 
     m := DEFAULT_MATERIAL;
@@ -1416,7 +1422,7 @@ msc_render :: proc(using self: ^MSCObject) {
     m.shader = ecs_world.ray_ctx.shader;
 
     if (window.instance_name == EDITOR_INSTANCE) {
-        msc_old_render(self);
+        msc_old_render(self, mode);
     } else {
         rl.DrawMesh(mesh, m, rl.Matrix(1));
     }
@@ -1446,49 +1452,61 @@ msc_render :: proc(using self: ^MSCObject) {
     }
 }
 
-msc_old_render :: proc(using self: ^MSCObject) {
-    for tri in mesh_tris {
-        t := tri.pts;
+msc_old_render :: proc(using self: ^MSCObject, mode: MscRenderMode = .MESH) {
+    render_tri :: proc(atlas: Atlas, tris: [dynamic]TriangleCollider) {
+        for tri in tris {
+            t := tri.pts;
 
-        v1 := t[0];
-        v2 := t[1];
-        v3 := t[2];
-        color := tri.color;
+            v1 := t[0];
+            v2 := t[1];
+            v3 := t[2];
+            color := tri.color;
 
-        // uv1, uv2, uv3 := triangle_uvs(v1, v2, v3, tri.rot);
+            // uv1, uv2, uv3 := triangle_uvs(v1, v2, v3, tri.rot);
 
-        at: AtlasTexture;
-        for st in atlas.subtextures {
-            if (st.tag == tri.texture_tag) {
-                at = st;
+            at: AtlasTexture;
+            for st in atlas.subtextures {
+                if (st.tag == tri.texture_tag) {
+                    at = st;
+                }
             }
+
+            verts := tri.pts;
+            uv1, uv2, uv3 := atlas_triangle_uvs(
+                verts[0], verts[1], verts[2],
+                at.uvs,
+                0
+            );
+            
+            // fmt.println(uv1, uv2, uv3, tri.texture_tag, at);
+
+            rl.rlColor4ub(color.r, color.g, color.b, color.a);
+            rl.rlBegin(rl.RL_TRIANGLES);
+
+            // if (asset_exists(tri.texture_tag)) {
+            //     tex := get_asset_var(tri.texture_tag, Texture);
+            //     rl.rlSetTexture(tex.id);
+            // }
+            rl.rlSetTexture(atlas.texture.id);
+
+            rl.rlTexCoord2f(uv1.x, uv1.y); rl.rlVertex3f(v1.x, v1.y, v1.z);
+            rl.rlTexCoord2f(uv2.x, uv2.y); rl.rlVertex3f(v2.x, v2.y, v2.z);
+            rl.rlTexCoord2f(uv3.x, uv3.y); rl.rlVertex3f(v3.x, v3.y, v3.z);
+
+            rl.rlEnd();
+
+            rl.rlSetTexture(0);
         }
+    }
 
-        verts := tri.pts;
-        uv1, uv2, uv3 := atlas_triangle_uvs(
-            verts[0], verts[1], verts[2],
-            at.uvs,
-            0
-        );
-        
-        // fmt.println(uv1, uv2, uv3, tri.texture_tag, at);
-
-        rl.rlColor4ub(color.r, color.g, color.b, color.a);
-        rl.rlBegin(rl.RL_TRIANGLES);
-
-        // if (asset_exists(tri.texture_tag)) {
-        //     tex := get_asset_var(tri.texture_tag, Texture);
-        //     rl.rlSetTexture(tex.id);
-        // }
-        rl.rlSetTexture(atlas.texture.id);
-
-        rl.rlTexCoord2f(uv1.x, uv1.y); rl.rlVertex3f(v1.x, v1.y, v1.z);
-        rl.rlTexCoord2f(uv2.x, uv2.y); rl.rlVertex3f(v2.x, v2.y, v2.z);
-        rl.rlTexCoord2f(uv3.x, uv3.y); rl.rlVertex3f(v3.x, v3.y, v3.z);
-
-        rl.rlEnd();
-
-        rl.rlSetTexture(0);
+    switch mode {
+        case .COLLISION:
+            render_tri(atlas, tris);
+        case .MESH:
+            render_tri(atlas, mesh_tris);
+        case .BOTH:
+            render_tri(atlas, tris);
+            render_tri(atlas, mesh_tris);
     }
 }
 

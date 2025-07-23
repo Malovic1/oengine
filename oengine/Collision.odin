@@ -181,7 +181,7 @@ collision_slope :: proc(slope: Slope, slope_trans, transform: Transform) -> (boo
     return object_height - transform.scale.y * 0.5 <= height, height;
 }
 
-ray_tri_collision :: proc(ray: Raycast, t: ^TriangleCollider) -> (bool, Vec3){
+ray_tri_collision :: proc(ray: Raycast, t: TriangleCollider) -> (bool, Vec3){
     edge1 := t.pts[1] - t.pts[0];
     edge2 := t.pts[2] - t.pts[0];
 
@@ -219,7 +219,7 @@ ray_tri_collision :: proc(ray: Raycast, t: ^TriangleCollider) -> (bool, Vec3){
     return false, {};
 }
 
-ray_tri_resolve :: proc(ray: ^Raycast, t: ^TriangleCollider) {
+ray_tri_resolve :: proc(ray: ^Raycast, t: TriangleCollider) {
     intersect, point := ray_tri_collision(ray^, t);
 
     if (intersect) {
