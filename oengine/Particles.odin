@@ -35,7 +35,8 @@ Particles :: struct {
     _removed_particles: [dynamic]int,
     position: Vec3,
     timer: Timer,
-    behaviours: [dynamic]ParticleBehaviour
+    behaviours: [dynamic]ParticleBehaviour,
+    disable_depth_mask: bool,
 }
 
 checkered_image: Texture; 
@@ -119,9 +120,11 @@ ps_render :: proc(ctx: ^ecs.Context, ent: ^ecs.Entity) {
     if (is_nil(ps)) do return;
     using ps;
 
+    if (disable_depth_mask) { rl.rlDisableDepthMask(); }
     for p in particles {
         p->render();
     }
+    if (disable_depth_mask) { rl.rlEnableDepthMask(); }
 }
 
 ps_parse :: proc(asset: od.Object) -> rawptr {

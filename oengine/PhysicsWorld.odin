@@ -206,11 +206,23 @@ ignored :: proc(rb, rb2: ^RigidBody) -> bool {
 }
 
 @(private = "file") 
-resolve_heightmap_collision :: proc(rb, rb2: ^RigidBody) {
+resolve_heightmap_collision :: proc(terrain, rb: ^RigidBody) {
+    if (rb.is_static) { return; }
+
     terrain_height := rb_get_height_terrain_at(
-        rb, rb2.transform.position.x, rb2.transform.position.z);
-    if (rb2.transform.position.y - rb2.transform.scale.y * 0.5 < terrain_height) {
-        rb2.transform.position.y = terrain_height + rb2.transform.scale.y * 0.5;
+        terrain, rb.transform.position.x, rb.transform.position.z);
+
+    bottom_y := rb.transform.position.y - rb.transform.scale.y * 0.5;
+    penetration := terrain_height - bottom_y;
+
+    if penetration > 0 {
+        rb.transform.position.y += penetration;
+
+        if rb.velocity.y < 0 {
+            rb.velocity.y = 0;
+        }
+
+        rb.grounded = true;
     }
 }
 

@@ -293,6 +293,11 @@ render :: proc(camera_tool: CameraTool) {
                     );
                 } else {
                     sm := oe.get_component_data(comp.tag, oe.SimpleMesh);
+
+                    if (sm.shape == .HEIGHTMAP) {
+                        sm.offset.position = -did.transform.scale * 0.5;
+                    }
+
                     oe.sm_custom_render(&did.transform, sm);
                 }
             }
