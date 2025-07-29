@@ -39,7 +39,6 @@ registry_tool :: proc(ct: CameraTool) {
 
     grid = oe.gui_grid(3, 0, 40, wr.width * 0.75, 10);
     if (oe.gui_button("Generate atlas", grid.x, grid.y, grid.width, grid.height)) {
-        path := oe.nfd_folder();
         globals.registry_atlas = oe.am_texture_atlas();
     }
 
@@ -267,14 +266,6 @@ texture_tool :: proc(ct: CameraTool) {
 
         active.division_level = i32(tiling);
         oe.reload_mesh_tris(oe.ecs_world.physics.mscs.data[ct._active_msc_id]);
-
-        // tag := oe.str_add(active.texture_tag, oe.str_add("_tiling_", tiling));
-        // oe.reg_asset(
-        //     tag,
-        //     oe.tile_texture(oe.get_asset_var(active.texture_tag, oe.Texture), i32(tiling))
-        // );
-        //
-        // active.texture_tag = tag;
         oe.gui.text_boxes["TilingTextBox"].text = "";
     }
 
@@ -304,6 +295,44 @@ texture_tool :: proc(ct: CameraTool) {
                     )) {
                     active := &oe.ecs_world.physics.mscs.data[ct._active_msc_id].tris[ct._active_id];
                     active.texture_tag = tag;
+                }
+            }
+        }
+    }
+
+    oe.gui_end();
+}
+
+texture_select_tool :: proc(ct: ^CameraTool) {
+    oe.gui_begin("Texture select tool", 
+        x = WINDOW_WIDTH, y = WINDOW_HEIGHT + oe.gui_top_bar_height + 60, 
+        h = WINDOW_HEIGHT, active = false);
+
+    texs := oe.get_reg_textures_tags();
+    
+    if (oe.gui_button("X", oe.gui_window("Texture select tool").width - 40, 10, 30, 30)) {
+        ct._active_texture = "";
+    }
+
+    COLS :: 6
+    rows := i32(math.ceil(f32(texs.len) / f32(COLS)));
+    w: f32 = 30;
+    h: f32 = 30;
+
+    for row: i32; row < rows; row += 1 {
+        for col: i32; col < COLS; col += 1 {
+            curr_id := row * COLS + col;
+
+            if (curr_id < i32(texs.len)) {
+                x := 10 + f32(col) * (w + 5);
+                y := 10 + f32(row) * (h + 5);
+                tag := texs.data[curr_id];
+
+                if (oe.gui_button(
+                    tag, x, y, w, h, 
+                    texture = oe.get_asset_var(tag, oe.Texture)
+                    )) {
+                    ct._active_texture = tag;
                 }
             }
         }
@@ -581,7 +610,7 @@ did_component_tool :: proc(ct: CameraTool) {
 edit_mode_tool :: proc(ct: ^CameraTool) {
     @static edit_xy, edit_xz, edit_zy: bool;
 
-    oe.gui_begin("Edit mode", x = WINDOW_WIDTH, y = 0, h = WINDOW_HEIGHT, can_exit = false);
+    oe.gui_begin("Edit mode", x = WINDOW_WIDTH, y = 0, h = WINDOW_HEIGHT + 60, can_exit = false);
 
     if (oe.key_down(.LEFT_SHIFT)) {
         if (oe.key_pressed(.ONE)) {
@@ -636,6 +665,29 @@ edit_mode_tool :: proc(ct: ^CameraTool) {
             ct.shape_mode += ShapeMode(1);
         }
     }
+
+    grid = oe.gui_grid(7, 0);
+    if (oe.gui_button("Select texture", grid.x, grid.y, grid.width, grid.height)) {
+        oe.gui_toggle_window("Texture select tool");
+    }
+
+    wr := oe.gui_rect(oe.gui_window("Edit mode"));
+    SCALE_FACTOR :: 0.25
+    grid = oe.gui_grid(8, 0, 30, wr.width * SCALE_FACTOR, 10);
+    oe.gui_text("Terrain size", 25, grid.x, grid.y);
+    grid = oe.gui_grid(9, 0, 30, wr.width * SCALE_FACTOR, 10);
+    sx_parse := oe.gui_text_box("EditScaleX", grid.x, grid.y, grid.width, grid.height);
+    grid = oe.gui_grid(9, 1, 30, wr.width * SCALE_FACTOR, 10);
+    sy_parse := oe.gui_text_box("EditScaleY", grid.x, grid.y, grid.width, grid.height);
+    grid = oe.gui_grid(9, 2, 30, wr.width * SCALE_FACTOR, 10);
+    sz_parse := oe.gui_text_box("EditScaleZ", grid.x, grid.y, grid.width, grid.height);
+
+    _sx, sx_ok := sc.parse_f32(sx_parse);
+    if (sx_ok) { ct._terrain_size.x = _sx; }
+    _sy, sy_ok := sc.parse_f32(sy_parse);
+    if (sy_ok) { ct._terrain_size.y = _sy; }
+    _sz, sz_ok := sc.parse_f32(sz_parse);
+    if (sz_ok) { ct._terrain_size.z = _sz; }
 
     oe.gui_end();
 }

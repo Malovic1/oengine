@@ -158,6 +158,9 @@ main :: proc() {
     );
 
     oe.update_msc(msc, msc2);
+
+    oe.msc_append_terrain(msc, heightmap_tex, {16, 8, 16}, {33, 0, 0}, texture_tag = "albedo");
+
     oe.msc_gen_mesh(msc);
     oe.remove_msc(msc2);
 
@@ -207,6 +210,9 @@ main :: proc() {
     terrain_rb := oe.add_component(terrain, oe.rb_init(terrain_tr^, 1.0, 0.5, oe.load_heights(img)));
     oe.sm_loader(terrain, "height_sm");
     rl.UnloadImage(img.data);
+    
+    atlas := oe.am_texture_atlas();
+    oe.pack_atlas(atlas, "../assets/test_atlas");
 
     // reset_track_allocator(&track_allocator);
     for (oe.w_tick()) {

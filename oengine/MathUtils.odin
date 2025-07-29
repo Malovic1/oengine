@@ -245,13 +245,14 @@ triangle_uvs :: proc(v1, v2, v3: Vec3, #any_int rotation_steps: i32 = 0) -> (Vec
         (cp3.y - min_y) / delta_y
     };
 
-    rotate_uv := proc(uv: Vec2, #any_int steps: i32) -> Vec2 {
-        if (steps == 1) {
-            return Vec2{uv.y, -uv.x};
-        } else if (steps == 2) {
-            return Vec2{-uv.x, -uv.y};
-        } else if (steps == 3) {
-            return Vec2{-uv.y, uv.x};
+    rotate_uv := proc(uv: Vec2, steps: i32) -> Vec2 {
+        s := steps % 4;
+        if s == 1 {
+            return Vec2{1.0 - uv.y, uv.x};
+        } else if s == 2 {
+            return Vec2{1.0 - uv.x, 1.0 - uv.y};
+        } else if s == 3 {
+            return Vec2{uv.y, 1.0 - uv.x};
         }
         return uv;
     };

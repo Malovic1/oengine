@@ -70,7 +70,8 @@ load_atlas :: proc(path: string) -> Atlas {
     for k, v in root {
         if (k == "path") { continue; }
 
-        if (k[:len(k) - 1] == "texture") {
+        texture_text := "texture";
+        if (k[:len(texture_text)] == "texture") {
             tex_data := v.(od.Object);
             texture_tag := tex_data["tag"].(string);
             texture_uvs := tex_data["uvs"].(od.Object);
@@ -413,6 +414,47 @@ msc_append_model :: proc(
             );
         } 
     }
+}
+
+msc_append_terrain :: proc(
+    using self: ^MSCObject,
+    heightmap: Texture,
+    scale: Vec3 = {1, 1, 1},
+    offs: Vec3 = {},
+    color: Color = WHITE,
+    texture_tag: string = "",
+    is_lit: bool = true,
+    use_fog: bool = OE_FAE,
+    rot: i32 = 0,
+    flipped: bool = false,
+    division_level: i32 = 0
+) {
+    img := rl.LoadImageFromTexture(heightmap);
+    _mesh := rl.GenMeshHeightmap(img, scale);
+
+    vertices := _mesh.vertices;
+    for j := 0; j < int(_mesh.vertexCount); j += 3 {
+        v0 := Vec3 { vertices[j * 3], vertices[j * 3 + 1], vertices[j * 3 + 2] };
+        v1 := Vec3 { vertices[(j + 1) * 3], vertices[(j + 1) * 3 + 1], vertices[(j + 1) * 3 + 2] };
+        v2 := Vec3 { vertices[(j + 2) * 3], vertices[(j + 2) * 3 + 1], vertices[(j + 2) * 3 + 2] };
+
+        normal := Vec3 { 
+            _mesh.normals[j * 3], 
+            _mesh.normals[j * 3 + 1], 
+            _mesh.normals[j * 3 + 2]
+        };
+
+        msc_append_tri(
+            self, v0, v1, v2, 
+            offs, 
+            texture_tag = texture_tag, normal = normal,
+            is_lit = is_lit, use_fog = use_fog,
+            rot = rot, flipped = flipped, division_level = division_level
+        );
+    }
+
+    rl.UnloadImage(img);
+    rl.UnloadMesh(_mesh);
 }
 
 reload_mesh_tris :: proc(using self: ^MSCObject) {

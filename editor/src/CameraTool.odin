@@ -34,10 +34,11 @@ ShapeMode :: enum {
     CIRCLE,
     MODEL,
     DATA_ID,
+    TERRAIN,
     MAX,
 }
 
-shape_mode_size := [ShapeMode.MAX]i32{3, 4, 2, 1, 1};
+shape_mode_size := [ShapeMode.MAX]i32{3, 4, 2, 1, 1, 1};
 
 CameraTool :: struct {
     camera_perspective: oe.Camera,
@@ -58,6 +59,8 @@ CameraTool :: struct {
     _prev_mouse_pos: oe.Vec2,
 
     _active_id, _active_msc_id: i32,
+    _active_texture: string,
+    _terrain_size: oe.Vec3,
 }
 
 ct_init :: proc() -> CameraTool {
@@ -75,6 +78,7 @@ ct_init :: proc() -> CameraTool {
         tile_size = {1, 1, 1},
         points_to_add = make([dynamic]oe.Vec3),
         shape_mode = .TRIANGLE,
+        _terrain_size = {1, 1, 1},
     };
 }
 
@@ -171,24 +175,25 @@ ct_render :: proc(using self: ^CameraTool) {
 ct_msc_edit :: proc(using self: ^CameraTool) {
     if (len(points_to_add) == int(shape_mode_size[shape_mode])) {
         msc := msc_check(new_instance);
+        texture_tag := _active_texture;
 
         #partial switch shape_mode {
             case .TRIANGLE:
                 points := [3]oe.Vec3{points_to_add[0], points_to_add[1], points_to_add[2]};
                 oe.msc_append_tri(
                     msc, points[0], points[1], points[2], 
-                    normal = oe.surface_normal(points));
+                    normal = oe.surface_normal(points), texture_tag = texture_tag);
             case .QUAD:
                 points := [4]oe.Vec3{points_to_add[0], points_to_add[1], points_to_add[2], points_to_add[3]};
-                oe.msc_append_quad(msc, points[0], points[1], points[2], points[3]);
+                oe.msc_append_quad(msc, points[0], points[1], points[2], points[3], texture_tag = texture_tag);
             case .CIRCLE:
-                oe.msc_append_circle(msc, points_to_add[0], points_to_add[1]);
+                oe.msc_append_circle(msc, points_to_add[0], points_to_add[1], texture_tag = texture_tag);
             case .MODEL:
                 path := oe.nfd_file();
                 model := oe.load_model(path);
 
                 if (filepath.ext(model.path) == ".obj") {
-                    oe.msc_append_model(msc, model, points_to_add[0]);
+                    oe.msc_append_model(msc, model, points_to_add[0], texture_tag = texture_tag);
                 } else {
                     oe.dbg_log("Unable to load model", .WARNING);
                     oe.dbg_log("Make sure it is in .obj format", .WARNING);
@@ -216,6 +221,15 @@ ct_msc_edit :: proc(using self: ^CameraTool) {
                     }
                 );
                 oe.dbg_log(oe.str_add({"Added data id of tag: ", tag, " and id: ", oe.str_add("", id)}));
+            case .TERRAIN:
+                path := oe.nfd_file();
+                tex := oe.load_texture(path);
+
+                size := _terrain_size;
+                oe.msc_append_terrain(
+                    msc, tex, size, 
+                    points_to_add[0] - size * 0.5, texture_tag = texture_tag
+                );
         }
 
         clear(&points_to_add);

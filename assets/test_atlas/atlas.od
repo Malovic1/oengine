@@ -1,0 +1,149 @@
+
+string path = "../assets/test_atlas/atlas.png"
+object texture0 {
+    string tag = "normal"
+    object uvs {
+        object uv_0 {
+            f32 x = 1
+            f32 y = 0.24255344
+        }
+        object uv_1 {
+            f32 x = 0
+            f32 y = 0.24255344
+        }
+        object uv_2 {
+            f32 x = 0
+            f32 y = 0
+        }
+        object uv_3 {
+            f32 x = 1
+            f32 y = 0
+        }
+    }
+}
+object texture1 {
+    string tag = "mtl0"
+    object uvs {
+        object uv_0 {
+            f32 x = 1
+            f32 y = 0.48510689
+        }
+        object uv_1 {
+            f32 x = 0
+            f32 y = 0.48510689
+        }
+        object uv_2 {
+            f32 x = 0
+            f32 y = 0.24255344
+        }
+        object uv_3 {
+            f32 x = 1
+            f32 y = 0.24255344
+        }
+    }
+}
+object texture2 {
+    string tag = "orm"
+    object uvs {
+        object uv_0 {
+            f32 x = 1
+            f32 y = 0.72766036
+        }
+        object uv_1 {
+            f32 x = 0
+            f32 y = 0.72766036
+        }
+        object uv_2 {
+            f32 x = 0
+            f32 y = 0.48510689
+        }
+        object uv_3 {
+            f32 x = 1
+            f32 y = 0.48510689
+        }
+    }
+}
+object texture3 {
+    string tag = "albedo"
+    object uvs {
+        object uv_0 {
+            f32 x = 1
+            f32 y = 0.97021377
+        }
+        object uv_1 {
+            f32 x = 0
+            f32 y = 0.97021377
+        }
+        object uv_2 {
+            f32 x = 0
+            f32 y = 0.72766036
+        }
+        object uv_3 {
+            f32 x = 1
+            f32 y = 0.72766036
+        }
+    }
+}
+object texture4 {
+    string tag = "water"
+    object uvs {
+        object uv_0 {
+            f32 x = 0.0625
+            f32 y = 0.98537338
+        }
+        object uv_1 {
+            f32 x = 0
+            f32 y = 0.98537338
+        }
+        object uv_2 {
+            f32 x = 0
+            f32 y = 0.97021377
+        }
+        object uv_3 {
+            f32 x = 0.0625
+            f32 y = 0.97021377
+        }
+    }
+}
+object texture5 {
+    string tag = "troll"
+    object uvs {
+        object uv_0 {
+            f32 x = 0.116210938
+            f32 y = 0.98105049
+        }
+        object uv_1 {
+            f32 x = 0.0625
+            f32 y = 0.98105049
+        }
+        object uv_2 {
+            f32 x = 0.0625
+            f32 y = 0.97021377
+        }
+        object uv_3 {
+            f32 x = 0.116210938
+            f32 y = 0.97021377
+        }
+    }
+}
+object texture6 {
+    string tag = "heightmap"
+    object uvs {
+        object uv_0 {
+            f32 x = 0.131835938
+            f32 y = 0.97400367
+        }
+        object uv_1 {
+            f32 x = 0.116210938
+            f32 y = 0.97400367
+        }
+        object uv_2 {
+            f32 x = 0.116210938
+            f32 y = 0.97021377
+        }
+        object uv_3 {
+            f32 x = 0.131835938
+            f32 y = 0.97021377
+        }
+    }
+}

@@ -563,52 +563,70 @@ reload_assets :: proc() {
 }
 
 am_texture_atlas :: proc() -> Atlas {
-    res := init_atlas();
+    atlas := init_atlas();
     textures := get_reg_textures_arr();
-
-    width: i32;
-    height: i32;
+    if len(textures) == 0 {
+        return atlas;
+    }
 
     for i in 0..<len(textures) {
-        tex := textures[i];
-        width += tex.width;
+        max_index := i;
+        for j in i+1..<len(textures) {
+            area_j := textures[j].width * textures[j].height;
+            area_max := textures[max_index].width * textures[max_index].height;
+            if area_j > area_max {
+                max_index = j;
+            }
+        }
+
+        if max_index != i {
+            temp := textures[i];
+            textures[i] = textures[max_index];
+            textures[max_index] = temp;
+        }
+    }
+
+    // Estimate total size (simple vertical stack)
+    width: i32 = 0;
+    height: i32 = 0;
+    for tex in textures {
+        width = max(width, tex.width);
         height += tex.height;
     }
 
-    res.width = width;
-    res.height = height;
+    atlas.width = width;
+    atlas.height = height;
 
-    target := rl.LoadRenderTexture(width, height);
-    rl.BeginTextureMode(target);
+    render_target := rl.LoadRenderTexture(width, height);
+    rl.BeginTextureMode(render_target);
     rl.ClearBackground(BLANK);
 
     free_rects := make([dynamic]Rect);
     append(&free_rects, Rect{0, 0, f32(width), f32(height)});
 
-    for i in 0..<len(textures) {
-        tex := textures[i];
-
-        best_rect := find_best_fit_rect(&free_rects, tex.width, tex.height);
-        if (best_rect.width == 0 || best_rect.height == 0) {
+    for tex in textures {
+        placement := find_best_fit_rect(&free_rects, tex.width, tex.height);
+        if placement.width == 0 || placement.height == 0 {
             break; // No space left
         }
 
-        rect := Rect{best_rect.x, best_rect.y, f32(tex.width), f32(tex.height)};
-        atlas_texture(&res, rect, tex.tag, true);
+        rect := Rect{placement.x, placement.y, f32(tex.width), f32(tex.height)};
+        atlas_texture(&atlas, rect, tex.tag, true);
 
         rl.DrawTexturePro(
             tex,
             {0, 0, f32(tex.width), f32(tex.height)},
             {rect.x, rect.y, rect.width, rect.height},
-            {}, 0, WHITE
+            {0, 0}, 0, WHITE
         );
 
         split_free_space(&free_rects, rect);
     }
 
     rl.EndTextureMode();
-    res.texture = tex_flip_vert(load_texture(target.texture));
-    return res;
+    atlas.texture = tex_flip_vert(load_texture(render_target.texture));
+
+    return atlas;
 }
 
 @(private)
