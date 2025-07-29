@@ -22,7 +22,7 @@ object texture0 {
     }
 }
 object texture1 {
-    string tag = "mtl0"
+    string tag = "albedo"
     object uvs {
         object uv_0 {
             f32 x = 1
@@ -43,7 +43,7 @@ object texture1 {
     }
 }
 object texture2 {
-    string tag = "orm"
+    string tag = "mtl0"
     object uvs {
         object uv_0 {
             f32 x = 1
@@ -64,7 +64,7 @@ object texture2 {
     }
 }
 object texture3 {
-    string tag = "albedo"
+    string tag = "orm"
     object uvs {
         object uv_0 {
             f32 x = 1

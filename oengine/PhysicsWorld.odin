@@ -385,7 +385,20 @@ resolve_tri_collision :: proc(rb: ^RigidBody, t: TriangleCollider) {
         // Project velocity to the normal plane if moving towards it
         vel_normal_dot := linalg.dot(rb.velocity, normal);
         if vel_normal_dot < 0 {
+            // Remove the part of velocity into the surface
             rb.velocity -= normal * vel_normal_dot;
+
+            // Compute tangential component
+            tangent := rb.velocity - normal * linalg.dot(rb.velocity, normal);
+            tangent_len := linalg.length(tangent);
+
+            STATIC_FRICTION_THRESHOLD :: 0.01; // Tune this as needed
+
+            if tangent_len < STATIC_FRICTION_THRESHOLD {
+                // Velocity is too small — cancel sliding (stick)
+                rb.velocity -= tangent;
+            }
+            // else: it's already moving enough, so let it slide
         }
     }
 }
