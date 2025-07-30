@@ -827,6 +827,7 @@ gen_skybox :: proc(c_map: Texture, size: f32 = 400) -> SkyBoxMesh {
 }
 
 draw_skybox_mesh :: proc(skybox: SkyBoxMesh) {
+    rl.rlDisableBackfaceCulling();
     rl.rlPushMatrix();
     pos := ecs_world.camera.position;
     rl.rlTranslatef(pos.x, pos.y, pos.z);

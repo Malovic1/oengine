@@ -291,6 +291,11 @@ ew_fixed_update :: proc() {
 ew_render :: proc() {
     using ecs_world;
 
+    rl.rlDisableBackfaceCulling();
+    for i in 0..<fa.range(physics.mscs) {
+        msc_render(physics.mscs.data[i]);
+    }
+
     rl.rlEnableBackfaceCulling();
 
     frustum := camera.frustum;
@@ -349,11 +354,6 @@ ew_render :: proc() {
 
         rl.DrawCubeWiresV({}, vec3_one() * OCTREE_SIZE, GREEN);
 
-    }
-
-    rl.rlDisableBackfaceCulling();
-    for i in 0..<fa.range(physics.mscs) {
-        msc_render(physics.mscs.data[i]);
     }
 }
 
