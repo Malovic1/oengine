@@ -235,7 +235,7 @@ ew_get_ents :: proc(tag: string) -> []AEntity {
 ew_update :: proc() {
     using ecs_world;
     // t := thread.create_and_start(ew_fixed_update, self_cleanup = true);
-    // ew_fixed_update();
+    ew_fixed_update(window.custom_update);
 
     fog_update(camera.position);
 
@@ -273,7 +273,7 @@ ew_fixed_thread :: proc() {
 }
 
 @(private = "file")
-ew_fixed_update :: proc() {
+ew_fixed_update :: proc(custom_update: proc(dt: f32) = nil) {
     using ecs_world;
 
     dt := rl.GetFrameTime();
@@ -281,7 +281,9 @@ ew_fixed_update :: proc() {
 
     for (accumulator >= FIXED_TIME_STEP) {
         if (!w_transform_changed() && window.instance_name != "oengine-editor") {
-            pw_update(&physics, FIXED_TIME_STEP);
+            if (custom_update != nil) {
+                custom_update(FIXED_TIME_STEP);
+            }
             ecs.ecs_fixed_update(&ecs_ctx);
         }
         accumulator -= FIXED_TIME_STEP;

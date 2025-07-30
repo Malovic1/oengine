@@ -232,6 +232,7 @@ render :: proc(camera_tool: CameraTool) {
     for i in 0..<oe.world().physics.mscs.len {
         msc := oe.world().physics.mscs.data[i];
         msc.render = false;
+        rl.rlDisableBackfaceCulling();
         oe.msc_old_render(msc, camera_tool.render_mode);
     }
 

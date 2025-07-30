@@ -32,6 +32,7 @@ window: struct {
 
     target: rl.RenderTexture,
     instance_name: string,
+    custom_update: proc(dt: f32),
 }
 
 w_create :: proc(name: string = "Game") {
@@ -382,6 +383,7 @@ engine_run :: proc(
     instance_name: string = "Game",
     init: proc() = nil,
     update: proc() = nil,
+    fixed_update: proc(dt: f32) = nil,
     render: proc() = proc() { rl.ClearBackground(BLACK); },
     render_ui: proc() = nil,
     deinit: proc() = nil,
@@ -400,6 +402,7 @@ engine_run :: proc(
     w_set_exit_key(exit_key);
     w_set_target_fps(fps);
     window.debug_stats = debug_stats;
+    window.custom_update = fixed_update;
 
     if (init != nil) { init(); }
 
