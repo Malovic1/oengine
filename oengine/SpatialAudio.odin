@@ -66,6 +66,6 @@ sa_parse :: proc(asset: od.Object) -> rawptr {
 }
 
 sa_loader :: proc(ent: AEntity, tag: string) {
-    comp := get_component_data(tag, SimpleMesh);
+    comp := get_component_data(tag, SpatialAudio);
     add_component(ent, comp^);
 }
