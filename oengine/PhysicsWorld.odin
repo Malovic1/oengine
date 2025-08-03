@@ -103,22 +103,6 @@ pw_update :: proc(using self: ^PhysicsWorld, dt: f32) {
                     query_octree(msc.tree, rb);
                 }
             }
-
-
-            // // clear narrow phase
-            // clear(&narrow_pairs);
-            //
-            // // broadphase
-            // for j := i + 1; j < fa.range(bodies); j += 1 {
-            //     rb2 := bodies.data[j];
-            //     if (rb2 == nil) { continue; }
-            //
-            //     if (ignored(rb, rb2)) do continue;
-            //     if (!collision_transforms(rb.transform, rb2.transform)) do continue;
-            //
-            //     append(&narrow_pairs, ContactPair{i, j});
-            // }
-
         }
 
         for i in 0..<fa.range(bodies) {
@@ -156,25 +140,6 @@ pw_update :: proc(using self: ^PhysicsWorld, dt: f32) {
                 }
             }
         }
-
-        // narrow phase
-        // for i in 0..<len(narrow_pairs) {
-        //     pair := narrow_pairs[i];
-        //     rb := bodies.data[pair.a];
-        //     rb2 := bodies.data[pair.b];
-        //
-        //     if (rb.shape == ShapeType.HEIGHTMAP) {
-        //         resolve_heightmap_collision(rb, rb2);
-        //     } else if (rb2.shape == ShapeType.HEIGHTMAP) {
-        //         resolve_heightmap_collision(rb2, rb);
-        //     } else if (rb.shape == ShapeType.SLOPE) {
-        //         resolve_slope_collision(self, rb, rb2);
-        //     } else if (rb2.shape == ShapeType.SLOPE) {
-        //         resolve_slope_collision(self, rb2, rb);
-        //     } else {
-        //         resolve_aabb_collision(self, rb, rb2);
-        //     }
-        // }
 
         for i in 0..<fa.range(joints) {
             joint := joints.data[i];
@@ -302,8 +267,20 @@ resolve_aabb_collision :: proc(using self: ^PhysicsWorld, rb, rb2: ^RigidBody) {
                 }
             }
 
-            resolve_collision(rb, contact.normal, (contact.depth * 0.5));
-            resolve_collision(rb2, contact.normal, -(contact.depth * 0.5));
+            // resolve_collision(rb, contact.normal, (contact.depth * 0.5));
+            // resolve_collision(rb2, contact.normal, -(contact.depth * 0.5));
+            inv_mass1 := rb_inverse_mass(rb^);
+            inv_mass2 := rb_inverse_mass(rb2^);
+            total_inv_mass := inv_mass1 + inv_mass2;
+
+            // Avoid division by zero
+            if total_inv_mass > 0 {
+                move1 := contact.depth * (inv_mass1 / total_inv_mass);
+                move2 := contact.depth * (inv_mass2 / total_inv_mass);
+
+                resolve_collision(rb, contact.normal, move1);
+                resolve_collision(rb2, contact.normal, -move2);
+            }
         }
 
         relative_vel := rb2.velocity - rb.velocity;

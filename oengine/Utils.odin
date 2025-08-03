@@ -402,6 +402,32 @@ od_vec3 :: proc(obj: od.Object) -> Vec3 {
     return {};
 }
 
+set_model_shader :: proc(m: ^Model, shader: Shader) {
+    for i in 0..<m.materialCount {
+        m.materials[i].shader = shader;
+    }
+}
+
+rand_sign :: proc() -> i32 {
+    val := rl.GetRandomValue(0, 1);
+    if (val == 0) { return -1; }
+    return 1;
+}
+
+get_sound_length :: proc(sound: rl.Sound) -> f32 {
+    return f32(sound.frameCount) / f32(sound.sampleRate);
+}
+
+rotate_vector_around_axis :: proc(v: Vec3, axis: Vec3, angle_deg: f32) -> Vec3 {
+    angle_rad := Deg2Rad * angle_deg;
+    cos_theta := linalg.cos(angle_rad);
+    sin_theta := linalg.sin(angle_rad);
+
+    return v * cos_theta +
+           linalg.cross(axis, v) * sin_theta +
+           axis * linalg.dot(axis, v) * (1.0 - cos_theta);
+}
+
 od_color :: proc(obj: od.Object) -> Color {
     if (od_contains(obj, "r") &&
         od_contains(obj, "g") &&
