@@ -214,15 +214,22 @@ pack_atlas :: proc(atlas: Atlas, path: string) {
     save_atlas(res, data_path);
 }
 
+MeshMaterial :: struct {
+    mesh: rl.Mesh,
+    material: rl.Material,
+    tiling: Vec2,
+}
+
 MSCObject :: struct {
     tris: [dynamic]TriangleCollider,
     mesh_tris: [dynamic]TriangleCollider,
     _aabb: AABB,
     tree: ^OctreeNode,
-    mesh: rl.Mesh,
+    meshes: [dynamic]MeshMaterial,
     atlas: Atlas,
     render: bool,
     mesh_tri_count: i32,
+    use_triplanar: bool,
 }
 
 msc_init :: proc() -> ^MSCObject {
@@ -230,6 +237,7 @@ msc_init :: proc() -> ^MSCObject {
 
     tris = make([dynamic]TriangleCollider);
     mesh_tris = make([dynamic]TriangleCollider);
+    meshes = make([dynamic]MeshMaterial);
     render = true;
 
     fa.append(&ecs_world.physics.mscs, self);
@@ -474,37 +482,111 @@ tri_recalc_uvs :: proc(t: ^TriangleCollider, #any_int uv_rot: i32 = 0) {
     t.rot = uv_rot;
 }
 
-msc_gen_mesh :: proc(using self: ^MSCObject, gen_tree := true) {
-    mesh.triangleCount = i32(len(mesh_tris));
-    mesh.vertexCount = mesh.triangleCount * 3;
-    allocate_mesh(&mesh);
-
-    for i in 0..<len(mesh_tris) {
-        gen_tri(self, &mesh_tris[i], i);
+msc_gen_mesh :: proc(using self: ^MSCObject, triplanar := false, gen_tree := true) {
+    if (!triplanar) {
+        build_mesh(self);
+    } else {
+        build_mesh_triplanar(self);
+        use_triplanar = triplanar;
     }
-
-    rl.UploadMesh(&mesh, false);
 
     if (gen_tree) {
         msc_build(self);
     }
 }
 
-gen_tri :: proc(using self: ^MSCObject, t: ^TriangleCollider, #any_int index: i32) {
-    verts := t.pts;
+@(private)
+build_mesh_triplanar :: proc(msc: ^MSCObject) {
+    mesh_texture_tags := make([dynamic]string);
+    defer delete(mesh_texture_tags);
 
-    at: AtlasTexture;
-    for st in atlas.subtextures {
-        if (st.tag == t.texture_tag) {
-            at = st;
+    tris_to_add := make(map[string][dynamic]TriangleCollider);
+
+    for i in 0..<len(msc.mesh_tris) {
+        tri := msc.mesh_tris[i];
+
+        contains := false;
+        for tag in mesh_texture_tags {
+            if (tag == tri.texture_tag) {
+                contains = true;
+                break;
+            }
         }
+
+        if (!contains) {
+            append(&mesh_texture_tags, tri.texture_tag);
+            tris_to_add[tri.texture_tag] = make([dynamic]TriangleCollider);
+        }
+
+        append(&tris_to_add[tri.texture_tag], tri);
     }
 
-    uv1, uv2, uv3 := atlas_triangle_uvs(
-        verts[0], verts[1], verts[2],
-        at.uvs,
-        0
-    );
+    for tag, tris in tris_to_add {
+        mesh: rl.Mesh;
+        mesh.triangleCount = i32(len(tris));
+        mesh.vertexCount = mesh.triangleCount * 3;
+        allocate_mesh(&mesh);
+
+        for i in 0..<len(tris) {
+            gen_tri(msc, mesh, &tris[i], i, false);
+        }
+
+        rl.UploadMesh(&mesh, false);
+
+        m := rl.LoadMaterialDefault();
+        m.maps[rl.MaterialMapIndex.ALBEDO].texture = get_asset_var(tag, Texture);
+        m.shader = ecs_world.ray_ctx.shader;
+
+        append(&msc.meshes, MeshMaterial{mesh, m, {0.5, 0.5}});
+    }
+}
+
+@(private)
+build_mesh :: proc(msc: ^MSCObject) {
+    mesh: rl.Mesh;
+    mesh.triangleCount = i32(len(msc.mesh_tris));
+    mesh.vertexCount = mesh.triangleCount * 3;
+    allocate_mesh(&mesh);
+
+    for i in 0..<len(msc.mesh_tris) {
+        gen_tri(msc, mesh, &msc.mesh_tris[i], i);
+    }
+
+    rl.UploadMesh(&mesh, false);
+
+    m := DEFAULT_MATERIAL;
+    m.maps[rl.MaterialMapIndex.ALBEDO].texture = msc.atlas;
+    m.shader = ecs_world.ray_ctx.shader;
+
+    append(&msc.meshes, MeshMaterial{mesh, m, {}});
+}
+
+gen_tri :: proc(
+    using self: ^MSCObject, 
+    mesh: rl.Mesh, 
+    t: ^TriangleCollider, 
+    #any_int index: i32,
+    use_atlas_uvs := true
+) {
+    verts := t.pts;
+
+    uv1, uv2, uv3: Vec2;
+    if (use_atlas_uvs) {
+        at: AtlasTexture;
+        for st in atlas.subtextures {
+            if (st.tag == t.texture_tag) {
+                at = st;
+            }
+        }
+
+        uv1, uv2, uv3 = atlas_triangle_uvs(
+            verts[0], verts[1], verts[2],
+            at.uvs,
+            0
+        );
+    } else {
+        uv1, uv2, uv3 = triangle_uvs(verts[0], verts[1], verts[2], 0);
+    }
 
     v_offset := index * 9;
     uv_offset := index * 6;
@@ -1459,14 +1541,20 @@ MscRenderMode :: enum {
 msc_render :: proc(using self: ^MSCObject, mode: MscRenderMode = .MESH) {
     if (!render) { return; }
 
-    m := DEFAULT_MATERIAL;
-    m.maps[rl.MaterialMapIndex.ALBEDO].texture = atlas;
-    m.shader = ecs_world.ray_ctx.shader;
-
     if (window.instance_name == EDITOR_INSTANCE) {
         msc_old_render(self, mode);
     } else {
-        rl.DrawMesh(mesh, m, rl.Matrix(1));
+        for mesh_mat in meshes {
+            if (use_triplanar) {
+                ray_set_tiling(mesh_mat.tiling);
+                ray_enable_triplanar();
+            }
+            rl.DrawMesh(mesh_mat.mesh, mesh_mat.material, rl.Matrix(1));
+            if (use_triplanar) {
+                ray_reset_tiling();
+                ray_disable_triplanar();
+            }
+        }
     }
 
     if (PHYS_DEBUG) {

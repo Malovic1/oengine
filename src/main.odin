@@ -150,7 +150,6 @@ main :: proc() {
     msc.atlas = oe.load_atlas("../assets/atlas");
     // msc.atlas = oe.am_texture_atlas();
     // oe.pack_atlas(msc.atlas, "../assets/atlas");
-    fmt.println(time.since(s));
 
     msc2 := oe.msc_init();
     oe.msc_from_model(
@@ -159,10 +158,9 @@ main :: proc() {
 
     oe.update_msc(msc, msc2);
 
-    oe.msc_append_terrain(msc, heightmap_tex, {16, 8, 16}, {33, 0, 0}, texture_tag = "albedo");
-
-    oe.msc_gen_mesh(msc);
+    oe.msc_gen_mesh(msc, true);
     oe.remove_msc(msc2);
+    fmt.println(time.since(s));
 
     light2 := oe.aent_init("light");
     light2_tr := oe.get_component(light2, oe.Transform);
