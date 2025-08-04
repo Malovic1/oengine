@@ -1120,7 +1120,9 @@ save_map :: proc(
     }
 }
 
-load_map :: proc(path: string, atlas: Atlas, use_json := false) {
+load_map :: proc(
+    path: string, atlas: Atlas, use_json := false, use_triplanar := true
+) {
     list := get_files(path);
 
     for dir in list {
@@ -1128,7 +1130,7 @@ load_map :: proc(path: string, atlas: Atlas, use_json := false) {
         if (use_json) { msc_from_json(msc, dir); }
         else { load_msc(msc, dir); }
         msc.atlas = atlas;
-        msc_gen_mesh(msc);
+        msc_gen_mesh(msc, use_triplanar);
     }
 }
 
