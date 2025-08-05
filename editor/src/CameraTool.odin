@@ -58,7 +58,8 @@ CameraTool :: struct {
     _mouse_pos: oe.Vec2,
     _prev_mouse_pos: oe.Vec2,
 
-    _active_id, _active_msc_id: i32,
+    _active_ids: [dynamic]i32,
+    _active_msc_id: i32,
     _active_texture: string,
     _terrain_size: oe.Vec3,
 }
@@ -73,7 +74,7 @@ ct_init :: proc() -> CameraTool {
             rotation = 0, zoom = 1,
         },
         mode = .PERSPECTIVE,
-        _active_id = ACTIVE_EMPTY,
+        _active_ids = make([dynamic]i32),
         _active_msc_id = ACTIVE_EMPTY,
         tile_size = {1, 1, 1},
         points_to_add = make([dynamic]oe.Vec3),
@@ -463,30 +464,39 @@ ct_render_ortho :: proc(using self: ^CameraTool) {
         }
     }
 
-    if (_active_id == ACTIVE_EMPTY || _active_msc_id == ACTIVE_EMPTY) do return;
+    if (len(_active_ids) == 0 || _active_msc_id == ACTIVE_EMPTY) do return;
 
     if (oe.key_pressed(.T)) {
         oe.gui_toggle_window("Texture tool");
     }
 
     if (oe.key_pressed(.DELETE)) {
-        ordered_remove(&oe.ecs_world.physics.mscs.data[_active_msc_id].tris, int(_active_id));
-        _active_id = ACTIVE_EMPTY;
+        msc := oe.ecs_world.physics.mscs.data[_active_msc_id];
+        for id in _active_ids {
+            ordered_remove(&msc.tris, auto_cast id);
+            oe.tri_count -= 1;
+        }
+        clear(&_active_ids);
         _active_msc_id = ACTIVE_EMPTY;
+        oe.reload_mesh_tris(msc);
         return;
     }
 
-    active_3d := oe.ecs_world.physics.mscs.data[_active_msc_id].tris[_active_id].pts;
-    active := msc_tri_to_ortho_tri(active_3d, mode);
 
-    rl.rlPushMatrix();
-    rl.rlScalef(1, -1, 1);
-    rl.DrawTriangle(
-        active[0] * RENDER_SCALAR, 
-        active[1] * RENDER_SCALAR, 
-        active[2] * RENDER_SCALAR, GRID_COLOR
-    );
-    rl.rlPopMatrix();
+    for id in _active_ids {
+        active_3d := oe.ecs_world.physics.mscs.data[_active_msc_id].tris[id].pts;
+
+        active := msc_tri_to_ortho_tri(active_3d, mode);
+
+        rl.rlPushMatrix();
+        rl.rlScalef(1, -1, 1);
+        rl.DrawTriangle(
+            active[0] * RENDER_SCALAR, 
+            active[1] * RENDER_SCALAR, 
+            active[2] * RENDER_SCALAR, GRID_COLOR
+        );
+        rl.rlPopMatrix();
+    }
 }
 
 @(private = "file")
@@ -634,38 +644,47 @@ render_tri :: proc(using self: ^CameraTool) {
             }
 
             if (oe.mouse_pressed(.LEFT) && !oe.gui_mouse_over()) {
-                _active_id = i32(info.id);
+                append(&_active_ids, i32(info.id));
                 _active_msc_id = i32(msc_id);
             }
         } else {
-            if (oe.mouse_pressed(.LEFT) && !oe.gui_mouse_over()) {
-                _active_id = ACTIVE_EMPTY;
+            if (oe.mouse_pressed(.LEFT) && 
+                !oe.key_down(.LEFT_ALT) && !oe.gui_mouse_over()) {
+                clear(&_active_ids);
                 _active_msc_id = ACTIVE_EMPTY;
             }
         }
         delete(arr);
     }
 
-    if (_active_id != ACTIVE_EMPTY && _active_msc_id != ACTIVE_EMPTY) {
+    if (len(_active_ids) != 0 && _active_msc_id != ACTIVE_EMPTY) {
         if (oe.key_pressed(.T)) {
             oe.gui_toggle_window("Texture tool");
         }
         msc := oe.ecs_world.physics.mscs.data[_active_msc_id];
-        t := &msc.tris[_active_id];
-
-        clr := GRID_COLOR;
-        if (t.color.r >= GRID_COLOR.r &&
-            t.color.g >= GRID_COLOR.g &&
-            t.color.b >= GRID_COLOR.b) {
-            clr.rgb = t.color.rgb - GRID_COLOR.rgb;
+        tris := make([dynamic]^oe.TriangleCollider);
+        defer delete(tris);
+        for id in _active_ids {
+            append(&tris, &msc.tris[id]);
         }
 
-        rl.DrawTriangle3D(t.pts[0], t.pts[1], t.pts[2], clr);
+        for t in tris {
+            clr := GRID_COLOR;
+            if (t.color.r >= GRID_COLOR.r &&
+                t.color.g >= GRID_COLOR.g &&
+                t.color.b >= GRID_COLOR.b) {
+                clr.rgb = t.color.rgb - GRID_COLOR.rgb;
+            }
+
+            rl.DrawTriangle3D(t.pts[0], t.pts[1], t.pts[2], clr);
+        }
 
         if (oe.key_pressed(.DELETE)) {
-            ordered_remove(&msc.tris, auto_cast _active_id);
-            oe.tri_count -= 1;
-            _active_id = ACTIVE_EMPTY;
+            for id in _active_ids {
+                ordered_remove(&msc.tris, auto_cast id);
+                oe.tri_count -= 1;
+            }
+            clear(&_active_ids);
             _active_msc_id = ACTIVE_EMPTY;
             oe.reload_mesh_tris(msc);
         }
@@ -694,7 +713,7 @@ update_tri_ortho :: proc(using self: ^CameraTool, pts: [3]oe.Vec3, #any_int id, 
         if (oe.mouse_pressed(.LEFT) && !oe.gui_mouse_over()) {
             _moving = true;
             _moving_id = id;
-            _active_id = id;
+            append(&_active_ids, id);
             _moving_msc_id = msc_id;
             _active_msc_id = msc_id;
 
@@ -710,9 +729,10 @@ update_tri_ortho :: proc(using self: ^CameraTool, pts: [3]oe.Vec3, #any_int id, 
     } else {
         if (!oe.gui_mouse_over() &&
             oe.mouse_pressed(.LEFT) &&
-            _active_id == id && 
+            !oe.key_down(.LEFT_ALT) &&
+            _active_ids[len(_active_ids)] == id && 
             _active_msc_id == msc_id) { 
-            _active_id = ACTIVE_EMPTY;
+            clear(&_active_ids);
             _active_msc_id = ACTIVE_EMPTY;
         }
     }

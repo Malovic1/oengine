@@ -241,7 +241,7 @@ map_proj_tool :: proc(ct: CameraTool) {
 }
 
 texture_tool :: proc(ct: CameraTool) {
-    if (ct._active_msc_id == ACTIVE_EMPTY || ct._active_id == ACTIVE_EMPTY) do return;
+    if (ct._active_msc_id == ACTIVE_EMPTY || len(ct._active_ids) == 0) do return;
 
     oe.gui_begin("Texture tool", 
         x = 0, y = WINDOW_HEIGHT * 3 + oe.gui_top_bar_height * 3, 
@@ -254,25 +254,30 @@ texture_tool :: proc(ct: CameraTool) {
         rot += 1;
         if (rot > 3) do rot = 0;
 
-        active := &oe.ecs_world.physics.mscs.data[ct._active_msc_id].tris[ct._active_id];
-        oe.tri_recalc_uvs(active, rot);
+        for id in ct._active_ids {
+            active := &oe.ecs_world.physics.mscs.data[ct._active_msc_id].tris[id];
+            oe.tri_recalc_uvs(active, rot);
+        }
     }
 
     t := oe.gui_text_box("TilingTextBox", oe.gui_window("Texture tool").width - 40, 50, 30, 30);
     @static tiling: int; ok: bool;
     tiling, ok = sc.parse_int(t);
     if (oe.gui_button("OK", oe.gui_window("Texture tool").width - 40, 90, 30, 30)) {
-        active := oe.ecs_world.physics.mscs.data[ct._active_msc_id].tris[ct._active_id];
-
-        active.division_level = i32(tiling);
+        for id in ct._active_ids {
+            active := &oe.ecs_world.physics.mscs.data[ct._active_msc_id].tris[id];
+            active.division_level = i32(tiling);
+        }
         oe.reload_mesh_tris(oe.ecs_world.physics.mscs.data[ct._active_msc_id]);
         oe.gui.text_boxes["TilingTextBox"].text = "";
     }
 
     if (oe.gui_button("FLIP", oe.gui_window("Texture tool").width - 40, 130, 30, 30)) {
-        active := oe.ecs_world.physics.mscs.data[ct._active_msc_id].tris[ct._active_id];
-        active.flipped = !active.flipped;
-        active.normal = -active.normal;
+        for id in ct._active_ids {
+            active := oe.ecs_world.physics.mscs.data[ct._active_msc_id].tris[id];
+            active.flipped = !active.flipped;
+            active.normal = -active.normal;
+        }
     }
 
     COLS :: 6
@@ -293,8 +298,10 @@ texture_tool :: proc(ct: CameraTool) {
                     tag, x, y, w, h, 
                     texture = oe.get_asset_var(tag, oe.Texture)
                     )) {
-                    active := &oe.ecs_world.physics.mscs.data[ct._active_msc_id].tris[ct._active_id];
-                    active.texture_tag = tag;
+                    for id in ct._active_ids {
+                        active := &oe.ecs_world.physics.mscs.data[ct._active_msc_id].tris[id];
+                        active.texture_tag = tag;
+                    }
                 }
             }
         }

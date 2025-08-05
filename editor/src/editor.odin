@@ -182,7 +182,7 @@ update :: proc(camera_tool: CameraTool) {
         if (oe.key_down(.LEFT_ALT) && oe.mouse_pressed(.LEFT)) {
             mouse_ray := oe.get_mouse_rc(camera_tool.camera_perspective);
 
-            if (camera_tool._active_id != ACTIVE_EMPTY && 
+            if (len(camera_tool._active_ids) != 0 && 
                 camera_tool._active_msc_id != ACTIVE_EMPTY) {
                 msc := oe.ecs_world.physics.mscs.data[camera_tool._active_msc_id];
                 coll, arr := oe.rc_colliding_tris(mouse_ray, msc);
@@ -250,7 +250,7 @@ render :: proc(camera_tool: CameraTool) {
         if (oe.key_down(.LEFT_ALT)) {
             mouse_ray := oe.get_mouse_rc(camera_tool.camera_perspective);
 
-            if (camera_tool._active_id != ACTIVE_EMPTY && 
+            if (len(camera_tool._active_ids) != 0 && 
                 camera_tool._active_msc_id != ACTIVE_EMPTY) {
                 msc := oe.ecs_world.physics.mscs.data[camera_tool._active_msc_id];
                 coll, arr := oe.rc_colliding_tris(mouse_ray, msc);
