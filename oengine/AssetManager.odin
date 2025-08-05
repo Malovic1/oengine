@@ -748,6 +748,15 @@ reg_asset :: proc(tag: string, asset: Asset) {
     using asset_manager;
     sync.lock(&asset_mutex);
     defer sync.unlock(&asset_mutex);
+    #partial switch &v in asset {
+        case Texture:
+            rl.GenTextureMipmaps(&v);
+            rl.rlTextureParameters(
+                v.id, 
+                rl.RL_TEXTURE_MIN_FILTER,
+                rl.RL_TEXTURE_FILTER_MIP_LINEAR, 
+            );
+    }
     registry[tag] = asset;
 }
 
