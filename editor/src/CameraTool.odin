@@ -8,6 +8,7 @@ import "core:math"
 import "core:math/linalg"
 import "core:strconv"
 import "core:path/filepath"
+import "core:slice"
 
 GRID_SPACING :: 25
 GRID_COLOR :: oe.Color {255, 255, 255, 125}
@@ -472,6 +473,7 @@ ct_render_ortho :: proc(using self: ^CameraTool) {
 
     if (oe.key_pressed(.DELETE)) {
         msc := oe.ecs_world.physics.mscs.data[_active_msc_id];
+        slice.reverse_sort(_active_ids[:]);
         for id in _active_ids {
             ordered_remove(&msc.tris, auto_cast id);
             oe.tri_count -= 1;
@@ -644,8 +646,14 @@ render_tri :: proc(using self: ^CameraTool) {
             }
 
             if (oe.mouse_pressed(.LEFT) && !oe.gui_mouse_over()) {
-                append(&_active_ids, i32(info.id));
-                _active_msc_id = i32(msc_id);
+                if (len(_active_ids) > 0) {
+                    if (oe.key_down(.LEFT_ALT)) {
+                        append(&_active_ids, i32(info.id));
+                    }
+                } else {
+                    append(&_active_ids, i32(info.id));
+                    _active_msc_id = i32(msc_id);
+                }
             }
         } else {
             if (oe.mouse_pressed(.LEFT) && 
@@ -680,6 +688,7 @@ render_tri :: proc(using self: ^CameraTool) {
         }
 
         if (oe.key_pressed(.DELETE)) {
+            slice.reverse_sort(_active_ids[:]);
             for id in _active_ids {
                 ordered_remove(&msc.tris, auto_cast id);
                 oe.tri_count -= 1;
@@ -713,7 +722,15 @@ update_tri_ortho :: proc(using self: ^CameraTool, pts: [3]oe.Vec3, #any_int id, 
         if (oe.mouse_pressed(.LEFT) && !oe.gui_mouse_over()) {
             _moving = true;
             _moving_id = id;
-            append(&_active_ids, id);
+
+            if (len(_active_ids) > 0) {
+                if (oe.key_down(.LEFT_ALT)) {
+                    append(&_active_ids, id);
+                }
+            } else {
+                append(&_active_ids, id);
+            }
+
             _moving_msc_id = msc_id;
             _active_msc_id = msc_id;
 
@@ -727,10 +744,17 @@ update_tri_ortho :: proc(using self: ^CameraTool, pts: [3]oe.Vec3, #any_int id, 
             };
         }
     } else {
+        in_active_ids := false;
+        for _id in _active_ids {
+            if  (id == _id) { 
+                in_active_ids = true; 
+                break;
+            }
+        }
         if (!oe.gui_mouse_over() &&
             oe.mouse_pressed(.LEFT) &&
             !oe.key_down(.LEFT_ALT) &&
-            _active_ids[len(_active_ids)] == id && 
+            in_active_ids && 
             _active_msc_id == msc_id) { 
             clear(&_active_ids);
             _active_msc_id = ACTIVE_EMPTY;
