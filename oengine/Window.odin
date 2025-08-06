@@ -292,23 +292,27 @@ w_end_render :: proc() {
 
         top_left := dbg_stat_pos[_dbg_stats_pos];
 
-        text_info := [?]cstring {
-            rl.TextFormat("fps: %v", rl.GetFPS()),
-            rl.TextFormat("dt: %.5f", rl.GetFrameTime()),
-            rl.TextFormat("time: %.5f", rl.GetTime()),
-            rl.TextFormat("ents: %v", ecs_world.ecs_ctx.entities.len),
-            rl.TextFormat("sys_updts: %v", ecs_world.ecs_ctx._update_systems.len),
-            rl.TextFormat("sys_rndrs: %v", ecs_world.ecs_ctx._render_systems.len),
-            rl.TextFormat("rbs: %v", ecs_world.physics.bodies.len),
-            rl.TextFormat("tris: %v", tri_count),
-            rl.TextFormat("decals: %v", len(ecs_world.decals)),
-            rl.TextFormat("lights: %v", ecs_world.ray_ctx.light_count),
+        text_info := [?]string {
+            str_add("fps: ", rl.GetFPS()),
+            str_add("dt: ", rl.GetFrameTime(), "%v%.5f"),
+            str_add("time: ", rl.GetTime(), "%v%.5f"),
+            str_add("ents: ", ecs_world.ecs_ctx.entities.len),
+            str_add("sys_updts: ", ecs_world.ecs_ctx._update_systems.len),
+            str_add("sys_rndrs: ", ecs_world.ecs_ctx._render_systems.len),
+            str_add("rbs: ", ecs_world.physics.bodies.len),
+            str_add("tris: ", tri_count),
+            str_add("decals: ", len(ecs_world.decals)),
+            str_add("lights: ", ecs_world.ray_ctx.light_count),
         };
 
         for i in 0..<len(text_info) {
+            c_str := to_cstr(text_info[i]);
             rl.DrawText(
-                text_info[i], top_left.x, top_left.y + OFFSET * i32(i), 16, YELLOW
+                c_str, top_left.x, top_left.y + OFFSET * i32(i), 16, YELLOW
             );
+
+            // delete(c_str);
+            delete(text_info[i]);
         }
     }
 
