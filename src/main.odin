@@ -211,6 +211,7 @@ main :: proc() {
 
     // reset_track_allocator(&track_allocator);
     for (oe.w_tick()) {
+        free_all(context.temp_allocator);
         oe.ew_update();
 
         // update

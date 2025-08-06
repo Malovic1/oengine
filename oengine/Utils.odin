@@ -609,15 +609,15 @@ str_add_strs :: proc(bufs: []string) -> string {
     return str.concatenate(bufs);
 }
 
-str_add_any :: proc(buf: string, elem: $E, _fmt: string = "%v%.2f") -> string {
+str_add_any :: proc(buf: string, elem: $E, _fmt: string = "%v%.2f", allocator := context.allocator) -> string {
     type := typeid_of(type_of(elem));
     if (type == f32 || type == f64) {
-        // return fmt.aprintf(fmt.aprint("%v", _fmt, sep = ""), buf, elem);
-        return str_printf(_fmt, buf, elem);
+        return fmt.aprintf(_fmt, buf, elem, allocator = allocator);
+        // return str_printf(_fmt, buf, elem);
     }
 
-    // return fmt.aprintf("%v%v", buf, elem);
-    return str_printf("%v%v", buf, elem);
+    return fmt.aprintf("%v%v", buf, elem, allocator = allocator);
+    // return str_printf("%v%v", buf, elem);
 }
 
 to_cstr :: proc(
