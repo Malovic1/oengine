@@ -299,7 +299,7 @@ main :: proc() {
         oe.draw_skybox_mesh(skybox);
         oe.ew_render();
 
-        coll, info := oe.ray_octree_info(msc.tree, camera.raycast);
+        coll, info := oe.rc_is_colliding_msc(camera.raycast, msc, true);
         if (coll) {
             rl.DrawLine3D(info.point, info.point + info.normal, oe.RED);
 

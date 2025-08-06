@@ -3,7 +3,6 @@ package oengine
 import "core:fmt"
 import rl "vendor:raylib"
 import "fa"
-import "core:math/linalg"
 
 MIN_TRIS :: 8
 MAX_DEPTH :: 6
@@ -68,50 +67,6 @@ query_octree :: proc(node: ^OctreeNode, rb: ^RigidBody) {
             query_octree(child, rb);
         }
     }
-}
-
-ray_octree_info :: proc(
-    node: ^OctreeNode, ray: Raycast) -> (bool, MSCCollisionInfo) {
-    hit_found := false;
-    closest_info: MSCCollisionInfo;
-    closest_dist := F32_MAX;
-
-    if (node.is_leaf) {
-        for i in 0..<len(node.triangles) {
-            tri := node.triangles[i];
-            coll, point := ray_tri_collision(ray, tri);
-            if (coll) {
-                normal := linalg.normalize(
-                    linalg.cross(tri.pts[1] - tri.pts[0], tri.pts[2] - tri.pts[0]));
-                dist := linalg.distance(ray.position, point);
-
-                if (dist < closest_dist) {
-                    closest_dist = dist;
-                    closest_info = {tri, point, normal, i};
-                    hit_found = true;
-                }
-            }
-        }
-        return hit_found, closest_info;
-    }
-
-    // For non-leaf nodes check children
-    for i in 0..<len(node.children) {
-        child := node.children[i];
-        if (child != nil) {
-            child_hit, child_info := ray_octree_info(child, ray);
-            if (child_hit) {
-                dist := linalg.distance(ray.position, child_info.point);
-                if (dist < closest_dist) {
-                    closest_dist = dist;
-                    closest_info = child_info;
-                    hit_found = true;
-                }
-            }
-        }
-    }
-
-    return hit_found, closest_info;
 }
 
 render_octree :: proc(node: ^OctreeNode, depth: i32) {

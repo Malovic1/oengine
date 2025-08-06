@@ -21,14 +21,6 @@ trans_to_aabb :: proc(t: Transform) -> AABB {
     }
 }
 
-aabb_to_trans :: proc(aabb: AABB) -> Transform {
-    return Transform {
-        position = Vec3 { aabb.x, aabb.y, aabb.z },
-        rotation = {},
-        scale = Vec3 { aabb.width, aabb.height, aabb.depth }
-    }
-}
-
 split_aabb_8 :: proc(aabb: AABB) -> [8]AABB {
     pos := Vec3 {aabb.x, aabb.y, aabb.z};
 
