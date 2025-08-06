@@ -37,6 +37,7 @@ world_fog: struct {
 
 Decal :: struct {
     position, normal: Vec3,
+    verts1, verts2: [4]Vec3,
     size: Vec2,
     color: Color,
     texture_tag: string,
@@ -54,25 +55,16 @@ new_decal :: proc(pos, normal: Vec3, size: Vec2, texture_tag: string, color: Col
     d._rot = look_at(d.position, d.position + d.normal);
     d.life_time = life_time;
 
+    offset := d.normal * 0.001;
+    d.verts1 = compute_quad(d.normal, d.size, d.position - offset);
+    d.verts2 = compute_quad(-d.normal, d.size, d.position + offset);
+
     append(&ecs_world.decals, d);
 }
 
 decal_render :: proc(using d: ^Decal, id: i32) {
-    draw_sprite(
-        position - d.normal * 0.1, 
-        size,
-        d._rot,
-        get_asset_var(texture_tag, Texture), 
-        color
-    );
-
-    draw_sprite(
-        position + d.normal * 0.1, 
-        size,
-        d._rot,
-        get_asset_var(texture_tag, Texture), 
-        color
-    );
+    draw_quad(verts1, get_asset_var(texture_tag, Texture), color);
+    draw_quad(verts2, get_asset_var(texture_tag, Texture), color);
 
     if (life_time != DECAL_PERMANENT) {
         life_time -= delta_time();
@@ -356,17 +348,28 @@ draw_aabb_wires :: proc(aabb: AABB, color: Color) {
     rl.DrawCubeWires({aabb.x, aabb.y, aabb.z}, aabb.width, aabb.height, aabb.depth, color);
 }
 
-draw_quad :: proc(pts: [4]Vec3, tex: Texture, clr: Color) {
+draw_quad :: proc(points: [4]Vec3, tex: Texture, clr: Color) {
     rl.rlPushMatrix();
 
     rl.rlColor4ub(clr.r, clr.g, clr.b, clr.a);
     rl.rlBegin(rl.RL_QUADS);
     rl.rlSetTexture(tex.id);
 
-    rl.rlTexCoord2f(0, 0); rl.rlVertex3f(pts[0].x, pts[0].y, pts[0].z);
-    rl.rlTexCoord2f(0, 1); rl.rlVertex3f(pts[1].x, pts[1].y, pts[1].z);
-    rl.rlTexCoord2f(1, 1); rl.rlVertex3f(pts[2].x, pts[2].y, pts[2].z);
-    rl.rlTexCoord2f(1, 0); rl.rlVertex3f(pts[3].x, pts[3].y, pts[3].z);
+    // Vertex 1
+    rl.rlTexCoord2f(0, 0); 
+    rl.rlVertex3f(points[0].x, points[0].y, points[0].z);
+
+    // Vertex 2
+    rl.rlTexCoord2f(0, 1); 
+    rl.rlVertex3f(points[1].x, points[1].y, points[1].z);
+
+    // Vertex 3
+    rl.rlTexCoord2f(1, 1); 
+    rl.rlVertex3f(points[2].x, points[2].y, points[2].z);
+
+    // Vertex 4
+    rl.rlTexCoord2f(1, 0); 
+    rl.rlVertex3f(points[3].x, points[3].y, points[3].z);
 
     rl.rlEnd();
     rl.rlSetTexture(0);

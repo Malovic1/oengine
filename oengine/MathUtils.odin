@@ -594,3 +594,33 @@ matrix_get_rotation :: proc(m: linalg.Matrix4f32, scale: Vec3) -> Vec3 {
         roll  * Rad2Deg
     };
 }
+
+compute_quad :: proc(normal: Vec3, size: Vec2, center: Vec3, up: Vec3 = {0, 1, 0}) -> [4]Vec3 {
+    n := linalg.normalize(normal)
+
+    // Detect if normal is nearly parallel to default up vector
+    up_default := up
+    dot_up := linalg.dot(n, up_default)
+
+    // If nearly parallel (floor or ceiling), choose different up vector
+    if math.abs(dot_up) > 0.999 {
+        // Use world forward vector instead
+        up_default = Vec3{0, 0, 1}
+    }
+
+    // Project up onto plane orthogonal to normal
+    up_proj := linalg.normalize(up_default - n * linalg.dot(up_default, n))
+
+    right := linalg.normalize(linalg.cross(n, up_proj))
+    up_corrected := linalg.cross(n, right)
+
+    hu := right * (size.x / 2)
+    hv := up_corrected * (size.y / 2)
+
+    return [4]Vec3{
+        (center - hu) - hv,
+        (center - hu) + hv,
+        (center + hu) + hv,
+        (center + hu) - hv,
+    }
+}
