@@ -325,8 +325,6 @@ w_end_render :: proc() {
 }
 
 w_close :: proc() {
-    delete(gui.windows);
-
     dbg_log(" ");
     dbg_log("Closing...");
 

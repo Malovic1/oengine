@@ -624,10 +624,7 @@ to_cstr :: proc(
     s: string,
     allocator := context.temp_allocator,
     loc := #caller_location) -> cstring {
-	c := make([]byte, len(s) + 1, allocator, loc);
-	copy(c, s);
-	c[len(s)] = 0;
-	return cstring(&c[0]);
+    return str.clone_to_cstring(s, allocator);
 }
 
 str_printf :: proc(

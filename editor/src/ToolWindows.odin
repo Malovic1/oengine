@@ -20,11 +20,11 @@ registry_tool :: proc(ct: CameraTool) {
 
     grid := oe.gui_grid(0, 0, 40, wr.width * 0.75, 10);
 
-    root := strs.clone_from_cstring(rl.GetWorkingDirectory());
+    root := strs.clone_from_cstring(rl.GetWorkingDirectory(), allocator = context.temp_allocator);
     @static dir: string;
     if (oe.gui_button("Set exe dir", grid.x, grid.y, grid.width, grid.height)) {
         dir = oe.nfd_folder();
-        rl.ChangeDirectory(strs.clone_to_cstring(dir));
+        rl.ChangeDirectory(oe.to_cstr(dir));
     }
 
     grid = oe.gui_grid(1, 0, 40, wr.width * 0.75, 10);
@@ -55,7 +55,7 @@ registry_tool :: proc(ct: CameraTool) {
             paths := load_config(path);
 
             if (paths[0] != oe.STR_EMPTY) {
-                rl.ChangeDirectory(strs.clone_to_cstring(paths[0]));
+                rl.ChangeDirectory(oe.to_cstr(paths[0]));
             }
             if (paths[1] != oe.STR_EMPTY) {
                 if (filepath.ext(paths[1]) == ".json" || filepath.ext(paths[1]) == ".od") {
@@ -358,9 +358,9 @@ data_id_tool :: proc(ct: CameraTool) {
     if (oe.gui_button("Add dataID", grid.x, grid.y, grid.width, grid.height)) {
         if (tag == "") do tag = "default";
 
-        reg_tag := oe.str_add("data_id_", tag);
+        reg_tag := oe.str_add("data_id_", tag, allocator = context.temp_allocator);
         if (oe.asset_manager.registry[reg_tag] != nil) {
-            reg_tag = oe.str_add(reg_tag, oe.rand_digits(4));
+            reg_tag = oe.str_add(reg_tag, oe.rand_digits(4), allocator = context.temp_allocator);
         }
 
         oe.reg_asset(
@@ -374,7 +374,7 @@ data_id_tool :: proc(ct: CameraTool) {
                 fa.fixed_array(oe.ComponentMarshall, 16),
             }
         );
-        oe.dbg_log(oe.str_add({"Added data id of tag: ", tag, " and id: ", oe.str_add("", id)}));
+        oe.dbg_log(oe.str_add({"Added data id of tag: ", tag, " and id: ", oe.str_add("", id, allocator = context.temp_allocator)}));
     }
 
     grid = oe.gui_grid(1, 0, 40, wr.width * 0.75, 10);
@@ -421,9 +421,9 @@ data_id_mod_tool :: proc(ct: CameraTool) {
     if (oe.gui_button("Modify", grid.x, grid.y, grid.width, grid.height)) {
         if (tag == "") do tag = "default";
 
-        reg_tag := oe.str_add("data_id_", tag);
+        reg_tag := oe.str_add("data_id_", tag, allocator = context.temp_allocator);
         if (oe.asset_manager.registry[reg_tag] != nil) {
-            reg_tag = oe.str_add(reg_tag, oe.rand_digits(4));
+            reg_tag = oe.str_add(reg_tag, oe.rand_digits(4), allocator = context.temp_allocator);
         }
 
         t := oe.get_asset_var(editor_data.active_data_id, oe.DataID).transform;
@@ -450,7 +450,7 @@ data_id_mod_tool :: proc(ct: CameraTool) {
                 comps,
             }
         );
-        oe.dbg_log(oe.str_add({"Modified data id of tag: ", tag, " and id: ", oe.str_add("", id)}));
+        oe.dbg_log(oe.str_add({"Modified data id of tag: ", tag, " and id: ", oe.str_add("", id, allocator = context.temp_allocator)}));
         d_flags = {};
         d_flags_len = 0;
     }
@@ -488,19 +488,19 @@ data_id_mod_tool :: proc(ct: CameraTool) {
     grid = oe.gui_grid(4, 0, 40, wr.width * POS_FACTOR, 10);
     if (oe.gui_button("CX", grid.x, grid.y, grid.width, grid.height)) {
         oe.gui.text_boxes["ModIDPosX"].text = oe.str_add(
-            "", oe.ecs_world.camera.position.x
+            "", oe.ecs_world.camera.position.x, allocator = context.temp_allocator,
         );
     }
     grid = oe.gui_grid(4, 1, 40, wr.width * POS_FACTOR, 10);
     if (oe.gui_button("CY", grid.x, grid.y, grid.width, grid.height)) {
         oe.gui.text_boxes["ModIDPosY"].text = oe.str_add(
-            "", oe.ecs_world.camera.position.y
+            "", oe.ecs_world.camera.position.y, allocator = context.temp_allocator,
         );
     }
     grid = oe.gui_grid(4, 2, 40, wr.width * POS_FACTOR, 10);
     if (oe.gui_button("CZ", grid.x, grid.y, grid.width, grid.height)) {
         oe.gui.text_boxes["ModIDPosZ"].text = oe.str_add(
-            "", oe.ecs_world.camera.position.z
+            "", oe.ecs_world.camera.position.z, allocator = context.temp_allocator
         );
     }
 
@@ -545,7 +545,7 @@ data_id_mod_tool :: proc(ct: CameraTool) {
 
         text := "";
         for i in 0..<did.flags.len {
-            text = oe.str_add(text, did.flags.data[i]);
+            text = oe.str_add(text, did.flags.data[i], allocator = context.temp_allocator);
             text = oe.str_add({text, ","})
         }
         grid = oe.gui_grid(7, 0, 40, wr.width, 10);
@@ -595,7 +595,7 @@ did_component_tool :: proc(ct: CameraTool) {
             did := oe.get_asset_var(tag, oe.DataID);
             fa.append(
                 &did.comps, 
-                oe.ComponentMarshall {k.name, oe.str_add("", k.type)}
+                oe.ComponentMarshall {k.name, oe.str_add("", k.type, allocator = context.temp_allocator)}
             );
 
             oe.unreg_asset(did.reg_tag);
@@ -603,7 +603,7 @@ did_component_tool :: proc(ct: CameraTool) {
             oe.dbg_log(
                 oe.str_add({
                     "Modified data id of tag: ", 
-                    tag, " and id: ", oe.str_add("", did.id)
+                    tag, " and id: ", oe.str_add("", did.id, allocator = context.temp_allocator)
                 })
             );
         }
@@ -656,16 +656,16 @@ edit_mode_tool :: proc(ct: ^CameraTool) {
     }
 
     grid = oe.gui_grid(3, 0);
-    oe.gui_text(oe.str_add("XY: ", ct.edit_layer[EditMode.XY]), 20, grid.x, grid.y);
+    oe.gui_text(oe.str_add("XY: ", ct.edit_layer[EditMode.XY], allocator = context.temp_allocator), 20, grid.x, grid.y);
 
     grid = oe.gui_grid(4, 0);
-    oe.gui_text(oe.str_add("XZ: ", ct.edit_layer[EditMode.XZ]), 20, grid.x, grid.y);
+    oe.gui_text(oe.str_add("XZ: ", ct.edit_layer[EditMode.XZ], allocator = context.temp_allocator), 20, grid.x, grid.y);
 
     grid = oe.gui_grid(5, 0);
-    oe.gui_text(oe.str_add("ZY: ", ct.edit_layer[EditMode.ZY]), 20, grid.x, grid.y);
+    oe.gui_text(oe.str_add("ZY: ", ct.edit_layer[EditMode.ZY], allocator = context.temp_allocator), 20, grid.x, grid.y);
 
     grid = oe.gui_grid(6, 0);
-    if (oe.gui_button(oe.str_add("", ct.shape_mode), grid.x, grid.y, grid.width, grid.height)) {
+    if (oe.gui_button(oe.str_add("", ct.shape_mode, allocator = context.temp_allocator), grid.x, grid.y, grid.width, grid.height)) {
         if (i32(ct.shape_mode) == i32(ShapeMode.MAX) - 1) {
             ct.shape_mode = .TRIANGLE;
         } else {

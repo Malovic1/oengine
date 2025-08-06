@@ -4,6 +4,7 @@ import "core:fmt"
 import str "core:strings"
 import rl "vendor:raylib"
 import oe "../../oengine"
+import "core:mem"
 
 globals: struct {
     registry_atlas: oe.Atlas,
@@ -12,6 +13,27 @@ globals: struct {
 main :: proc() {
     oe.OE_DEBUG = true;
     oe.PHYS_DEBUG = true;
+
+    def_allocator := context.allocator;
+    track_allocator: mem.Tracking_Allocator;
+    mem.tracking_allocator_init(&track_allocator, def_allocator);
+    context.allocator = mem.tracking_allocator(&track_allocator);
+
+    reset_track_allocator :: proc(a: ^mem.Tracking_Allocator) -> bool {
+        err := false;
+
+        for _, value in a.allocation_map {
+            fmt.printf("%v: allocated %v bytes\n", value.location, value.size);
+            err = true;
+        }
+
+        if (!err) {
+            fmt.println("No memory allocated");
+        }
+
+        mem.tracking_allocator_clear(a);
+        return err;
+    }
 
     monitor := rl.GetCurrentMonitor();
     oe.w_create(oe.EDITOR_INSTANCE);
@@ -29,6 +51,8 @@ main :: proc() {
     collided_dids := make([dynamic]oe.DataID);
 
     for (oe.w_tick()) {
+        free_all(context.temp_allocator);
+        mem.tracking_allocator_clear(&track_allocator);
         // update
         oe.ew_update();
         ct_update(&camera_tool);
@@ -51,24 +75,26 @@ main :: proc() {
         edit_mode_tool(&camera_tool);
         texture_select_tool(&camera_tool);
 
+        current_allocator := context.temp_allocator;
         oe.gui_text(
-            oe.str_add("mode: ", camera_tool.mode), 
+            oe.str_add("mode: ", camera_tool.mode, allocator = current_allocator), 
             20, 10, f32(oe.w_render_height()) - 120, true
         );
         oe.gui_text(
-            oe.str_add("tile edit: ", camera_tool.tile_edit), 
+            oe.str_add("tile edit: ", camera_tool.tile_edit, allocator = current_allocator), 
             20, 10, f32(oe.w_render_height()) - 90, true
         );
         oe.gui_text(
-            oe.str_add("tile layer: ", camera_tool.tile_layer), 
+            oe.str_add("tile layer: ", camera_tool.tile_layer, allocator = current_allocator), 
             20, 10, f32(oe.w_render_height()) - 60, true
         );
         oe.gui_text(
-            oe.str_add("render mode: ", camera_tool.render_mode), 
+            oe.str_add("render mode: ", camera_tool.render_mode, allocator = current_allocator), 
             20, 10, f32(oe.w_render_height()) - 30, true
         );
 
         oe.w_end_render();
+        if (oe.key_pressed(.F4)) do reset_track_allocator(&track_allocator);
     }
 
     delete(distances);
@@ -129,15 +155,16 @@ handle_mouse_ray :: proc(distances: ^[dynamic]f32, collided_dids: ^[dynamic]oe.D
         editor_data.active_data_id = editor_data.hovered_data_id;
         did := oe.get_asset_var(editor_data.active_data_id, oe.DataID);
 
+        current_allocator := context.temp_allocator;
         oe.gui.windows["DataID modifier"].active = true;
         oe.gui.text_boxes["ModTagTextBox"].text = did.tag;
-        oe.gui.text_boxes["ModIDTextBox"].text = oe.str_add("", did.id);
-        oe.gui.text_boxes["ModIDPosX"].text = oe.str_add("", did.transform.position.x);
-        oe.gui.text_boxes["ModIDPosY"].text = oe.str_add("", did.transform.position.y);
-        oe.gui.text_boxes["ModIDPosZ"].text = oe.str_add("", did.transform.position.z);
-        oe.gui.text_boxes["ModIDScaleX"].text = oe.str_add("", did.transform.scale.x);
-        oe.gui.text_boxes["ModIDScaleY"].text = oe.str_add("", did.transform.scale.y);
-        oe.gui.text_boxes["ModIDScaleZ"].text = oe.str_add("", did.transform.scale.z);
+        oe.gui.text_boxes["ModIDTextBox"].text = oe.str_add("", did.id, allocator = current_allocator);
+        oe.gui.text_boxes["ModIDPosX"].text = oe.str_add("", did.transform.position.x, allocator = current_allocator);
+        oe.gui.text_boxes["ModIDPosY"].text = oe.str_add("", did.transform.position.y, allocator = current_allocator);
+        oe.gui.text_boxes["ModIDPosZ"].text = oe.str_add("", did.transform.position.z, allocator = current_allocator);
+        oe.gui.text_boxes["ModIDScaleX"].text = oe.str_add("", did.transform.scale.x, allocator = current_allocator);
+        oe.gui.text_boxes["ModIDScaleY"].text = oe.str_add("", did.transform.scale.y, allocator = current_allocator);
+        oe.gui.text_boxes["ModIDScaleZ"].text = oe.str_add("", did.transform.scale.z, allocator = current_allocator);
     }
 }
 
@@ -152,7 +179,7 @@ update :: proc(camera_tool: CameraTool) {
             did := oe.get_asset_var(editor_data.active_data_id, oe.DataID);
             reg_tag := did.reg_tag;
             if (oe.asset_manager.registry[reg_tag] != nil) {
-                reg_tag = oe.str_add(reg_tag, oe.rand_digits(4));
+                reg_tag = oe.str_add(reg_tag, oe.rand_digits(4), allocator = context.temp_allocator);
             }
 
             tag := str.clone(did.tag);
@@ -175,7 +202,7 @@ update :: proc(camera_tool: CameraTool) {
                 }
             );
             oe.dbg_log(oe.str_add({
-                "Added data id of tag: ", tag, " and id: ", oe.str_add("", did.id)}
+                "Added data id of tag: ", tag, " and id: ", oe.str_add("", did.id, allocator = context.temp_allocator)}
             ));
         }
 
@@ -193,7 +220,7 @@ update :: proc(camera_tool: CameraTool) {
                     did := oe.get_asset_var(editor_data.active_data_id, oe.DataID);
                     reg_tag := did.reg_tag;
                     if (oe.asset_manager.registry[reg_tag] != nil) {
-                        reg_tag = oe.str_add(reg_tag, oe.rand_digits(4));
+                        reg_tag = oe.str_add(reg_tag, oe.rand_digits(4), allocator = context.temp_allocator);
                     }
 
                     tag := str.clone(did.tag);
@@ -216,7 +243,7 @@ update :: proc(camera_tool: CameraTool) {
                         }
                     );
                     oe.dbg_log(oe.str_add({
-                        "Added data id of tag: ", tag, " and id: ", oe.str_add("", did.id)}
+                        "Added data id of tag: ", tag, " and id: ", oe.str_add("", did.id, allocator = context.temp_allocator)}
                     ));
                 }
             }
@@ -261,7 +288,7 @@ render :: proc(camera_tool: CameraTool) {
                     did := oe.get_asset_var(editor_data.active_data_id, oe.DataID);
                     reg_tag := did.reg_tag;
                     if (oe.asset_manager.registry[reg_tag] != nil) {
-                        reg_tag = oe.str_add(reg_tag, oe.rand_digits(4));
+                        reg_tag = oe.str_add(reg_tag, oe.rand_digits(4), allocator = context.temp_allocator);
                     }
 
                     t := did.transform;
