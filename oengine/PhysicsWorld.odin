@@ -73,7 +73,6 @@ pw_update :: proc(using self: ^PhysicsWorld, dt: f32) {
     delta_time = dt;
     if (paused) { return; }
 
-    @static narrow_pairs: [dynamic]ContactPair;
     @static candidates: [dynamic]int;
 
     for n: i32; n < iterations; n += 1 {

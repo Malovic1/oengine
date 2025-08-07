@@ -22,6 +22,13 @@ AABB :: struct {
     x, y, z, width, height, depth: f32,
 }
 
+Collision :: struct {
+    entity: ^Entity,
+    normal: [3]f32,
+    depth: f32,
+    point: [3]f32,
+}
+
 Entity :: struct {
     id: u32,
     tag: string,
@@ -29,6 +36,9 @@ Entity :: struct {
     components: fa.FixedMap(typeid, rawptr, MAX_CMPNTS),
     frustum_type: FrustumType,
     custom_box: AABB,
+    use_octree: bool,
+    on_collision: proc(collision: Collision),
+    use_rb_transform: bool,
 }
 
 entity_init :: proc(ctx: ^Context, transparent := true) -> ^Entity {

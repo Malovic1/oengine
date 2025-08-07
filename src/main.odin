@@ -78,6 +78,11 @@ main :: proc() {
     skybox := oe.gen_skybox(oe.gen_cubemap_texture(skybox_tex));
 
     floor := oe.aent_init("Floor");
+    floor.on_collision = proc(collision: ecs.Collision) {
+        if (collision.entity.tag == "player") {
+            fmt.println("has player");
+        }
+    }
     floor_tr := oe.get_component(floor, oe.Transform);
     floor_tr.scale = {50, 1, 50};
     floor_rb := oe.add_component(floor, oe.rb_init(floor_tr^, 1.0, 0.5, true, oe.ShapeType.BOX));
@@ -99,6 +104,12 @@ main :: proc() {
     wall2_sm := oe.add_component(wall2, oe.sm_init(albedo));
 
     player := oe.aent_init("player");
+    player.use_rb_transform = true;
+    player.on_collision = proc(collision: ecs.Collision) {
+        if (collision.entity.tag == "Floor") {
+            fmt.println("on floor");
+        }
+    }
     player_tr := oe.get_component(player, oe.Transform);
     player_tr.position = {0, 5, 0};
     player_rb := oe.add_component(

@@ -15,6 +15,7 @@ FOG_DENSITY :: 0
 
 ecs_world: struct {
     ecs_ctx: ecs.Context,
+    ent_tree: TransformOctree,
     physics: PhysicsWorld,
     camera: ^Camera,
     ray_ctx: RayContext, // lighting context
@@ -29,6 +30,7 @@ ecs_world: struct {
 ew_init :: proc(s_gravity: Vec3, s_iter: i32 = 8) {
     using ecs_world;
     ecs_ctx = ecs.ecs_init();
+    ent_tree = tr_make_tree({}, vec3_one() * OCTREE_SIZE);
 
     asset_manager.registry = make(map[string]Asset);
     asset_manager.component_types = make(map[ComponentParse]typeid);
@@ -234,7 +236,11 @@ ew_get_ents :: proc(tag: string) -> []AEntity {
 
 ew_update :: proc() {
     using ecs_world;
-    // t := thread.create_and_start(ew_fixed_update, self_cleanup = true);
+    @static candidates: [dynamic]u32;
+
+    tr_clear_tree(ent_tree.root);
+    clear(&candidates);
+
     ew_fixed_update(window.custom_update);
 
     fog_update(camera.position);
@@ -242,7 +248,57 @@ ew_update :: proc() {
     ray_set_view(ray_ctx.shader, camera^);
     update_light_count(ray_ctx.shader, ray_ctx.light_count);
 
-    ecs.ecs_update(&ecs_ctx);
+    for i in 0..<fa.range(ecs_ctx.entities) {
+        entity := ecs_ctx.entities.data[i];
+        for j in 0..<fa.range(ecs_ctx._update_systems) {
+            system := ecs_ctx._update_systems.data[j];
+            system(&ecs_ctx, entity);
+        }
+
+        if (!entity.use_octree) { continue; }
+
+        tr_insert_octree(ent_tree.root, entity.id, tr_get_aabb(entity.id));
+    }
+
+    for i in 0..<fa.range(ecs_ctx.entities) {
+        entity := ecs_ctx.entities.data[i];
+
+        clear(&candidates);
+        tr_query_octree(ent_tree.root, tr_get_aabb(entity.id), &candidates);
+        for id in candidates {
+            if (id <= entity.id) { continue; }
+
+            entity2 := ew_get_ent(id);
+            tr := tr_target_transform(entity.id);
+            tr2 := tr_target_transform(entity2.id);
+            contact: CollisionInfo;
+            if (collision_transforms(tr, tr2, &contact)) {
+                if (entity.on_collision != nil) {
+                    collision := ecs.Collision {
+                        entity = entity2,
+                        normal = contact.normal,
+                        depth = contact.depth,
+                        point = contact.point,
+                    };
+                    entity.on_collision(collision);
+                }
+                if (entity2.on_collision != nil) {
+                    collision := ecs.Collision {
+                        entity = entity,
+                        normal = contact.normal,
+                        depth = contact.depth,
+                        point = contact.point,
+                    };
+                    entity2.on_collision(collision);
+                }
+            }
+        }
+    }
+
+    for id in ecs_ctx.removed_ents {
+        fa.remove(&ecs_ctx.entities, id);
+    }
+    clear(&ecs_ctx.removed_ents);
 
     for i in removed_decals {
         if (int(i) < len(decals)) {
