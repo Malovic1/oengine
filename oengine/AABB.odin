@@ -10,6 +10,18 @@ AABB :: struct {
     width, height, depth: f32,
 }
 
+aabb_min :: proc(a: AABB) -> Vec3 {
+    return {a.x - a.width * 0.5,
+                a.y - a.height * 0.5,
+                a.z - a.depth * 0.5};
+}
+
+aabb_max :: proc(a: AABB) -> Vec3 {
+    return {a.x + a.width * 0.5,
+                a.y + a.height * 0.5,
+                a.z + a.depth * 0.5};
+}
+
 trans_to_aabb :: proc(t: Transform) -> AABB {
     return AABB {
         x = t.position.x,
