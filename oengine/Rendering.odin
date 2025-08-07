@@ -37,7 +37,8 @@ world_fog: struct {
 
 Decal :: struct {
     position, normal: Vec3,
-    verts1, verts2: [4]Vec3,
+    mesh: rl.Mesh,
+    material: rl.Material,
     size: Vec2,
     color: Color,
     texture_tag: string,
@@ -56,15 +57,21 @@ new_decal :: proc(pos, normal: Vec3, size: Vec2, texture_tag: string, color: Col
     d.life_time = life_time;
 
     offset := d.normal * 0.001;
-    d.verts1 = compute_quad(d.normal, d.size, d.position - offset);
-    d.verts2 = compute_quad(-d.normal, d.size, d.position + offset);
+    verts1 := compute_quad(d.normal, d.size, d.position - offset);
+    verts2 := compute_quad(-d.normal, d.size, d.position + offset);
+    d.mesh = make_double_sided_quad_mesh(verts1, verts2, d.normal, -d.normal);
+    d.material = rl.LoadMaterialDefault();
+    d.material.shader = world().ray_ctx.shader;
+    d.material.maps[rl.MaterialMapIndex.ALBEDO].color = d.color;
+    d.material.maps[rl.MaterialMapIndex.ALBEDO].texture = get_asset_var(
+        texture_tag, Texture
+    );
 
     append(&ecs_world.decals, d);
 }
 
 decal_render :: proc(using d: ^Decal, id: i32) {
-    draw_quad(verts1, get_asset_var(texture_tag, Texture), color);
-    draw_quad(verts2, get_asset_var(texture_tag, Texture), color);
+    rl.DrawMesh(mesh, material, rl.Matrix(1));
 
     if (life_time != DECAL_PERMANENT) {
         life_time -= delta_time();
@@ -963,6 +970,96 @@ gen_mesh_cubemap :: proc(scale: Vec3, c_map: Texture) -> (mesh: rl.Mesh) {
 
     rl.UploadMesh(&mesh, false);
     return;
+}
+
+make_double_sided_quad_mesh :: proc(verts1, verts2: [4]Vec3, normal1, normal2: Vec3) -> rl.Mesh {
+    // We will have 12 vertices total
+    positions := []f32{
+        // Front face (verts1)
+        verts1[0].x, verts1[0].y, verts1[0].z,
+        verts1[1].x, verts1[1].y, verts1[1].z,
+        verts1[2].x, verts1[2].y, verts1[2].z,
+
+        verts1[0].x, verts1[0].y, verts1[0].z,
+        verts1[2].x, verts1[2].y, verts1[2].z,
+        verts1[3].x, verts1[3].y, verts1[3].z,
+
+        // Back face (verts2)
+        verts2[0].x, verts2[0].y, verts2[0].z,
+        verts2[1].x, verts2[1].y, verts2[1].z,
+        verts2[2].x, verts2[2].y, verts2[2].z,
+
+        verts2[0].x, verts2[0].y, verts2[0].z,
+        verts2[2].x, verts2[2].y, verts2[2].z,
+        verts2[3].x, verts2[3].y, verts2[3].z,
+    }
+
+    // Normals — one per vertex
+    n1 := linalg.normalize(normal1)
+    n2 := linalg.normalize(normal2)
+
+    normals := []f32{
+        // Front
+        n1.x, n1.y, n1.z,
+        n1.x, n1.y, n1.z,
+        n1.x, n1.y, n1.z,
+
+        n1.x, n1.y, n1.z,
+        n1.x, n1.y, n1.z,
+        n1.x, n1.y, n1.z,
+
+        // Back
+        n2.x, n2.y, n2.z,
+        n2.x, n2.y, n2.z,
+        n2.x, n2.y, n2.z,
+
+        n2.x, n2.y, n2.z,
+        n2.x, n2.y, n2.z,
+        n2.x, n2.y, n2.z,
+    }
+
+    // UVs — same for front and back
+    texcoords := []f32{
+        // Front
+        0, 0,
+        0, 1,
+        1, 1,
+
+        0, 0,
+        1, 1,
+        1, 0,
+
+        // Back
+        0, 0,
+        0, 1,
+        1, 1,
+
+        0, 0,
+        1, 1,
+        1, 0,
+    }
+
+    // Indices — just sequential for now
+    indices := []u16{
+        0, 1, 2,
+        3, 4, 5,
+
+        6, 7, 8,
+        9, 10, 11,
+    }
+
+    mesh := rl.Mesh{}
+    mesh.vertexCount = 12
+    mesh.triangleCount = 4
+
+    mesh.vertices = &positions[0]
+    mesh.normals = &normals[0]
+    mesh.texcoords = &texcoords[0]
+    mesh.indices = &indices[0]
+
+    rl.UploadMesh(&mesh, false)
+
+    return mesh
 }
 
 gen_mesh_triangle :: proc(verts: [3]Vec3, #any_int uv_rot: i32 = 0) -> rl.Mesh {
