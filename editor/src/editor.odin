@@ -14,27 +14,6 @@ main :: proc() {
     oe.OE_DEBUG = true;
     oe.PHYS_DEBUG = true;
 
-    def_allocator := context.allocator;
-    track_allocator: mem.Tracking_Allocator;
-    mem.tracking_allocator_init(&track_allocator, def_allocator);
-    context.allocator = mem.tracking_allocator(&track_allocator);
-
-    reset_track_allocator :: proc(a: ^mem.Tracking_Allocator) -> bool {
-        err := false;
-
-        for _, value in a.allocation_map {
-            fmt.printf("%v: allocated %v bytes\n", value.location, value.size);
-            err = true;
-        }
-
-        if (!err) {
-            fmt.println("No memory allocated");
-        }
-
-        mem.tracking_allocator_clear(a);
-        return err;
-    }
-
     monitor := rl.GetCurrentMonitor();
     oe.w_create(oe.EDITOR_INSTANCE);
     rl.MaximizeWindow();
@@ -52,7 +31,6 @@ main :: proc() {
 
     for (oe.w_tick()) {
         free_all(context.temp_allocator);
-        mem.tracking_allocator_clear(&track_allocator);
         // update
         oe.ew_update();
         ct_update(&camera_tool);
@@ -94,7 +72,6 @@ main :: proc() {
         );
 
         oe.w_end_render();
-        if (oe.key_pressed(.F4)) do reset_track_allocator(&track_allocator);
     }
 
     oe.w_close();
