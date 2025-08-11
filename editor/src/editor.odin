@@ -97,8 +97,6 @@ main :: proc() {
         if (oe.key_pressed(.F4)) do reset_track_allocator(&track_allocator);
     }
 
-    delete(distances);
-    delete(collided_dids);
     oe.w_close();
 }
 
@@ -155,7 +153,7 @@ handle_mouse_ray :: proc(distances: ^[dynamic]f32, collided_dids: ^[dynamic]oe.D
         editor_data.active_data_id = editor_data.hovered_data_id;
         did := oe.get_asset_var(editor_data.active_data_id, oe.DataID);
 
-        current_allocator := context.temp_allocator;
+        current_allocator := context.allocator;
         oe.gui.windows["DataID modifier"].active = true;
         oe.gui.text_boxes["ModTagTextBox"].text = did.tag;
         oe.gui.text_boxes["ModIDTextBox"].text = oe.str_add("", did.id, allocator = current_allocator);

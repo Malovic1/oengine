@@ -358,9 +358,9 @@ data_id_tool :: proc(ct: CameraTool) {
     if (oe.gui_button("Add dataID", grid.x, grid.y, grid.width, grid.height)) {
         if (tag == "") do tag = "default";
 
-        reg_tag := oe.str_add("data_id_", tag, allocator = context.temp_allocator);
+        reg_tag := oe.str_add("data_id_", tag);
         if (oe.asset_manager.registry[reg_tag] != nil) {
-            reg_tag = oe.str_add(reg_tag, oe.rand_digits(4), allocator = context.temp_allocator);
+            reg_tag = oe.str_add(reg_tag, oe.rand_digits(4));
         }
 
         oe.reg_asset(
@@ -421,9 +421,9 @@ data_id_mod_tool :: proc(ct: CameraTool) {
     if (oe.gui_button("Modify", grid.x, grid.y, grid.width, grid.height)) {
         if (tag == "") do tag = "default";
 
-        reg_tag := oe.str_add("data_id_", tag, allocator = context.temp_allocator);
+        reg_tag := oe.str_add("data_id_", tag);
         if (oe.asset_manager.registry[reg_tag] != nil) {
-            reg_tag = oe.str_add(reg_tag, oe.rand_digits(4), allocator = context.temp_allocator);
+            reg_tag = oe.str_add(reg_tag, oe.rand_digits(4));
         }
 
         t := oe.get_asset_var(editor_data.active_data_id, oe.DataID).transform;
@@ -488,19 +488,19 @@ data_id_mod_tool :: proc(ct: CameraTool) {
     grid = oe.gui_grid(4, 0, 40, wr.width * POS_FACTOR, 10);
     if (oe.gui_button("CX", grid.x, grid.y, grid.width, grid.height)) {
         oe.gui.text_boxes["ModIDPosX"].text = oe.str_add(
-            "", oe.ecs_world.camera.position.x, allocator = context.temp_allocator,
+            "", oe.ecs_world.camera.position.x,
         );
     }
     grid = oe.gui_grid(4, 1, 40, wr.width * POS_FACTOR, 10);
     if (oe.gui_button("CY", grid.x, grid.y, grid.width, grid.height)) {
         oe.gui.text_boxes["ModIDPosY"].text = oe.str_add(
-            "", oe.ecs_world.camera.position.y, allocator = context.temp_allocator,
+            "", oe.ecs_world.camera.position.y,
         );
     }
     grid = oe.gui_grid(4, 2, 40, wr.width * POS_FACTOR, 10);
     if (oe.gui_button("CZ", grid.x, grid.y, grid.width, grid.height)) {
         oe.gui.text_boxes["ModIDPosZ"].text = oe.str_add(
-            "", oe.ecs_world.camera.position.z, allocator = context.temp_allocator
+            "", oe.ecs_world.camera.position.z
         );
     }
 
@@ -545,7 +545,7 @@ data_id_mod_tool :: proc(ct: CameraTool) {
 
         text := "";
         for i in 0..<did.flags.len {
-            text = oe.str_add(text, did.flags.data[i], allocator = context.temp_allocator);
+            text = oe.str_add(text, did.flags.data[i]);
             text = oe.str_add({text, ","})
         }
         grid = oe.gui_grid(7, 0, 40, wr.width, 10);
@@ -595,7 +595,7 @@ did_component_tool :: proc(ct: CameraTool) {
             did := oe.get_asset_var(tag, oe.DataID);
             fa.append(
                 &did.comps, 
-                oe.ComponentMarshall {k.name, oe.str_add("", k.type, allocator = context.temp_allocator)}
+                oe.ComponentMarshall {k.name, oe.str_add("", k.type)}
             );
 
             oe.unreg_asset(did.reg_tag);
