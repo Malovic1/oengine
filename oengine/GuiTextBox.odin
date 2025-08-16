@@ -12,7 +12,7 @@ GuiTextBox :: struct {
 }
 
 @(private)
-gui_text_box_render :: proc(using self: ^GuiTextBox, x, y, w, h: f32, decorated: bool = true, standalone: bool = false, except: []char = {}) -> string {
+gui_text_box_render :: proc(using self: ^GuiTextBox, x, y, w, h: f32, decorated: bool = true, standalone: bool = false, except: []char = {}, tint := WHITE) -> string {
     w_active := gui_active();
     if (!standalone) { 
         if (w_active != nil && !w_active.active) do return text;
@@ -47,7 +47,7 @@ gui_text_box_render :: proc(using self: ^GuiTextBox, x, y, w, h: f32, decorated:
     text_x := rec.x + 5;
 
     if (decorated) do gui_inverse_rec(rec.x, rec.y, rec.width, rec.height);
-    else do rl.DrawRectangleLinesEx(rec, 1, WHITE);
+    else do rl.DrawRectangleLinesEx(rec, 1, tint);
 
     rl.BeginScissorMode(i32(rec.x), i32(rec.y), i32(rec.width), i32(rec.height));
    
@@ -158,7 +158,7 @@ gui_text_box_render :: proc(using self: ^GuiTextBox, x, y, w, h: f32, decorated:
                 }
             } else {
                 key := []char{char_pressed()};
-                if (key[0] >= 32 && key[0] <= 125 && !contains(&key[0], raw_data(except), len(except), char)) {
+                if (key[0] >= 32 && key[0] <= 125 && !contains_ptr(&key[0], raw_data(except), len(except), char)) {
                     left := text[:len(text) - pos];
                     char_key := utf8.runes_to_string(key);
                     right := text[len(text) - pos:];
@@ -191,7 +191,7 @@ gui_text_box_render :: proc(using self: ^GuiTextBox, x, y, w, h: f32, decorated:
                 }
             } else {
                 key := []char{char_pressed()};
-                if (key[0] >= 32 && key[0] <= 125 && !contains(&key[0], raw_data(except), len(except), char)) {
+                if (key[0] >= 32 && key[0] <= 125 && !contains_ptr(&key[0], raw_data(except), len(except), char)) {
                     text = str_add(text, utf8.runes_to_string(key));
                 }
             }
@@ -222,15 +222,15 @@ gui_text_box_render :: proc(using self: ^GuiTextBox, x, y, w, h: f32, decorated:
     return text;
 }
 
-gui_text_box :: proc(tag: string, x, y, w, h: f32, decorated: bool = true, standalone: bool = false, except: []char = {}) -> string {
+gui_text_box :: proc(tag: string, x, y, w, h: f32, decorated: bool = true, standalone: bool = false, except: []char = {}, text := "", tint := WHITE) -> string {
     if (!gui_text_box_exists(tag)) {
         instance := new(GuiTextBox);
-        instance.text = "";
+        instance.text = text;
         instance.active = false;
 
         gui.text_boxes[tag] = instance;
     }
 
     inst := gui.text_boxes[tag];
-    return gui_text_box_render(inst, x, y, w, h, decorated, standalone, except);
+    return gui_text_box_render(inst, x, y, w, h, decorated, standalone, except, tint);
 }

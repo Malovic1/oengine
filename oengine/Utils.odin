@@ -10,6 +10,7 @@ import "core:math/linalg"
 import "core:math/rand"
 import "core:encoding/json"
 import od "object_data"
+import "base:intrinsics"
 
 STR_EMPTY :: ""
 
@@ -428,6 +429,17 @@ rotate_vector_around_axis :: proc(v: Vec3, axis: Vec3, angle_deg: f32) -> Vec3 {
            axis * linalg.dot(axis, v) * (1.0 - cos_theta);
 }
 
+contains :: proc(arr: $T, elem: $E) -> (bool, int)
+    where intrinsics.type_is_dynamic_array(type_of(arr)) {
+    for i in 0..<len(arr) {
+        if (arr[i] == elem) { 
+            return true, i;
+        }
+    }
+
+    return false, -1;
+}
+
 od_color :: proc(obj: od.Object) -> Color {
     if (od_contains(obj, "r") &&
         od_contains(obj, "g") &&
@@ -488,7 +500,7 @@ is_nil :: proc(data: ..rawptr) -> bool {
     return false;
 }
 
-contains :: proc(element, array: rawptr, arr_len: int, $T: typeid) -> bool {
+contains_ptr :: proc(element, array: rawptr, arr_len: int, $T: typeid) -> bool {
     elem := cast(^T)element;
     arr := cast([^]T)array;
     // fmt.println(elem^, arr[0:arr_len]);

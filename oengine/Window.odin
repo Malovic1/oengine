@@ -361,6 +361,7 @@ w_transform_changed :: proc() -> bool {
 
 @(private)
 w_reload_target :: proc() {
+    rl.UnloadRenderTexture(window.target);
     window.target = rl.LoadRenderTexture(window._render_width, window._render_height);
     dev_console._rec = {0, -f32(w_render_height() / 2), f32(w_render_width()), f32(w_render_height() / 2)};
 }

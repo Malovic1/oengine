@@ -366,7 +366,7 @@ gui_tick :: proc(
     text: string = STR_EMPTY,
     text_size: f32 = 20,
     standalone: bool = false,
-    decorated: bool = true) -> bool {
+    decorated: bool = true, tint := WHITE) -> bool {
     active := gui_active();
     if (active != nil && !active.active && !standalone) do return false;
 
@@ -383,7 +383,7 @@ gui_tick :: proc(
     if (decorated) {
         gui_inverse_rec(rp.x, rp.y, w, h);
     } else {
-        rl.DrawRectangleLinesEx({rp.x, rp.y, w, h}, 1, WHITE);
+        rl.DrawRectangleLinesEx({rp.x, rp.y, w, h}, 1, tint);
     }
 
     res := tick
@@ -395,7 +395,7 @@ gui_tick :: proc(
 
     if (tick) do gui_icon(.TICK, i32(rp.x), i32(rp.y), i32(w), i32(h));
 
-    gui_text(text, text_size, rp.x + w + 10, rp.y, standalone = true);
+    gui_text(text, text_size, rp.x + w + 10, rp.y, standalone = true, color = tint);
 
     return res;
 }
