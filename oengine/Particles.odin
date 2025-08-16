@@ -15,7 +15,7 @@ ParticleData :: struct {
 ParticleBehaviour :: #type proc(p: ^Particle);
 
 default_behaviour :: proc(p: ^Particle) {
-    p.data.accel.y = -p.data.grav.y;
+    p.data.accel = -p.data.grav;
     p.data.vel += p.data.accel * rl.GetFrameTime();
     p.position += p.data.vel * rl.GetFrameTime();
 }

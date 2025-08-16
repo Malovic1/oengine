@@ -41,6 +41,29 @@ collision_transforms_plain :: proc(a, b: Transform) -> bool {
     return true;
 }
 
+collision_tr_tri :: proc(tr: Transform, t: TriangleCollider) -> bool {
+    cube_dimensions := tr.scale;
+
+    scaled_position := tr.position;
+
+    closest := closest_point_on_triangle(scaled_position, t.pts[0], t.pts[1], t.pts[2]);
+    diff := scaled_position - closest;
+
+    half_dimensions := cube_dimensions * 0.5;
+    adjusted_diff := Vec3{
+        diff.x / half_dimensions.x,
+        diff.y / half_dimensions.y,
+        diff.z / half_dimensions.z,
+    };
+    dist := linalg.length(adjusted_diff);
+
+    normal := adjusted_diff / dist;
+
+    RAD :: 1
+
+    return dist < RAD;
+}
+
 collision_transforms_pro :: proc(a, b: Transform, contact: ^CollisionInfo) -> bool {
     // Calculate half extents along each axis
     extents1 := Vec3 {a.scale.x / 2, a.scale.y / 2, a.scale.z / 2};

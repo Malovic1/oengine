@@ -77,8 +77,8 @@ ecs_fixed_update :: proc(ctx: ^Context) {
 }
 
 ecs_remove :: proc(ctx: ^Context, ent: ^Entity) {
-    id := fa.get_id(ctx.entities, ent);
-    if (id == -1) { return; }
+    if (ent.removing) { return; }
 
-    append(&ctx.removed_ents, i32(id));
+    ent.removing = true;
+    append(&ctx.removed_ents, i32(ent.id));
 }

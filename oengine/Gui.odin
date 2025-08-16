@@ -151,13 +151,13 @@ GuiTextPositioning :: enum i32 {
     RIGHT,
 }
 
-text_pos_renders := [?]proc(string, rl.Rectangle) {
+text_pos_renders := [?]proc(string, rl.Rectangle, Color) {
     text_center_pos,
     text_left_pos,
     text_right_pos,
 };
 
-text_center_pos :: proc(text: string, rec: rl.Rectangle) {
+text_center_pos :: proc(text: string, rec: rl.Rectangle, tint := WHITE) {
     ctext := to_cstr(text);
     text_scale := (rec.width - gui_bezel_size * 2) / f32(rl.MeasureText(ctext, i32(gui_font_size)));
 
@@ -172,11 +172,11 @@ text_center_pos :: proc(text: string, rec: rl.Rectangle) {
         gui_default_font, 
         ctext, 
         Vec2 {text_x, text_y}, 
-        gui_font_size * text_scale, gui_text_spacing, rl.WHITE
+        gui_font_size * text_scale, gui_text_spacing, tint
     );
 }
 
-text_left_pos :: proc(text: string, rec: rl.Rectangle) {
+text_left_pos :: proc(text: string, rec: rl.Rectangle, tint := WHITE) {
     ctext := to_cstr(text);
     text_scale := (rec.height - gui_bezel_size * 2) / gui_font_size;
 
@@ -191,11 +191,11 @@ text_left_pos :: proc(text: string, rec: rl.Rectangle) {
         gui_default_font, 
         ctext, 
         Vec2 {text_x, text_y}, 
-        gui_font_size * text_scale, gui_text_spacing, rl.WHITE
+        gui_font_size * text_scale, gui_text_spacing, tint
     );
 }
 
-text_right_pos :: proc(text: string, rec: rl.Rectangle) {
+text_right_pos :: proc(text: string, rec: rl.Rectangle, tint := WHITE) {
     ctext := to_cstr(text);
     text_scale := (rec.height - gui_bezel_size * 2) / gui_font_size;
 
@@ -210,13 +210,15 @@ text_right_pos :: proc(text: string, rec: rl.Rectangle) {
         gui_default_font, 
         ctext, 
         Vec2 {text_x, text_y}, 
-        gui_font_size * text_scale, gui_text_spacing, rl.WHITE
+        gui_font_size * text_scale, gui_text_spacing, tint
     );
 }
 
 gui_button :: proc(text: string, x: f32 = 10, y: f32 = 10, w: f32 = 50, h: f32 = 25, 
-    text_pos: GuiTextPositioning = .CENTER, standalone: bool = false, decorated: bool = true,
-    texture: Texture = {path = "empty"}) -> bool {
+    text_pos: GuiTextPositioning = .CENTER, 
+    standalone: bool = false, decorated: bool = true,
+    texture: Texture = {path = "empty"}, tint: Color = WHITE, 
+    draw_bounds := true) -> bool {
     active := gui_active();
     if (active != nil && !active.active && !standalone) do return false;
 
@@ -248,10 +250,12 @@ gui_button :: proc(text: string, x: f32 = 10, y: f32 = 10, w: f32 = 50, h: f32 =
             if (!held) do rl.DrawRectangleRec(rec, gui_main_color);
             else do rl.DrawRectangleRec(rec, gui_accent_color);
         } else {
-            rl.DrawRectangleLinesEx(rec, 1, WHITE);
+            if (draw_bounds) {
+                rl.DrawRectangleLinesEx(rec, 1, WHITE);
+            }
         }
 
-        text_pos_renders[text_pos](text, rec);
+        text_pos_renders[text_pos](text, rec, tint);
     } else {
         rl.DrawTexturePro(
             texture, {0, 0, f32(texture.width), f32(texture.height)},

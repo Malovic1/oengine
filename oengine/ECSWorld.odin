@@ -295,10 +295,15 @@ ew_update :: proc() {
         }
     }
 
-    for id in ecs_ctx.removed_ents {
-        fa.remove(&ecs_ctx.entities, id);
+    for remove_id in ecs_ctx.removed_ents {
+        for i := fa.range(ecs_ctx.entities) - 1; i >= 0; i -= 1 {  
+            if (i32(ecs_ctx.entities.data[i].id) == remove_id) {
+                fa.remove(&ecs_ctx.entities, i)
+                break
+            }
+        }
     }
-    clear(&ecs_ctx.removed_ents);
+    clear(&ecs_ctx.removed_ents)
 
     for i in removed_decals {
         if (int(i) < len(decals)) {
@@ -426,6 +431,7 @@ ent_in_view :: proc(ent: AEntity) -> bool {
 ew_deinit :: proc() {
     using ecs_world;
 
+    thread.terminate(physics_thread, 0);
     thread.join(physics_thread);
 
     nfd.Quit();

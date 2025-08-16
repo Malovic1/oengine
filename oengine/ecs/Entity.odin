@@ -39,6 +39,7 @@ Entity :: struct {
     use_octree: bool,
     on_collision: proc(collision: Collision),
     use_rb_transform: bool,
+    removing: bool,
 }
 
 entity_init :: proc(ctx: ^Context, transparent := true) -> ^Entity {
