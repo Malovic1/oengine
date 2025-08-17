@@ -348,8 +348,10 @@ resolve_tri_collision :: proc(rb: ^RigidBody, t: TriangleCollider) {
 
     normal := adjusted_diff / dist;
 
-    RAD :: 1
+    up := vec3_y();
+    slope_dot := linalg.dot(normal, up);
 
+    RAD :: 1
     if dist < RAD {
         // Adjust position considering the cube dimensions
         rb.transform.position += Vec3{
@@ -359,9 +361,21 @@ resolve_tri_collision :: proc(rb: ^RigidBody, t: TriangleCollider) {
         };
 
         // Project velocity to the normal plane if moving towards it
-        vel_normal_dot := linalg.dot(rb.velocity, normal);
-        if vel_normal_dot < 0 {
-            rb.velocity -= normal * vel_normal_dot;
+        if (OE_SLOPE_SLIDING) {
+            if (slope_dot >= OE_SLOPE_THRESHOLD) {
+                vel_normal_dot := linalg.dot(rb.velocity, normal);
+                if vel_normal_dot < 0 {
+                    rb.velocity -= normal * vel_normal_dot;
+                }
+            } else {
+                rb.grounded = false;
+            }
+        } else {
+            vel_normal_dot := linalg.dot(rb.velocity, normal);
+            if vel_normal_dot < 0 {
+                rb.velocity -= normal * vel_normal_dot;
+            }
         }
+
     }
 }
