@@ -13,6 +13,7 @@ SpatialAudio :: struct {
     position, _target: Vec3,
     strength: f32,
     can_play: bool,
+    vol_mod: f32,
 }
 
 sa_init :: proc(position: Vec3, s_sound: Sound) -> SpatialAudio {
@@ -20,7 +21,8 @@ sa_init :: proc(position: Vec3, s_sound: Sound) -> SpatialAudio {
         sound = s_sound,
         position = position,
         strength = 1,
-        can_play = true
+        can_play = true,
+        vol_mod = 1,
     };
 }
 
@@ -45,7 +47,7 @@ sa_update :: proc(ctx: ^ecs.Context, ent: ^ecs.Entity) {
     strength = 1.0 / (dist / MAX_SOUND_DISTANCE + 1.0);
     strength = clamp(strength, 0.0, 1.0); 
 
-    rl.SetSoundVolume(sound, strength);
+    rl.SetSoundVolume(sound, strength * vol_mod);
 }
 
 sa_parse :: proc(asset: od.Object) -> rawptr {
