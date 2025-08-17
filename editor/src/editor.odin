@@ -154,7 +154,7 @@ update :: proc(camera_tool: CameraTool) {
             did := oe.get_asset_var(editor_data.active_data_id, oe.DataID);
             reg_tag := did.reg_tag;
             if (oe.asset_manager.registry[reg_tag] != nil) {
-                reg_tag = oe.str_add(reg_tag, oe.rand_digits(4), allocator = context.temp_allocator);
+                reg_tag = oe.str_add(reg_tag, oe.rand_digits(4));
             }
 
             tag := str.clone(did.tag);
@@ -195,13 +195,13 @@ update :: proc(camera_tool: CameraTool) {
                     did := oe.get_asset_var(editor_data.active_data_id, oe.DataID);
                     reg_tag := did.reg_tag;
                     if (oe.asset_manager.registry[reg_tag] != nil) {
-                        reg_tag = oe.str_add(reg_tag, oe.rand_digits(4), allocator = context.temp_allocator);
+                        reg_tag = oe.str_add(reg_tag, oe.rand_digits(4));
                     }
 
                     tag := str.clone(did.tag);
 
                     t := did.transform;
-                    t.position = pos;
+                    t.position = pos + t.scale * 0.5;
 
                     flags := did.flags;
                     comps := did.comps;
@@ -263,11 +263,11 @@ render :: proc(camera_tool: CameraTool) {
                     did := oe.get_asset_var(editor_data.active_data_id, oe.DataID);
                     reg_tag := did.reg_tag;
                     if (oe.asset_manager.registry[reg_tag] != nil) {
-                        reg_tag = oe.str_add(reg_tag, oe.rand_digits(4), allocator = context.temp_allocator);
+                        reg_tag = oe.str_add(reg_tag, oe.rand_digits(4));
                     }
 
                     t := did.transform;
-                    t.position = pos;
+                    t.position = pos + t.scale * 0.5;
 
                     oe.draw_cube_wireframe(t.position, t.rotation, t.scale, oe.YELLOW);
                     for i in 0..<did.comps.len {

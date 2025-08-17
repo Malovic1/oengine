@@ -648,10 +648,16 @@ render_tri :: proc(using self: ^CameraTool) {
             if (oe.mouse_pressed(.LEFT) && !oe.gui_mouse_over()) {
                 if (len(_active_ids) > 0) {
                     if (oe.key_down(.LEFT_ALT)) {
-                        append(&_active_ids, i32(info.id));
+                        ok, _ := oe.contains(_active_ids, i32(info.id));
+                        if (!ok) {
+                            append(&_active_ids, i32(info.id));
+                        }
                     }
                 } else {
-                    append(&_active_ids, i32(info.id));
+                    ok, _ := oe.contains(_active_ids, i32(info.id));
+                    if (!ok) {
+                        append(&_active_ids, i32(info.id));
+                    }
                     _active_msc_id = i32(msc_id);
                 }
             }
