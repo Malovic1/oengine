@@ -3,6 +3,8 @@ package main
 import "core:fmt"
 import "core:net"
 import "core:os"
+import "core:strconv"
+import "core:strings"
 
 tcp_client :: proc(ip: string, port: i32) {
     local_address, ok := net.parse_ip4_address(ip);
@@ -53,5 +55,25 @@ tcp_client :: proc(ip: string, port: i32) {
 }
 
 main :: proc() {
-    tcp_client("127.0.0.1", 8080);
+    fmt.print("IP: ");
+    buffer: [256]u8;
+    n, err_read := os.read(os.stdin, buffer[:]);
+    if (err_read != nil) {
+        fmt.println("Failed to read data");
+        return;
+    }
+
+    ip := strings.trim_space(string(buffer[:n]));
+
+    fmt.print("Port: ");
+    buffer2: [256]u8;
+    n2, err_read2 := os.read(os.stdin, buffer2[:]);
+    if (err_read2 != nil) {
+        fmt.println("Failed to read data");
+        return;
+    }
+
+    port_str := strings.trim_space(string(buffer2[:n2]));
+    port, ok := strconv.parse_int(port_str);
+    tcp_client(ip, i32(port));
 }
