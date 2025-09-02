@@ -3,8 +3,19 @@ package main
 import "core:fmt"
 import "core:net"
 import "core:os"
+import "core:thread"
 import "core:strconv"
 import "core:strings"
+import rl "vendor:raylib"
+import "core:sync"
+
+Player :: struct {
+    id: i32,
+    x, y: f32,
+}
+
+players: [dynamic]Player;
+players_mutex: sync.Mutex;
 
 tcp_client :: proc(ip: string, port: i32) {
     local_address, ok := net.parse_ip4_address(ip);
@@ -21,36 +32,81 @@ tcp_client :: proc(ip: string, port: i32) {
 
     buffer: [256]u8;
 
-    for {
-        n, err_read := os.read(os.stdin, buffer[:]);
-        if (err_read != nil) {
-            fmt.println("Failed to read data");
-            break;
+    // --- Thread to continuously receive server updates ---
+    thread.create_and_start_with_poly_data2(
+        socket, &buffer, proc(socket: net.TCP_Socket, buffer: ^[256]u8) {
+        for {
+            bytes_recv, err_recv := net.recv_tcp(socket, buffer^[:]);
+            if (err_recv != nil || bytes_recv == 0) {
+                continue;
+            }
+
+            recieved := buffer^[:bytes_recv];
+            lines := strings.split(string(recieved), "\n");
+
+            sync.mutex_lock(&players_mutex);
+            for line in lines {
+                if (len(line) == 0) { continue; }
+
+                parts := strings.split(line, ":");
+                if (len(parts) != 3) { continue; }
+
+                id, ok_id := strconv.parse_int(parts[0]);
+                x, ok_x := strconv.parse_f32(parts[1]);
+                y, ok_y := strconv.parse_f32(parts[2]);
+                if (!ok_id || !ok_x || !ok_y) { continue; }
+
+                found := false;
+                for i in 0..<len(players) {
+                    if (players[i].id == i32(id)) {
+                        players[i].x = x;
+                        players[i].y = y;
+                        found = true;
+                        break;
+                    }
+                }
+
+                if (!found) {
+                    append(&players, Player{i32(id), x, y});
+                }
+            }
+            sync.mutex_unlock(&players_mutex);
+        }
+    })
+
+    rl.InitWindow(800, 600, "client");
+    rl.SetTargetFPS(60);
+
+    // --- Main loop: send input and render ---
+    for (!rl.WindowShouldClose()) {
+        move_input: u8 = 0;
+        if (rl.IsKeyDown(.W)) { move_input = 'w'; }
+        if (rl.IsKeyDown(.S)) { move_input = 's'; }
+        if (rl.IsKeyDown(.A)) { move_input = 'a'; }
+        if (rl.IsKeyDown(.D)) { move_input = 'd'; }
+
+        if (move_input != 0) {
+            buffer[0] = move_input;
+            _, err_send := net.send_tcp(socket, buffer[:1]);
+            if (err_send != nil) {
+                fmt.println("Failed to send input");
+                break;
+            }
         }
 
-        if (n == 0 || (n == 1 && buffer[0] == '\n')) {
-            break;
-        }
+        rl.BeginDrawing();
+        rl.ClearBackground(rl.RAYWHITE);
 
-        data := buffer[:n];
-        bytes_sent, err_send := net.send_tcp(socket, data);
-        if (err_send != nil) {
-            fmt.println("Failed to send data");
-            break;
+        sync.mutex_lock(&players_mutex);
+        for player in players {
+            rl.DrawCircle(i32(player.x) + 400, i32(player.y) + 300, 10, rl.BLUE);
         }
+        sync.mutex_unlock(&players_mutex);
 
-        sent := data[:bytes_sent];
-        fmt.printfln("Client sent [ %d bytes ]: %s", len(sent), sent);
-        bytes_recv, err_recv := net.recv_tcp(socket, buffer[:]);
-        if (err_recv != nil) {
-            fmt.println("Failed to recieve data");
-            break;
-        }
-
-        recieved := buffer[:bytes_recv];
-        fmt.printfln("Client recieved [ %d bytes ]: %s", len(recieved), recieved);
+        rl.EndDrawing();
     }
 
+    rl.CloseWindow();
     net.close(socket);
 }
 
@@ -59,21 +115,24 @@ main :: proc() {
     buffer: [256]u8;
     n, err_read := os.read(os.stdin, buffer[:]);
     if (err_read != nil) {
-        fmt.println("Failed to read data");
+        fmt.println("Failed to read IP");
         return;
     }
-
     ip := strings.trim_space(string(buffer[:n]));
 
     fmt.print("Port: ");
     buffer2: [256]u8;
     n2, err_read2 := os.read(os.stdin, buffer2[:]);
     if (err_read2 != nil) {
-        fmt.println("Failed to read data");
+        fmt.println("Failed to read port");
+        return;
+    }
+    port_str := strings.trim_space(string(buffer2[:n2]));
+    port, ok := strconv.parse_int(port_str);
+    if !ok {
+        fmt.println("Invalid port");
         return;
     }
 
-    port_str := strings.trim_space(string(buffer2[:n2]));
-    port, ok := strconv.parse_int(port_str);
     tcp_client(ip, i32(port));
 }

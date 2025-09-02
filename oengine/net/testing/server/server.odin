@@ -3,38 +3,111 @@ package main
 import "core:fmt"
 import "core:net"
 import "core:thread"
+import "core:sync"
 import "core:os"
-import "core:strconv"
 import "core:strings"
+import "core:strconv"
 
-handle_msg :: proc(socket: net.TCP_Socket) {
-    buffer: [256]u8;
+MAX_CLIENTS :: 8
+TICK_RATE :: 60
 
-    for {
-        bytes_recv, err_recv := net.recv_tcp(socket, buffer[:]);
-        if (err_recv != nil) {
-            fmt.println("Failed to recieve data");
-        }
+SocketID :: struct {
+    socket: net.TCP_Socket,
+    id: i32,
+}
 
-        recieved := buffer[:bytes_recv];
+Client :: struct {
+    socket: net.TCP_Socket,
+    id: i32,
+    x, y: f32,
+    input: u8,
+}
 
-        if (len(recieved) == 0) {
-            fmt.println("Disconnecting client");
-            return;
-        }
+clients: [dynamic]Client;
+clients_mutex: sync.Mutex;
 
-        fmt.printfln("Server recieved [ %d bytes ]: %s", len(recieved), recieved);
+add_client :: proc(socket: net.TCP_Socket) {
+    sync.mutex_lock(&clients_mutex);
 
-        bytes_sent, err_send := net.send_tcp(socket, recieved);
-        if (err_send != nil) {
-            fmt.println("Failed to send data");
-        }
-
-        sent := recieved[:bytes_sent];
-        fmt.printfln("Server sent [ %d bytes ]: %s", len(sent), sent);
+    if (len(clients) >= MAX_CLIENTS) {
+        fmt.println("Server full");
+        return;
     }
 
-    net.close(socket);
+    id := i32(len(clients));
+    append(&clients, Client{socket, id, 0.0, 0.0, 0});
+    fmt.println("Client connected: ", id);
+
+    for j in 0..<len(clients) {
+        other := clients[j]
+        data := fmt.aprintf("%d:%0.1f:%0.1f\n", other.id, other.x, other.y)
+        net.send_tcp(socket, transmute([]u8)data)
+    }
+
+    thread.create_and_start_with_poly_data(id, handle_client_input);
+
+    sync.mutex_unlock(&clients_mutex);
+}
+
+handle_client_input :: proc(client_id: i32) {
+    buffer: [1]u8;
+
+    for {
+        bytes_recv, err := net.recv_tcp(clients[client_id].socket, buffer[:]);
+        if (err != nil || bytes_recv == 0) {
+            continue;
+        }
+
+        sync.mutex_lock(&clients_mutex);
+        clients[client_id].input = buffer[0];
+        sync.mutex_unlock(&clients_mutex);
+    }
+}
+
+
+update_game :: proc(dt: f32) {
+    sync.mutex_lock(&clients_mutex);
+
+    for i in 0..<len(clients) {
+        client := &clients[i];
+
+        SPEED :: 150.0
+        switch client.input {
+        case 'd': client.x += dt * SPEED;
+        case 'a': client.x -= dt * SPEED;
+        case 's': client.y += dt * SPEED;
+        case 'w': client.y -= dt * SPEED;
+        }
+
+        client.input = 0;
+    }
+
+    sync.mutex_unlock(&clients_mutex);
+}
+
+broadcast_state :: proc() {
+    sync.mutex_lock(&clients_mutex);
+
+    for i in 0..<len(clients) {
+        client := clients[i];
+
+        for j in 0..<len(clients) {
+            other := clients[j];
+            data := fmt.aprintf("%d:%0.1f:%0.1f\n", other.id, other.x, other.y);
+            net.send_tcp(client.socket, transmute([]u8)data);
+        }
+    }
+    sync.mutex_unlock(&clients_mutex);
+}
+
+game_loop :: proc() {
+    dt: f32 = 1.0 / TICK_RATE;
+
+    for {
+        update_game(dt);
+        broadcast_state();
+        thread.yield();
+    }
 }
 
 tcp_server :: proc(ip: string, port: i32) {
@@ -44,11 +117,7 @@ tcp_server :: proc(ip: string, port: i32) {
         return;
     }
 
-    endpoint := net.Endpoint {
-        address = local_address,
-        port = int(port),
-    };
-
+    endpoint := net.Endpoint { address = local_address, port = int(port) };
     socket, err := net.listen_tcp(endpoint);
     if (err != nil) {
         fmt.println("Failed to listen on TCP");
@@ -57,17 +126,22 @@ tcp_server :: proc(ip: string, port: i32) {
 
     fmt.printfln("Listening on TCP: %s", net.endpoint_to_string(endpoint));
 
-    for {
-        client, _, err_accept := net.accept_tcp(socket);
-        if (err_accept != nil) {
-            fmt.println("Failed to accept TCP connection");
+    // Accept clients in a separate thread
+    thread.create_and_start_with_poly_data(socket, proc(socket: net.TCP_Socket) {
+        for {
+            client_socket, _, err_accept := net.accept_tcp(socket);
+            if (err_accept != nil) {
+                fmt.println("Failed to accept TCP connection");
+                continue;
+            }
+            add_client(client_socket);
         }
+    })
 
-        thread.create_and_start_with_poly_data(client, handle_msg);
-    }
+    game_loop();
 
     net.close(socket);
-    fmt.println("Closed socket");
+    fmt.println("Server closed");
 }
 
 main :: proc() {
