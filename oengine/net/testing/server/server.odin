@@ -9,7 +9,7 @@ import "core:strings"
 import "core:strconv"
 
 MAX_CLIENTS :: 8
-TICK_RATE :: 60
+TICK_RATE :: 60.0
 
 SocketID :: struct {
     socket: net.TCP_Socket,
@@ -37,6 +37,9 @@ add_client :: proc(socket: net.TCP_Socket) {
     id := i32(len(clients));
     append(&clients, Client{socket, id, 0.0, 0.0, 0});
     fmt.println("Client connected: ", id);
+
+    data := fmt.aprintf("YOU:%d\n", id);
+    net.send_tcp(socket, transmute([]u8)data);
 
     for j in 0..<len(clients) {
         other := clients[j]
