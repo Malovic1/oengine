@@ -300,7 +300,7 @@ texture_tool :: proc(ct: CameraTool) {
                     )) {
                     for id in ct._active_ids {
                         active := &oe.ecs_world.physics.mscs.data[ct._active_msc_id].tris[id];
-                        active.texture_tag = tag;
+                        active.texture_tag = strs.clone(tag);
                     }
                 }
             }
@@ -339,7 +339,7 @@ texture_select_tool :: proc(ct: ^CameraTool) {
                     tag, x, y, w, h, 
                     texture = oe.get_asset_var(tag, oe.Texture)
                     )) {
-                    ct._active_texture = tag;
+                    ct._active_texture = strs.clone(tag);
                 }
             }
         }

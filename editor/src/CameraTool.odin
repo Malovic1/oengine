@@ -652,6 +652,13 @@ render_tri :: proc(using self: ^CameraTool) {
                         if (!ok) {
                             append(&_active_ids, i32(info.id));
                         }
+                    } else {
+                        clear(&_active_ids);
+                        ok, _ := oe.contains(_active_ids, i32(info.id));
+                        if (!ok) {
+                            append(&_active_ids, i32(info.id));
+                        }
+                        _active_msc_id = i32(msc_id);
                     }
                 } else {
                     ok, _ := oe.contains(_active_ids, i32(info.id));
@@ -731,6 +738,9 @@ update_tri_ortho :: proc(using self: ^CameraTool, pts: [3]oe.Vec3, #any_int id, 
 
             if (len(_active_ids) > 0) {
                 if (oe.key_down(.LEFT_ALT)) {
+                    append(&_active_ids, id);
+                } else {
+                    clear(&_active_ids);
                     append(&_active_ids, id);
                 }
             } else {

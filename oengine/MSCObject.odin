@@ -395,12 +395,6 @@ msc_append_model :: proc(
     for i in 0..<model.meshCount {
         mesh := model.meshes[i];
 
-        materialIndex := model.meshMaterial[i];
-        material := model.materials[materialIndex];
-        tag := str_add("mtl", materialIndex);
-        texture := material.maps[rl.MaterialMapIndex.ALBEDO].texture;
-        reg_asset(tag, load_texture(texture));
-
         vertices := mesh.vertices;
         for j := 0; j < int(mesh.vertexCount); j += 3 {
             v0 := scale * Vec3 { vertices[j * 3], vertices[j * 3 + 1], vertices[j * 3 + 2] };
@@ -416,7 +410,7 @@ msc_append_model :: proc(
             msc_append_tri(
                 self, v0, v1, v2, 
                 offs, 
-                texture_tag = tag, normal = normal,
+                texture_tag = texture_tag, normal = normal,
                 is_lit = is_lit, use_fog = use_fog,
                 rot = rot, flipped = flipped, division_level = division_level
             );
