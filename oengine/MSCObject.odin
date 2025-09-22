@@ -12,6 +12,7 @@ import od "object_data"
 import "core:path/filepath"
 import "core:math/linalg"
 import "core:time"
+import sc "core:strconv"
 
 /*
 EXAMPLE
@@ -1172,6 +1173,64 @@ msc_load_data_id :: proc {
 }
 
 msc_load_data_id_od :: proc(tag: string, obj: od.Object) {
+    data := strs.split(tag, ";");
+    if (len(data) > 1) {
+        _tag := data[0];
+        id := obj["id"].(i32);
+
+        if (!od_contains(obj, "transform")) do return;
+
+        transfrom_obj := obj["transform"].(od.Object);
+        transform := Transform {
+            position = od_vec3(transfrom_obj["position"].(od.Object)),
+            rotation = od_vec3(transfrom_obj["rotation"].(od.Object)),
+            scale = od_vec3(transfrom_obj["scale"].(od.Object)),
+        };
+
+        reg_tag := str_add("data_id_", _tag);
+        if (asset_manager.registry[reg_tag] != nil) { 
+            reg_tag = str_add(reg_tag, rl.GetRandomValue(1000, 9999)); 
+        }
+
+        if (window.instance_name != EDITOR_INSTANCE) {
+            ent := aent_init(tag);
+            ent_tr := get_component(ent, Transform);
+            ent_tr^ = transform;
+
+            model_tag := data[1];
+            is_msc_parse := data[2];
+            vs_parse := data[3];
+
+            is_msc, ok := sc.parse_bool(is_msc_parse);
+            voxel_size, ok2 := sc.parse_f32(vs_parse);
+
+            model: Model;
+            if (asset_manager.registry[model_tag] != nil) {
+                model = get_asset_var(model_tag, Model);
+            }
+
+            if (ok && ok2) {
+                pos := transform.position;
+                prop_init(
+                    ent, model, pos, transform.scale,
+                    _msc = is_msc, voxel_size = voxel_size, render_msc = true);
+                add_component(ent, sm_init(model));
+            }
+        }
+
+        reg_asset(
+            reg_tag, 
+            DataID {
+                reg_tag, 
+                tag, 
+                u32(id), 
+                transform,
+                {}, {}
+            }
+        );
+        return;
+    }
+
     id := obj["id"].(i32);
 
     if (!od_contains(obj, "transform")) do return;

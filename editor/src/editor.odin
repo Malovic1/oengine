@@ -29,6 +29,10 @@ main :: proc() {
     distances := make([dynamic]f32);
     collided_dids := make([dynamic]oe.DataID);
 
+    p_distances := make([dynamic]f32);
+    collided_props := make([dynamic]i32);
+    editor_data.active_prop = ACTIVE_EMPTY;
+
     for (oe.w_tick()) {
         free_all(context.temp_allocator);
         // update
@@ -36,6 +40,7 @@ main :: proc() {
         ct_update(&camera_tool);
 
         handle_mouse_ray(&distances, &collided_dids); 
+        handle_prop_mouse(&p_distances, &collided_props);
 
         // render
         oe.w_begin_render();
@@ -50,6 +55,7 @@ main :: proc() {
         texture_tool(camera_tool);
         data_id_mod_tool(camera_tool);
         did_component_tool(camera_tool);
+        prop_tool(camera_tool);
         edit_mode_tool(&camera_tool);
         texture_select_tool(&camera_tool);
 
@@ -143,7 +149,82 @@ handle_mouse_ray :: proc(distances: ^[dynamic]f32, collided_dids: ^[dynamic]oe.D
     }
 }
 
+handle_prop_mouse :: proc(
+    distances: ^[dynamic]f32, collided_props: ^[dynamic]i32) {
+    collision_count: i32;
+    clear(distances);
+    clear(collided_props);
+    editor_data.hovered_data_id = "";
+    for i in 0..<len(editor_data.props) {
+        prop := &editor_data.props[i];
+        mouse_ray := rl.GetMouseRay(
+            oe.window.mouse_position, oe.ecs_world.camera.rl_matrix);
+        collision := rl.GetRayCollisionBox(
+            mouse_ray, oe.transform_to_rl_bb(prop.collider));
+
+        if (collision.hit) {
+            collision_count += 1;
+            append(distances, collision.distance);
+            append(collided_props, auto_cast i);
+        }
+    }
+
+    did: int = 0;
+    if (collision_count > 1) {
+        // multiple collisions
+        min_dist := distances[0];
+        id: int;
+        for i in 1..<len(distances) {
+            dist := distances[i];
+
+            if (dist < min_dist) {
+                min_dist = dist;
+                id = i;
+            }
+        }
+
+        did = id;
+    }
+
+    if (collision_count == 0) {
+        if (oe.mouse_pressed(.LEFT) && 
+            !oe.key_down(.LEFT_ALT) &&
+            !oe.gui_mouse_over()) { 
+            editor_data.active_prop = ACTIVE_EMPTY; 
+            oe.gui.windows["Prop modifier"].active = false;
+        }
+        return;
+    }
+
+    if (oe.mouse_pressed(.LEFT) && !oe.gui_mouse_over()) {
+        editor_data.active_prop = collided_props[did];
+        prop := editor_data.props[editor_data.active_prop];
+
+        current_allocator := context.allocator;
+        oe.gui.windows["Prop modifier"].active = true;
+        oe.gui.text_boxes["PropTagTextBox"].text = prop.ent_tag;
+        oe.gui.text_boxes["PropModelTagTextBox"].text = prop.model_tag;
+        oe.gui.text_boxes["ModPropPosX"].text = oe.str_add("", prop.collider.position.x, allocator = current_allocator);
+        oe.gui.text_boxes["ModPropPosY"].text = oe.str_add("", prop.collider.position.y, allocator = current_allocator);
+        oe.gui.text_boxes["ModPropPosZ"].text = oe.str_add("", prop.collider.position.z, allocator = current_allocator);
+        oe.gui.text_boxes["ModPropRotX"].text = oe.str_add("", prop.collider.rotation.x, allocator = current_allocator);
+        oe.gui.text_boxes["ModPropRotY"].text = oe.str_add("", prop.collider.rotation.y, allocator = current_allocator);
+        oe.gui.text_boxes["ModPropRotZ"].text = oe.str_add("", prop.collider.rotation.z, allocator = current_allocator);
+        oe.gui.text_boxes["ModPropScaleX"].text = oe.str_add("", prop.collider.scale.x, allocator = current_allocator);
+        oe.gui.text_boxes["ModPropScaleY"].text = oe.str_add("", prop.collider.scale.y, allocator = current_allocator);
+        oe.gui.text_boxes["ModPropScaleZ"].text = oe.str_add("", prop.collider.scale.z, allocator = current_allocator);
+        oe.gui.text_boxes["VSProp"].text = oe.str_add("", prop.voxel_size, allocator = current_allocator);
+    }
+}
+
 update :: proc(camera_tool: CameraTool) {
+    if (editor_data.active_prop != ACTIVE_EMPTY) {
+        if (oe.key_pressed(.DELETE)) {
+            ordered_remove(&editor_data.props, editor_data.active_prop);
+            editor_data.active_prop = ACTIVE_EMPTY;
+        }
+    }
+
     if (editor_data.active_data_id != oe.STR_EMPTY) {
         if (oe.key_pressed(.DELETE)) {
             oe.unreg_asset(editor_data.active_data_id);

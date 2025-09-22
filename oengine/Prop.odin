@@ -13,7 +13,7 @@ Prop :: struct {
 }
 
 prop_init :: proc(
-    ent: AEntity, model: Model, _position: Vec3, scale: f32 = 1, 
+    ent: AEntity, model: Model, _position: Vec3, scale: Vec3 = {1, 1, 1}, 
     _msc := false, voxel_size: f32 = 0.1, render_msc := false) -> (p: Prop) {
     rlbb := rl.GetModelBoundingBox(model);
     size := rlbb.max - rlbb.min;
@@ -23,7 +23,7 @@ prop_init :: proc(
         collider = Transform {
             position = _position,
             rotation = {},
-            scale = size,
+            scale = size * scale,
         },
         _model = model,
     };
@@ -53,7 +53,7 @@ prop_render :: proc(ctx: ^ecs.Context, ent: ^ecs.Entity) {
 
 simplify_msc_model :: proc(
     using self: ^MSCObject, model: Model, 
-    offs: Vec3 = {}, scale: f32 = 1, voxel_size: f32 = 0.1
+    offs: Vec3 = {}, scale: Vec3 = {1, 1, 1}, voxel_size: f32 = 0.1
 ) {
     voxel_size := voxel_size;
     if voxel_size <= 0 {
@@ -148,9 +148,9 @@ simplify_msc_model :: proc(
                 continue // degenerate
             }
 
-            v0 := clustered_positions[a] + offs
-            v1 := clustered_positions[b] + offs
-            v2 := clustered_positions[c] + offs
+            v0 := clustered_positions[a]
+            v1 := clustered_positions[b]
+            v2 := clustered_positions[c]
 
             normal := clustered_normals[a]
             if normal == (Vec3{0,0,0}) {

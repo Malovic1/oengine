@@ -191,6 +191,31 @@ map_proj_tool :: proc(ct: CameraTool) {
     if (oe.gui_button("Save msc", grid.x, grid.y, grid.width, grid.height)) {
         path := oe.nfd_file();
         if (path != oe.STR_EMPTY) {
+            for i in 0..<len(editor_data.props) {
+                prop := editor_data.props[i];
+                prop_tag := prop.ent_tag;
+                prop_model_tag := prop.model_tag;
+                prop_is_msc := oe.str_add("", prop.is_msc);
+                prop_v_size := oe.str_add("", prop.voxel_size);
+                did_tag_data := oe.str_add(
+                    {prop_tag, ";", prop_model_tag, ";", prop_is_msc, ";", prop_v_size}
+                );
+
+                reg_tag := oe.str_add("data_id_", did_tag_data);
+                if (oe.asset_manager.registry[reg_tag] != nil) {
+                    reg_tag = oe.str_add(reg_tag, oe.rand_digits(4));
+                }
+
+                oe.reg_asset(reg_tag, 
+                    oe.DataID {
+                        reg_tag,
+                        did_tag_data,
+                        auto_cast oe.rand_digits(2),
+                        prop.collider,
+                        {}, {}
+                    }
+                );
+            }
             if (filepath.ext(path) == ".json") {
                 oe.msc_to_json(oe.ecs_world.physics.mscs.data[0], path);
             } else if (filepath.ext(path) == ".od") {
@@ -212,6 +237,8 @@ map_proj_tool :: proc(ct: CameraTool) {
         for did in dids {
             oe.unreg_asset(did.reg_tag);
         }
+
+        clear(&editor_data.props);
     }
 
     @static use_json: bool;
@@ -225,7 +252,7 @@ map_proj_tool :: proc(ct: CameraTool) {
     grid = oe.gui_grid(3, 0, 40, wr.width * 0.5, 10);
     if (oe.gui_button("Save map", grid.x, grid.y, grid.width, grid.height)) {
         path := oe.nfd_folder();
-        oe.save_map(map_name, path, use_json);
+        save_map(map_name, path, use_json);
     }
 
     grid = oe.gui_grid(4, 0, 40, wr.width * 0.75, 10);
@@ -342,6 +369,135 @@ texture_select_tool :: proc(ct: ^CameraTool) {
                     ct._active_texture = strs.clone(tag);
                 }
             }
+        }
+    }
+
+    oe.gui_end();
+}
+
+prop_tool :: proc(ct: CameraTool) {
+    oe.gui_begin("Prop modifier", 
+        x = f32(oe.w_render_width()) - 300, 
+        y = 200 + oe.gui_top_bar_height,
+        h = 350,
+        active = false
+    );
+    wr := oe.gui_rect(oe.gui_window("Prop modifier"));
+
+    @static tag: string;
+    @static model_tag: string;
+    @static is_msc: bool;
+    @static voxel_size: f32;
+    @static position, rotation, scale: oe.Vec3;
+
+    if (editor_data.active_prop != ACTIVE_EMPTY) {
+        prop := &editor_data.props[editor_data.active_prop];
+        if (prop != nil) {
+            is_msc = prop.is_msc;
+        }
+    }
+
+    grid := oe.gui_grid(0, 0, 40, wr.width * 0.75, 10);
+    tag = oe.gui_text_box("PropTagTextBox", grid.x, grid.y, grid.width, grid.height);
+    grid = oe.gui_grid(0, 1, 40, wr.width * 0.75, 10);
+    oe.gui_text("Tag", 25, grid.x, grid.y);
+
+    grid = oe.gui_grid(1, 0, 40, wr.width * 0.75, 10);
+    model_tag = oe.gui_text_box(
+        "PropModelTagTextBox", grid.x, grid.y, grid.width, grid.height);
+    grid = oe.gui_grid(1, 1, 40, wr.width * 0.75, 10);
+    oe.gui_text("Model", 25, grid.x, grid.y);
+
+    POS_FACTOR :: 0.25
+    grid = oe.gui_grid(2, 0, 40, wr.width * POS_FACTOR, 10);
+    x_parse := oe.gui_text_box("ModPropPosX", grid.x, grid.y, grid.width, grid.height);
+    grid = oe.gui_grid(2, 1, 40, wr.width * POS_FACTOR, 10);
+    y_parse := oe.gui_text_box("ModPropPosY", grid.x, grid.y, grid.width, grid.height);
+    grid = oe.gui_grid(2, 2, 40, wr.width * POS_FACTOR, 10);
+    z_parse := oe.gui_text_box("ModPropPosZ", grid.x, grid.y, grid.width, grid.height);
+    grid = oe.gui_grid(2, 3, 40, wr.width * POS_FACTOR, 10);
+    oe.gui_text("Pos", 25, grid.x, grid.y);
+
+    _x, x_ok := sc.parse_f32(x_parse);
+    if (x_ok) { position.x = _x; }
+    _y, y_ok := sc.parse_f32(y_parse);
+    if (y_ok) { position.y = _y; }
+    _z, z_ok := sc.parse_f32(z_parse);
+    if (z_ok) { position.z = _z; }
+
+    grid = oe.gui_grid(3, 0, 40, wr.width * POS_FACTOR, 10);
+    if (oe.gui_button("CX", grid.x, grid.y, grid.width, grid.height)) {
+        oe.gui.text_boxes["ModPropPosX"].text = oe.str_add(
+            "", oe.ecs_world.camera.position.x,
+        );
+    }
+    grid = oe.gui_grid(3, 1, 40, wr.width * POS_FACTOR, 10);
+    if (oe.gui_button("CY", grid.x, grid.y, grid.width, grid.height)) {
+        oe.gui.text_boxes["ModPropPosY"].text = oe.str_add(
+            "", oe.ecs_world.camera.position.y,
+        );
+    }
+    grid = oe.gui_grid(3, 2, 40, wr.width * POS_FACTOR, 10);
+    if (oe.gui_button("CZ", grid.x, grid.y, grid.width, grid.height)) {
+        oe.gui.text_boxes["ModPropPosZ"].text = oe.str_add(
+            "", oe.ecs_world.camera.position.z
+        );
+    }
+
+    ROT_FACTOR :: 0.25
+    grid = oe.gui_grid(4, 0, 40, wr.width * ROT_FACTOR, 10);
+    rx_parse := oe.gui_text_box("ModPropRotX", grid.x, grid.y, grid.width, grid.height);
+    grid = oe.gui_grid(4, 1, 40, wr.width * ROT_FACTOR, 10);
+    ry_parse := oe.gui_text_box("ModPropRotY", grid.x, grid.y, grid.width, grid.height);
+    grid = oe.gui_grid(4, 2, 40, wr.width * ROT_FACTOR, 10);
+    rz_parse := oe.gui_text_box("ModPropRotZ", grid.x, grid.y, grid.width, grid.height);
+    grid = oe.gui_grid(4, 3, 40, wr.width * ROT_FACTOR, 10);
+    oe.gui_text("Rot", 25, grid.x, grid.y);
+
+    _rx, rx_ok := sc.parse_f32(rx_parse);
+    if (rx_ok) { rotation.x = _rx; }
+    _ry, ry_ok := sc.parse_f32(ry_parse);
+    if (ry_ok) { rotation.y = _ry; }
+    _rz, rz_ok := sc.parse_f32(rz_parse);
+    if (rz_ok) { rotation.z = _rz; }
+
+    SCALE_FACTOR :: 0.25
+    grid = oe.gui_grid(5, 0, 40, wr.width * SCALE_FACTOR, 10);
+    sx_parse := oe.gui_text_box("ModPropScaleX", grid.x, grid.y, grid.width, grid.height);
+    grid = oe.gui_grid(5, 1, 40, wr.width * SCALE_FACTOR, 10);
+    sy_parse := oe.gui_text_box("ModPropScaleY", grid.x, grid.y, grid.width, grid.height);
+    grid = oe.gui_grid(5, 2, 40, wr.width * SCALE_FACTOR, 10);
+    sz_parse := oe.gui_text_box("ModPropScaleZ", grid.x, grid.y, grid.width, grid.height);
+    grid = oe.gui_grid(5, 3, 40, wr.width * SCALE_FACTOR, 10);
+    oe.gui_text("Scale", 25, grid.x, grid.y);
+
+    _sx, sx_ok := sc.parse_f32(sx_parse);
+    if (sx_ok) { scale.x = _sx; }
+    _sy, sy_ok := sc.parse_f32(sy_parse);
+    if (sy_ok) { scale.y = _sy; }
+    _sz, sz_ok := sc.parse_f32(sz_parse);
+    if (sz_ok) { scale.z = _sz; }
+
+    grid = oe.gui_grid(6, 0, 40, wr.width, 10);
+    is_msc = oe.gui_tick(is_msc, grid.x, grid.y, grid.height, grid.height, "is msc");
+    grid = oe.gui_grid(7, 0, 40, wr.width * SCALE_FACTOR, 10);
+    vs_handle := oe.gui_text_box("VSProp", grid.x, grid.y, grid.width, grid.height);
+    grid = oe.gui_grid(7, 1, 40, wr.width * SCALE_FACTOR, 10);
+    oe.gui_text("voxel size", 25, grid.x, grid.y);
+
+    _vs, vs_ok := sc.parse_f32(vs_handle);
+    if (vs_ok) { voxel_size = _vs; }
+
+    if (editor_data.active_prop != ACTIVE_EMPTY) {
+        prop := &editor_data.props[editor_data.active_prop];
+        if (prop != nil) {
+            prop.ent_tag = tag;
+            prop.model_tag = model_tag;
+            prop.collider.position = position;
+            prop.collider.rotation = rotation;
+            prop.collider.scale = scale;
+            prop.is_msc = is_msc;
+            prop.voxel_size = voxel_size;
         }
     }
 
@@ -697,6 +853,36 @@ edit_mode_tool :: proc(ct: ^CameraTool) {
     if (sz_ok) { ct._terrain_size.z = _sz; }
 
     oe.gui_end();
+}
+
+save_map :: proc(map_name, path: string, use_json: bool) {
+    for i in 0..<len(editor_data.props) {
+        prop := editor_data.props[i];
+        prop_tag := prop.ent_tag;
+        prop_model_tag := prop.model_tag;
+        prop_is_msc := oe.str_add("", prop.is_msc);
+        prop_v_size := oe.str_add("", prop.voxel_size);
+        did_tag_data := oe.str_add(
+            {prop_tag, ";", prop_model_tag, ";", prop_is_msc, ";", prop_v_size}
+        );
+
+        reg_tag := oe.str_add("data_id_", did_tag_data);
+        if (oe.asset_manager.registry[reg_tag] != nil) {
+            reg_tag = oe.str_add(reg_tag, oe.rand_digits(4));
+        }
+
+        oe.reg_asset(reg_tag, 
+            oe.DataID {
+                reg_tag,
+                did_tag_data,
+                auto_cast oe.rand_digits(2),
+                prop.collider,
+                {}, {}
+            }
+        );
+    }
+
+    oe.save_map(map_name, path, use_json);
 }
 
 @(private = "file")

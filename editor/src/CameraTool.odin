@@ -36,10 +36,11 @@ ShapeMode :: enum {
     MODEL,
     DATA_ID,
     TERRAIN,
+    PROP,
     MAX,
 }
 
-shape_mode_size := [ShapeMode.MAX]i32{3, 4, 2, 1, 1, 1};
+shape_mode_size := [ShapeMode.MAX]i32{3, 4, 2, 1, 1, 1, 1};
 
 CameraTool :: struct {
     camera_perspective: oe.Camera,
@@ -157,6 +158,35 @@ ct_render :: proc(using self: ^CameraTool) {
         render(self^);
         render_tri(self);
 
+        for i in 0..<len(editor_data.props) {
+            prop := editor_data.props[i];
+            model: oe.Model;
+            if (oe.asset_manager.registry[prop.model_tag] != nil) {
+                model = oe.get_asset_var(prop.model_tag, oe.Model);
+            }
+
+            color := oe.GREEN;
+            ray := oe.get_mouse_rc(oe.ecs_world.camera^);
+
+            coll, _ := oe.rc_is_colliding(ray, prop.collider, .BOX);
+            if (coll) {
+                color = oe.BLUE;
+            }
+
+            if (auto_cast i == editor_data.active_prop) {
+                color = oe.WHITE;
+            }
+
+            rl.DrawModelEx(
+                model, prop.collider.position, {}, 0, prop.collider.scale, oe.WHITE);
+            oe.draw_cube_wireframe(
+                prop.collider.position, 
+                prop.collider.rotation,
+                prop.collider.scale,
+                color,
+            );
+        }
+
         if (tile_edit) {
             ct_tile_edit(self);
         }
@@ -232,6 +262,9 @@ ct_msc_edit :: proc(using self: ^CameraTool) {
                     msc, tex, size, 
                     points_to_add[0] - size * 0.5, texture_tag = texture_tag
                 );
+            case .PROP:
+                t := oe.Transform {points_to_add[0], {}, oe.vec3_one()};
+                append(&editor_data.props, PropHandle{"Prop", "", t, false, 0.1});
         }
 
         clear(&points_to_add);
