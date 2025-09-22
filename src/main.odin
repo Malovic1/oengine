@@ -220,6 +220,10 @@ main :: proc() {
     oe.sm_loader(terrain, "height_sm");
     rl.UnloadImage(img.data);
 
+    prop := oe.aent_init("prop");
+    // oe.prop_init(prop, swat, {0, 3, 0}, _msc = true, voxel_size = 0.1);
+    oe.prop_init(prop, swat, {0, 3, 0});
+
     // reset_track_allocator(&track_allocator);
     for (oe.w_tick()) {
         free_all(context.temp_allocator);
