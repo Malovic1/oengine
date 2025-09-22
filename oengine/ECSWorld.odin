@@ -75,6 +75,7 @@ ew_init :: proc(s_gravity: Vec3, s_iter: i32 = 8) {
     reg_component(Particles, ps_parse, ps_loader);
     reg_component(SpatialAudio, sa_parse, sa_loader);
     reg_component(Fluid, f_parse, f_loader);
+    reg_component(Prop);
 
     ecs.register_system(&ecs_ctx, rb_update, ecs.ECS_UPDATE);
     ecs.register_system(&ecs_ctx, lc_update, ecs.ECS_UPDATE);
@@ -84,14 +85,11 @@ ew_init :: proc(s_gravity: Vec3, s_iter: i32 = 8) {
     ecs.register_system(&ecs_ctx, ps_render, ecs.ECS_RENDER);
     ecs.register_system(&ecs_ctx, sm_render, ecs.ECS_RENDER);
     ecs.register_system(&ecs_ctx, f_render, ecs.ECS_RENDER);
+    ecs.register_system(&ecs_ctx, prop_render, ecs.ECS_RENDER);
 
-    if (OE_DEBUG) {
-        ecs.register_system(&ecs_ctx, rb_render, ecs.ECS_RENDER);
-    }
+    ecs.register_system(&ecs_ctx, rb_render, ecs.ECS_RENDER);
 
-    if (PHYS_DEBUG) {
-        ecs.register_system(&ecs_ctx, transform_render, ecs.ECS_RENDER);
-    }
+    ecs.register_system(&ecs_ctx, transform_render, ecs.ECS_RENDER);
 
     physics_thread = thread.create_and_start(ew_fixed_thread);
 
