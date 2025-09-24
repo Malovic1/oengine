@@ -223,6 +223,32 @@ update :: proc(camera_tool: CameraTool) {
             ordered_remove(&editor_data.props, editor_data.active_prop);
             editor_data.active_prop = ACTIVE_EMPTY;
         }
+
+        if (oe.key_down(.LEFT_ALT) && oe.mouse_pressed(.LEFT)) {
+            mouse_ray := oe.get_mouse_rc(camera_tool.camera_perspective);
+
+            if (len(camera_tool._active_ids) != 0 && 
+                camera_tool._active_msc_id != ACTIVE_EMPTY) {
+                msc := oe.ecs_world.physics.mscs.data[camera_tool._active_msc_id];
+                coll, arr := oe.rc_colliding_tris(mouse_ray, msc);
+
+                if (len(arr) > 0) {
+                    pos := arr[0].point;
+
+                    active_prop := editor_data.props[editor_data.active_prop];
+
+                    t := active_prop.collider;
+                    t.position = pos + t.scale * 0.5;
+
+                    append(&editor_data.props, PropHandle{
+                        str.clone(active_prop.ent_tag), 
+                        str.clone(active_prop.model_tag), 
+                        t, active_prop.is_msc, 
+                        active_prop.voxel_size
+                    });
+                }
+            }
+        }
     }
 
     if (editor_data.active_data_id != oe.STR_EMPTY) {
@@ -323,6 +349,38 @@ render :: proc(camera_tool: CameraTool) {
         did := oe.get_asset_var(editor_data.hovered_data_id, oe.DataID);
         t := did.transform;
         oe.draw_cube_wireframe(t.position, t.rotation, t.scale, oe.YELLOW); 
+    }
+
+    if (editor_data.active_prop != ACTIVE_EMPTY) {
+        if (oe.key_down(.LEFT_ALT)) {
+            mouse_ray := oe.get_mouse_rc(camera_tool.camera_perspective);
+
+            if (len(camera_tool._active_ids) != 0 && 
+                camera_tool._active_msc_id != ACTIVE_EMPTY) {
+                msc := oe.ecs_world.physics.mscs.data[camera_tool._active_msc_id];
+                coll, arr := oe.rc_colliding_tris(mouse_ray, msc);
+
+                if (len(arr) > 0) {
+                    pos := arr[0].point;
+
+                    active_prop := editor_data.props[editor_data.active_prop];
+
+                    t := active_prop.collider;
+                    t.position = pos + t.scale * 0.5;
+
+                    oe.draw_cube_wireframe(t.position, t.rotation, t.scale, oe.YELLOW);
+
+                    model: oe.Model;
+                    if (oe.asset_manager.registry[active_prop.model_tag] != nil) {
+                        model = oe.get_asset_var(active_prop.model_tag, oe.Model);
+                    }
+
+                    rl.DrawModelEx(
+                        model, t.position, {}, 0, 
+                        t.scale, oe.WHITE);
+                }
+            }
+        }
     }
     
     if (editor_data.active_data_id != oe.STR_EMPTY) {
