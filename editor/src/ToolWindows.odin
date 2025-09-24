@@ -9,6 +9,8 @@ import "core:math"
 import "core:path/filepath"
 import sc "core:strconv"
 import strs "core:strings"
+import "core:os"
+import od "../../oengine/object_data"
 
 BUTTON_WIDTH :: 180
 WINDOW_WIDTH :: 300
@@ -258,7 +260,7 @@ map_proj_tool :: proc(ct: CameraTool) {
     grid = oe.gui_grid(4, 0, 40, wr.width * 0.75, 10);
     if (oe.gui_button("Load map", grid.x, grid.y, grid.width, grid.height)) {
         path := oe.nfd_folder();
-        oe.load_map(path, globals.registry_atlas, use_json);
+        load_map(path, globals.registry_atlas, use_json);
     }
 
     grid = oe.gui_grid(5, 0, 40, 40, 10);
@@ -883,6 +885,209 @@ save_map :: proc(map_name, path: string, use_json: bool) {
     }
 
     oe.save_map(map_name, path, use_json);
+}
+
+load_map :: proc(path: string, atlas: oe.Atlas, use_json: bool) {
+    // oe.load_map(path, atlas, use_json);
+    list := oe.get_files(path);
+
+    for dir in list {
+        msc := oe.msc_init();
+        if (use_json) { oe.msc_from_json(msc, dir); }
+        else { load_msc(msc, dir); }
+        msc.atlas = atlas;
+        oe.msc_gen_mesh(msc, true);
+    }
+}
+
+load_msc :: proc(using self: ^oe.MSCObject, path: string, load_dids := true) {
+    data, ok := os.read_entire_file_from_filename(path);
+    if (!ok) {
+        oe.dbg_log("Failed to open file ", oe.DebugType.WARNING);
+        return;
+    }
+    defer delete(data);
+
+    _data := od.parse(string(data));
+    msc := _data;
+
+    for tag, obj in msc {
+        if (strs.contains(tag, "triangle")) { 
+            oe.msc_load_tri(self, obj.(od.Object)); 
+        } else { 
+            if (load_dids) {
+                msc_load_data_id(
+                    strs.clone(obj.(od.Object)["tag"].(string)), 
+                    obj.(od.Object)
+                ); 
+            }
+        }
+    }
+}
+
+msc_load_data_id :: proc(tag: string, obj: od.Object) {
+    using oe;
+    data := strs.split(tag, ";");
+    if (len(data) > 1) {
+        _tag := data[0];
+        id := obj["id"].(i32);
+
+        if (!od_contains(obj, "transform")) do return;
+
+        transfrom_obj := obj["transform"].(od.Object);
+        transform := Transform {
+            position = od_vec3(transfrom_obj["position"].(od.Object)),
+            rotation = od_vec3(transfrom_obj["rotation"].(od.Object)),
+            scale = od_vec3(transfrom_obj["scale"].(od.Object)),
+        };
+
+        reg_tag := str_add("data_id_", _tag);
+        if (asset_manager.registry[reg_tag] != nil) { 
+            reg_tag = str_add(reg_tag, rl.GetRandomValue(1000, 9999)); 
+        }
+
+        if (window.instance_name != EDITOR_INSTANCE) {
+            ent := aent_init(_tag);
+            ent_tr := get_component(ent, Transform);
+            ent_tr^ = transform;
+
+            model_tag := data[1];
+            is_msc_parse := data[2];
+            vs_parse := data[3];
+
+            is_msc, ok := sc.parse_bool(is_msc_parse);
+            voxel_size, ok2 := sc.parse_f32(vs_parse);
+
+            model: Model;
+            if (asset_manager.registry[model_tag] != nil) {
+                model = get_asset_var(model_tag, Model);
+            }
+
+            if (ok && ok2) {
+                pos := transform.position;
+                prop_init(
+                    ent, model, pos, transform.scale,
+                    _msc = is_msc, voxel_size = voxel_size, render_msc = true);
+                add_component(ent, sm_init(model));
+            }
+
+            reg_asset(
+                reg_tag, 
+                DataID {
+                    reg_tag, 
+                    tag, 
+                    u32(id), 
+                    transform,
+                    {}, {}
+                }
+            );
+            return;
+        }
+
+
+        model_tag := data[1];
+        is_msc_parse := data[2];
+        vs_parse := data[3];
+
+        is_msc, ok := sc.parse_bool(is_msc_parse);
+        voxel_size, ok2 := sc.parse_f32(vs_parse);
+
+        if (ok && ok2) {
+            pos := transform.position;
+            append(&editor_data.props, PropHandle{
+                _tag, model_tag, transform, is_msc, voxel_size
+            });
+        }
+        return;
+    }
+
+    id := obj["id"].(i32);
+
+    if (!od_contains(obj, "transform")) do return;
+
+    transfrom_obj := obj["transform"].(od.Object);
+    transform := Transform {
+        position = od_vec3(transfrom_obj["position"].(od.Object)),
+        rotation = od_vec3(transfrom_obj["rotation"].(od.Object)),
+        scale = od_vec3(transfrom_obj["scale"].(od.Object)),
+    };
+
+    reg_tag := str_add("data_id_", tag);
+    if (asset_manager.registry[reg_tag] != nil) { 
+        reg_tag = str_add(reg_tag, rl.GetRandomValue(1000, 9999)); 
+    }
+    
+    flags := fa.fixed_array(i32, 16);
+    if (obj["flags"] != nil) {
+        flags_handle := obj["flags"].(od.Object);
+        for i in 0..<16 {
+            flag := od.target_type(flags_handle[str_add("c", i)], i32);
+            fa.append(&flags, flag);
+        }
+    }
+
+    comps_arr := fa.fixed_array(ComponentMarshall, 16);
+
+    if (window.instance_name != EDITOR_INSTANCE) {
+        ent := aent_init(tag);
+        ent_tr := get_component(ent, Transform);
+        ent_tr^ = transform;
+
+        if (od_contains(obj, "components")) {
+            comps_handle := obj["components"].(od.Object);
+
+            for i in 0..<16 {
+                comp := comps_handle[str_add("c", i)].(od.Object);
+                tag := comp["tag"].(string);
+                type := comp["type"].(string);
+
+                loader := asset_manager.component_loaders[type];
+                if (loader != nil) { loader(ent, tag); }
+
+                fa.append(
+                    &comps_arr, 
+                    ComponentMarshall {
+                        strs.clone(tag), 
+                        strs.clone(type)
+                    },
+                );
+            }
+        }
+
+        for i in 0..<16 {
+            ent.flags[i] = flags.data[i];
+        }
+    } else {
+        if (od_contains(obj, "components")) {
+            comps_handle := obj["components"].(od.Object);
+
+            for i in 0..<16 {
+                comp := comps_handle[str_add("c", i)].(od.Object);
+                tag := comp["tag"].(string);
+                type := comp["type"].(string);
+
+                fa.append(
+                    &comps_arr, 
+                    ComponentMarshall {
+                        strs.clone(tag), 
+                        strs.clone(type)
+                    },
+                );
+            }
+        }
+    }
+
+    reg_asset(
+        reg_tag, 
+        DataID {
+            reg_tag, 
+            tag, 
+            u32(id), 
+            transform,
+            flags,
+            comps_arr,
+        }
+    );
 }
 
 @(private = "file")

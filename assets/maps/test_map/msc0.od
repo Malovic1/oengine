@@ -1,0 +1,721 @@
+
+object triangle0 {
+    object pts {
+        object pt_0 {
+            f32 x = 33
+            f32 y = 10
+            f32 z = 30
+        }
+        object pt_1 {
+            f32 x = 33
+            f32 y = 10
+            f32 z = 40
+        }
+        object pt_2 {
+            f32 x = 20
+            f32 y = 10
+            f32 z = 40
+        }
+    }
+    object color {
+        i32 r = 255
+        i32 g = 255
+        i32 b = 255
+        i32 a = 255
+    }
+    string texture_tag = "albedo"
+    bool is_lit = true
+    bool use_fog = false
+    i32 rot = 0
+    bool flipped = false
+    object normal {
+        f32 x = 0
+        f32 y = 1
+        f32 z = 0
+    }
+    i32 division = 0
+}
+object triangle1 {
+    object pts {
+        object pt_0 {
+            f32 x = 0
+            f32 y = 11
+            f32 z = 30
+        }
+        object pt_1 {
+            f32 x = 10
+            f32 y = 0
+            f32 z = 30
+        }
+        object pt_2 {
+            f32 x = 10
+            f32 y = 11
+            f32 z = 30
+        }
+    }
+    object color {
+        i32 r = 255
+        i32 g = 255
+        i32 b = 255
+        i32 a = 255
+    }
+    string texture_tag = "troll"
+    bool is_lit = true
+    bool use_fog = false
+    i32 rot = 2
+    bool flipped = true
+    object normal {
+        f32 x = -0
+        f32 y = -0
+        f32 z = -1
+    }
+    i32 division = 1
+}
+object triangle2 {
+    object pts {
+        object pt_0 {
+            f32 x = 33
+            f32 y = 22
+            f32 z = 17
+        }
+        object pt_1 {
+            f32 x = 48
+            f32 y = 22
+            f32 z = 17
+        }
+        object pt_2 {
+            f32 x = 33
+            f32 y = 22
+            f32 z = 50
+        }
+    }
+    object color {
+        i32 r = 255
+        i32 g = 255
+        i32 b = 255
+        i32 a = 255
+    }
+    string texture_tag = "albedo"
+    bool is_lit = true
+    bool use_fog = false
+    i32 rot = 0
+    bool flipped = false
+    object normal {
+        f32 x = 0
+        f32 y = 1
+        f32 z = 0
+    }
+    i32 division = 0
+}
+object triangle3 {
+    object pts {
+        object pt_0 {
+            f32 x = 20
+            f32 y = 10
+            f32 z = 30
+        }
+        object pt_1 {
+            f32 x = 33
+            f32 y = 10
+            f32 z = 30
+        }
+        object pt_2 {
+            f32 x = 20
+            f32 y = 10
+            f32 z = 40
+        }
+    }
+    object color {
+        i32 r = 255
+        i32 g = 255
+        i32 b = 255
+        i32 a = 255
+    }
+    string texture_tag = "albedo"
+    bool is_lit = true
+    bool use_fog = false
+    i32 rot = 0
+    bool flipped = false
+    object normal {
+        f32 x = 0
+        f32 y = 1
+        f32 z = 0
+    }
+    i32 division = 0
+}
+object triangle4 {
+    object pts {
+        object pt_0 {
+            f32 x = 20
+            f32 y = 10
+            f32 z = 30
+        }
+        object pt_1 {
+            f32 x = 10
+            f32 y = 10
+            f32 z = 40
+        }
+        object pt_2 {
+            f32 x = 20
+            f32 y = 10
+            f32 z = 40
+        }
+    }
+    object color {
+        i32 r = 255
+        i32 g = 0
+        i32 b = 255
+        i32 a = 255
+    }
+    string texture_tag = "albedo"
+    bool is_lit = true
+    bool use_fog = false
+    i32 rot = 0
+    bool flipped = false
+    object normal {
+        f32 x = 0
+        f32 y = 1
+        f32 z = 0
+    }
+    i32 division = 1
+}
+object triangle5 {
+    object pts {
+        object pt_0 {
+            f32 x = 20
+            f32 y = 10
+            f32 z = 40
+        }
+        object pt_1 {
+            f32 x = 10
+            f32 y = 10
+            f32 z = 50
+        }
+        object pt_2 {
+            f32 x = 20
+            f32 y = 10
+            f32 z = 50
+        }
+    }
+    object color {
+        i32 r = 255
+        i32 g = 255
+        i32 b = 255
+        i32 a = 255
+    }
+    string texture_tag = "albedo"
+    bool is_lit = true
+    bool use_fog = false
+    i32 rot = 0
+    bool flipped = false
+    object normal {
+        f32 x = 0
+        f32 y = 1
+        f32 z = 0
+    }
+    i32 division = 0
+}
+object triangle6 {
+    object pts {
+        object pt_0 {
+            f32 x = 0
+            f32 y = 0
+            f32 z = 0
+        }
+        object pt_1 {
+            f32 x = 0
+            f32 y = 0
+            f32 z = 10
+        }
+        object pt_2 {
+            f32 x = 0
+            f32 y = 11
+            f32 z = 5
+        }
+    }
+    object color {
+        i32 r = 255
+        i32 g = 255
+        i32 b = 255
+        i32 a = 255
+    }
+    string texture_tag = "albedo"
+    bool is_lit = true
+    bool use_fog = false
+    i32 rot = 0
+    bool flipped = false
+    object normal {
+        f32 x = 1
+        f32 y = 0
+        f32 z = 0
+    }
+    i32 division = 0
+}
+object triangle7 {
+    object pts {
+        object pt_0 {
+            f32 x = 48
+            f32 y = 10
+            f32 z = 50
+        }
+        object pt_1 {
+            f32 x = 33
+            f32 y = 10
+            f32 z = 50
+        }
+        object pt_2 {
+            f32 x = 48
+            f32 y = 10
+            f32 z = 17
+        }
+    }
+    object color {
+        i32 r = 255
+        i32 g = 255
+        i32 b = 255
+        i32 a = 255
+    }
+    string texture_tag = "albedo"
+    bool is_lit = true
+    bool use_fog = false
+    i32 rot = 0
+    bool flipped = false
+    object normal {
+        f32 x = 0
+        f32 y = 1
+        f32 z = 0
+    }
+    i32 division = 0
+}
+object triangle8 {
+    object pts {
+        object pt_0 {
+            f32 x = 20
+            f32 y = 10
+            f32 z = 40
+        }
+        object pt_1 {
+            f32 x = 10
+            f32 y = 10
+            f32 z = 40
+        }
+        object pt_2 {
+            f32 x = 10
+            f32 y = 10
+            f32 z = 50
+        }
+    }
+    object color {
+        i32 r = 255
+        i32 g = 255
+        i32 b = 255
+        i32 a = 255
+    }
+    string texture_tag = "albedo"
+    bool is_lit = true
+    bool use_fog = false
+    i32 rot = 0
+    bool flipped = false
+    object normal {
+        f32 x = 0
+        f32 y = 1
+        f32 z = 0
+    }
+    i32 division = 0
+}
+object triangle9 {
+    object pts {
+        object pt_0 {
+            f32 x = 48
+            f32 y = 10
+            f32 z = 17
+        }
+        object pt_1 {
+            f32 x = 33
+            f32 y = 10
+            f32 z = 17
+        }
+        object pt_2 {
+            f32 x = 33
+            f32 y = 10
+            f32 z = 50
+        }
+    }
+    object color {
+        i32 r = 255
+        i32 g = 255
+        i32 b = 255
+        i32 a = 255
+    }
+    string texture_tag = "albedo"
+    bool is_lit = true
+    bool use_fog = false
+    i32 rot = 0
+    bool flipped = false
+    object normal {
+        f32 x = 0
+        f32 y = 1
+        f32 z = 0
+    }
+    i32 division = 0
+}
+object triangle10 {
+    object pts {
+        object pt_0 {
+            f32 x = 10
+            f32 y = 25
+            f32 z = 45
+        }
+        object pt_1 {
+            f32 x = 20
+            f32 y = 10
+            f32 z = 40
+        }
+        object pt_2 {
+            f32 x = 20
+            f32 y = 25
+            f32 z = 40
+        }
+    }
+    object color {
+        i32 r = 0
+        i32 g = 255
+        i32 b = 255
+        i32 a = 255
+    }
+    string texture_tag = "albedo"
+    bool is_lit = true
+    bool use_fog = false
+    i32 rot = 0
+    bool flipped = false
+    object normal {
+        f32 x = 1
+        f32 y = 0
+        f32 z = 2
+    }
+    i32 division = 0
+}
+object triangle11 {
+    object pts {
+        object pt_0 {
+            f32 x = 20
+            f32 y = 0
+            f32 z = 20
+        }
+        object pt_1 {
+            f32 x = 10
+            f32 y = 10
+            f32 z = 30
+        }
+        object pt_2 {
+            f32 x = 20
+            f32 y = 10
+            f32 z = 30
+        }
+    }
+    object color {
+        i32 r = 255
+        i32 g = 255
+        i32 b = 255
+        i32 a = 255
+    }
+    string texture_tag = "albedo"
+    bool is_lit = true
+    bool use_fog = false
+    i32 rot = 0
+    bool flipped = false
+    object normal {
+        f32 x = 0
+        f32 y = 0.0099999998
+        f32 z = -0.0099999998
+    }
+    i32 division = 0
+}
+object triangle12 {
+    object pts {
+        object pt_0 {
+            f32 x = 10
+            f32 y = 25
+            f32 z = 45
+        }
+        object pt_1 {
+            f32 x = 10
+            f32 y = 10
+            f32 z = 40
+        }
+        object pt_2 {
+            f32 x = 20
+            f32 y = 10
+            f32 z = 40
+        }
+    }
+    object color {
+        i32 r = 0
+        i32 g = 255
+        i32 b = 255
+        i32 a = 255
+    }
+    string texture_tag = "albedo"
+    bool is_lit = true
+    bool use_fog = false
+    i32 rot = 0
+    bool flipped = false
+    object normal {
+        f32 x = 0
+        f32 y = -0.00666667
+        f32 z = 0.02
+    }
+    i32 division = 0
+}
+object triangle13 {
+    object pts {
+        object pt_0 {
+            f32 x = 48
+            f32 y = 10
+            f32 z = 17
+        }
+        object pt_1 {
+            f32 x = 48
+            f32 y = 10
+            f32 z = 50
+        }
+        object pt_2 {
+            f32 x = 48
+            f32 y = 22
+            f32 z = 17
+        }
+    }
+    object color {
+        i32 r = 255
+        i32 g = 255
+        i32 b = 255
+        i32 a = 255
+    }
+    string texture_tag = "albedo"
+    bool is_lit = true
+    bool use_fog = false
+    i32 rot = 0
+    bool flipped = true
+    object normal {
+        f32 x = -1
+        f32 y = -0
+        f32 z = -0
+    }
+    i32 division = 0
+}
+object triangle14 {
+    object pts {
+        object pt_0 {
+            f32 x = 48
+            f32 y = 22
+            f32 z = 50
+        }
+        object pt_1 {
+            f32 x = 48
+            f32 y = 22
+            f32 z = 17
+        }
+        object pt_2 {
+            f32 x = 33
+            f32 y = 22
+            f32 z = 50
+        }
+    }
+    object color {
+        i32 r = 255
+        i32 g = 255
+        i32 b = 255
+        i32 a = 255
+    }
+    string texture_tag = "albedo"
+    bool is_lit = true
+    bool use_fog = false
+    i32 rot = 0
+    bool flipped = false
+    object normal {
+        f32 x = 0
+        f32 y = 1
+        f32 z = 0
+    }
+    i32 division = 0
+}
+object triangle15 {
+    object pts {
+        object pt_0 {
+            f32 x = 0
+            f32 y = 0
+            f32 z = 0
+        }
+        object pt_1 {
+            f32 x = 10
+            f32 y = 0
+            f32 z = 0
+        }
+        object pt_2 {
+            f32 x = 5
+            f32 y = 11
+            f32 z = 0
+        }
+    }
+    object color {
+        i32 r = 255
+        i32 g = 255
+        i32 b = 255
+        i32 a = 255
+    }
+    string texture_tag = "albedo"
+    bool is_lit = true
+    bool use_fog = false
+    i32 rot = 0
+    bool flipped = false
+    object normal {
+        f32 x = 0
+        f32 y = 0
+        f32 z = 1
+    }
+    i32 division = 0
+}
+object triangle16 {
+    object pts {
+        object pt_0 {
+            f32 x = 20
+            f32 y = 0
+            f32 z = 20
+        }
+        object pt_1 {
+            f32 x = 10
+            f32 y = 0
+            f32 z = 20
+        }
+        object pt_2 {
+            f32 x = 10
+            f32 y = 10
+            f32 z = 30
+        }
+    }
+    object color {
+        i32 r = 255
+        i32 g = 255
+        i32 b = 255
+        i32 a = 255
+    }
+    string texture_tag = "albedo"
+    bool is_lit = true
+    bool use_fog = false
+    i32 rot = 0
+    bool flipped = false
+    object normal {
+        f32 x = 0
+        f32 y = 0.0099999998
+        f32 z = -0.0099999998
+    }
+    i32 division = 0
+}
+object triangle17 {
+    object pts {
+        object pt_0 {
+            f32 x = 0
+            f32 y = 0
+            f32 z = 30
+        }
+        object pt_1 {
+            f32 x = 0
+            f32 y = 11
+            f32 z = 30
+        }
+        object pt_2 {
+            f32 x = 10
+            f32 y = 0
+            f32 z = 30
+        }
+    }
+    object color {
+        i32 r = 255
+        i32 g = 255
+        i32 b = 255
+        i32 a = 255
+    }
+    string texture_tag = "troll"
+    bool is_lit = true
+    bool use_fog = false
+    i32 rot = 2
+    bool flipped = true
+    object normal {
+        f32 x = -0
+        f32 y = -0
+        f32 z = -1
+    }
+    i32 division = 0
+}
+object triangle18 {
+    object pts {
+        object pt_0 {
+            f32 x = 48
+            f32 y = 22
+            f32 z = 50
+        }
+        object pt_1 {
+            f32 x = 48
+            f32 y = 10
+            f32 z = 50
+        }
+        object pt_2 {
+            f32 x = 48
+            f32 y = 22
+            f32 z = 17
+        }
+    }
+    object color {
+        i32 r = 255
+        i32 g = 255
+        i32 b = 255
+        i32 a = 255
+    }
+    string texture_tag = "albedo"
+    bool is_lit = true
+    bool use_fog = false
+    i32 rot = 0
+    bool flipped = true
+    object normal {
+        f32 x = -1
+        f32 y = -0
+        f32 z = -0
+    }
+    i32 division = 0
+}
+object triangle19 {
+    object pts {
+        object pt_0 {
+            f32 x = 20
+            f32 y = 10
+            f32 z = 30
+        }
+        object pt_1 {
+            f32 x = 10
+            f32 y = 10
+            f32 z = 30
+        }
+        object pt_2 {
+            f32 x = 10
+            f32 y = 10
+            f32 z = 40
+        }
+    }
+    object color {
+        i32 r = 255
+        i32 g = 255
+        i32 b = 255
+        i32 a = 255
+    }
+    string texture_tag = "albedo"
+    bool is_lit = true
+    bool use_fog = false
+    i32 rot = 0
+    bool flipped = false
+    object normal {
+        f32 x = 0
+        f32 y = 1
+        f32 z = 0
+    }
+    i32 division = 0
+}

@@ -1193,7 +1193,7 @@ msc_load_data_id_od :: proc(tag: string, obj: od.Object) {
         }
 
         if (window.instance_name != EDITOR_INSTANCE) {
-            ent := aent_init(tag);
+            ent := aent_init(_tag);
             ent_tr := get_component(ent, Transform);
             ent_tr^ = transform;
 
@@ -1213,7 +1213,7 @@ msc_load_data_id_od :: proc(tag: string, obj: od.Object) {
                 pos := transform.position;
                 prop_init(
                     ent, model, pos, transform.scale,
-                    _msc = is_msc, voxel_size = voxel_size, render_msc = true);
+                    _msc = is_msc, voxel_size = voxel_size, render_msc = false);
                 add_component(ent, sm_init(model));
             }
         }
