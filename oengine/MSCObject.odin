@@ -1200,6 +1200,18 @@ msc_load_data_id_od :: proc(tag: string, obj: od.Object) {
             model_tag := data[1];
             is_msc_parse := data[2];
             vs_parse := data[3];
+            pos_offset_parse := data[4];
+            scale_offset_parse := data[5];
+
+            pos_vals := strs.split(pos_offset_parse, ",");
+            x, xok := sc.parse_f32(pos_vals[0]);
+            y, yok := sc.parse_f32(pos_vals[1]);
+            z, zok := sc.parse_f32(pos_vals[2]);
+
+            scale_vals := strs.split(scale_offset_parse, ",");
+            sx, sxok := sc.parse_f32(scale_vals[0]);
+            sy, syok := sc.parse_f32(scale_vals[1]);
+            sz, szok := sc.parse_f32(scale_vals[2]);
 
             is_msc, ok := sc.parse_bool(is_msc_parse);
             voxel_size, ok2 := sc.parse_f32(vs_parse);
@@ -1212,9 +1224,12 @@ msc_load_data_id_od :: proc(tag: string, obj: od.Object) {
             if (ok && ok2) {
                 pos := transform.position;
                 prop_init(
-                    ent, model, pos, transform.scale,
+                    ent, model, pos, use_preset = true, preset_size = transform.scale,
                     _msc = is_msc, voxel_size = voxel_size, render_msc = false);
-                add_component(ent, sm_init(model));
+                sm := sm_init(model);
+                sm.locked = false;
+                sm.offset = {{x, y, z}, {}, {sx, sy, sz}};
+                add_component(ent, sm);
             }
         }
 

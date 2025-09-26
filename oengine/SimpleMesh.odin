@@ -45,6 +45,7 @@ ma_load :: proc(path: string, speed: f32 = 100) -> ModelArmature {
 SimpleMesh :: struct {
     transform: Transform,
     offset: Transform,
+    locked: bool, // follow ent transform (default = true)
     shape: ShapeType,
     
     tex: union {
@@ -80,6 +81,7 @@ sm_init :: proc {
 sm_init_all :: proc(using sm: ^SimpleMesh, s_shape: ShapeType, s_color: Color) {
     transform = transform_default();
     offset = transform_default();
+    locked = true;
     shape = s_shape;
 
     if (int(shape) < 10) {
@@ -201,7 +203,20 @@ sm_custom_render :: proc(t: ^Transform, sm: ^SimpleMesh) {
                 ray_enable_triplanar();
             }
 
-            draw_model(v, target, color, is_lit, offset);
+            if (locked) {
+                draw_model(v, target, color, is_lit, offset);
+            } else {
+                target := offset;
+
+                target.position = offset.position + transform.position;
+
+                if (is_sprite) {
+                    target.rotation.y = -look_at_vec2(
+                        target.position.xz, world().camera.position.xz) - 90;
+                }
+
+                draw_model(v, target, color, is_lit);
+            }
 
             if (use_triplanar) {
                 ray_disable_triplanar();

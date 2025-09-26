@@ -2,19 +2,19 @@
 object triangle0 {
     object pts {
         object pt_0 {
-            f32 x = 20
-            f32 y = 0
-            f32 z = 20
+            f32 x = 48
+            f32 y = 10
+            f32 z = 50
         }
         object pt_1 {
-            f32 x = 10
-            f32 y = 0
-            f32 z = 20
+            f32 x = 33
+            f32 y = 10
+            f32 z = 50
         }
         object pt_2 {
-            f32 x = 10
+            f32 x = 48
             f32 y = 10
-            f32 z = 30
+            f32 z = 17
         }
     }
     object color {
@@ -30,480 +30,12 @@ object triangle0 {
     bool flipped = false
     object normal {
         f32 x = 0
-        f32 y = 0.0099999998
-        f32 z = -0.0099999998
+        f32 y = 1
+        f32 z = 0
     }
     i32 division = 0
 }
 object triangle1 {
-    object pts {
-        object pt_0 {
-            f32 x = 33
-            f32 y = 10
-            f32 z = 30
-        }
-        object pt_1 {
-            f32 x = 33
-            f32 y = 10
-            f32 z = 40
-        }
-        object pt_2 {
-            f32 x = 20
-            f32 y = 10
-            f32 z = 40
-        }
-    }
-    object color {
-        i32 r = 255
-        i32 g = 255
-        i32 b = 255
-        i32 a = 255
-    }
-    string texture_tag = "albedo"
-    bool is_lit = true
-    bool use_fog = false
-    i32 rot = 0
-    bool flipped = false
-    object normal {
-        f32 x = 0
-        f32 y = 1
-        f32 z = 0
-    }
-    i32 division = 0
-}
-object triangle2 {
-    object pts {
-        object pt_0 {
-            f32 x = 20
-            f32 y = 10
-            f32 z = 40
-        }
-        object pt_1 {
-            f32 x = 10
-            f32 y = 10
-            f32 z = 40
-        }
-        object pt_2 {
-            f32 x = 10
-            f32 y = 10
-            f32 z = 50
-        }
-    }
-    object color {
-        i32 r = 255
-        i32 g = 255
-        i32 b = 255
-        i32 a = 255
-    }
-    string texture_tag = "albedo"
-    bool is_lit = true
-    bool use_fog = false
-    i32 rot = 0
-    bool flipped = false
-    object normal {
-        f32 x = 0
-        f32 y = 1
-        f32 z = 0
-    }
-    i32 division = 0
-}
-object triangle3 {
-    object pts {
-        object pt_0 {
-            f32 x = 10
-            f32 y = 25
-            f32 z = 45
-        }
-        object pt_1 {
-            f32 x = 10
-            f32 y = 10
-            f32 z = 40
-        }
-        object pt_2 {
-            f32 x = 20
-            f32 y = 10
-            f32 z = 40
-        }
-    }
-    object color {
-        i32 r = 0
-        i32 g = 255
-        i32 b = 255
-        i32 a = 255
-    }
-    string texture_tag = "albedo"
-    bool is_lit = true
-    bool use_fog = false
-    i32 rot = 0
-    bool flipped = false
-    object normal {
-        f32 x = 0
-        f32 y = -0.00666667
-        f32 z = 0.02
-    }
-    i32 division = 0
-}
-object triangle4 {
-    object pts {
-        object pt_0 {
-            f32 x = 20
-            f32 y = 10
-            f32 z = 30
-        }
-        object pt_1 {
-            f32 x = 10
-            f32 y = 10
-            f32 z = 30
-        }
-        object pt_2 {
-            f32 x = 10
-            f32 y = 10
-            f32 z = 40
-        }
-    }
-    object color {
-        i32 r = 255
-        i32 g = 255
-        i32 b = 255
-        i32 a = 255
-    }
-    string texture_tag = "albedo"
-    bool is_lit = true
-    bool use_fog = false
-    i32 rot = 0
-    bool flipped = false
-    object normal {
-        f32 x = 0
-        f32 y = 1
-        f32 z = 0
-    }
-    i32 division = 0
-}
-object triangle5 {
-    object pts {
-        object pt_0 {
-            f32 x = 20
-            f32 y = 10
-            f32 z = 30
-        }
-        object pt_1 {
-            f32 x = 10
-            f32 y = 10
-            f32 z = 40
-        }
-        object pt_2 {
-            f32 x = 20
-            f32 y = 10
-            f32 z = 40
-        }
-    }
-    object color {
-        i32 r = 255
-        i32 g = 0
-        i32 b = 255
-        i32 a = 255
-    }
-    string texture_tag = "albedo"
-    bool is_lit = true
-    bool use_fog = false
-    i32 rot = 0
-    bool flipped = false
-    object normal {
-        f32 x = 0
-        f32 y = 1
-        f32 z = 0
-    }
-    i32 division = 1
-}
-object triangle6 {
-    object pts {
-        object pt_0 {
-            f32 x = 20
-            f32 y = 0
-            f32 z = 20
-        }
-        object pt_1 {
-            f32 x = 10
-            f32 y = 10
-            f32 z = 30
-        }
-        object pt_2 {
-            f32 x = 20
-            f32 y = 10
-            f32 z = 30
-        }
-    }
-    object color {
-        i32 r = 255
-        i32 g = 255
-        i32 b = 255
-        i32 a = 255
-    }
-    string texture_tag = "albedo"
-    bool is_lit = true
-    bool use_fog = false
-    i32 rot = 0
-    bool flipped = false
-    object normal {
-        f32 x = 0
-        f32 y = 0.0099999998
-        f32 z = -0.0099999998
-    }
-    i32 division = 0
-}
-object triangle7 {
-    object pts {
-        object pt_0 {
-            f32 x = 0
-            f32 y = 0
-            f32 z = 0
-        }
-        object pt_1 {
-            f32 x = 10
-            f32 y = 0
-            f32 z = 0
-        }
-        object pt_2 {
-            f32 x = 5
-            f32 y = 11
-            f32 z = 0
-        }
-    }
-    object color {
-        i32 r = 255
-        i32 g = 255
-        i32 b = 255
-        i32 a = 255
-    }
-    string texture_tag = "albedo"
-    bool is_lit = true
-    bool use_fog = false
-    i32 rot = 0
-    bool flipped = false
-    object normal {
-        f32 x = 0
-        f32 y = 0
-        f32 z = 1
-    }
-    i32 division = 0
-}
-object triangle8 {
-    object pts {
-        object pt_0 {
-            f32 x = 20
-            f32 y = 10
-            f32 z = 30
-        }
-        object pt_1 {
-            f32 x = 33
-            f32 y = 10
-            f32 z = 30
-        }
-        object pt_2 {
-            f32 x = 20
-            f32 y = 10
-            f32 z = 40
-        }
-    }
-    object color {
-        i32 r = 255
-        i32 g = 255
-        i32 b = 255
-        i32 a = 255
-    }
-    string texture_tag = "albedo"
-    bool is_lit = true
-    bool use_fog = false
-    i32 rot = 0
-    bool flipped = false
-    object normal {
-        f32 x = 0
-        f32 y = 1
-        f32 z = 0
-    }
-    i32 division = 0
-}
-object triangle9 {
-    object pts {
-        object pt_0 {
-            f32 x = 48
-            f32 y = 10
-            f32 z = 50
-        }
-        object pt_1 {
-            f32 x = 33
-            f32 y = 10
-            f32 z = 50
-        }
-        object pt_2 {
-            f32 x = 48
-            f32 y = 10
-            f32 z = 17
-        }
-    }
-    object color {
-        i32 r = 255
-        i32 g = 255
-        i32 b = 255
-        i32 a = 255
-    }
-    string texture_tag = "albedo"
-    bool is_lit = true
-    bool use_fog = false
-    i32 rot = 0
-    bool flipped = false
-    object normal {
-        f32 x = 0
-        f32 y = 1
-        f32 z = 0
-    }
-    i32 division = 0
-}
-object triangle10 {
-    object pts {
-        object pt_0 {
-            f32 x = 0
-            f32 y = 0
-            f32 z = 0
-        }
-        object pt_1 {
-            f32 x = 0
-            f32 y = 0
-            f32 z = 10
-        }
-        object pt_2 {
-            f32 x = 0
-            f32 y = 11
-            f32 z = 5
-        }
-    }
-    object color {
-        i32 r = 255
-        i32 g = 255
-        i32 b = 255
-        i32 a = 255
-    }
-    string texture_tag = "albedo"
-    bool is_lit = true
-    bool use_fog = false
-    i32 rot = 0
-    bool flipped = false
-    object normal {
-        f32 x = 1
-        f32 y = 0
-        f32 z = 0
-    }
-    i32 division = 0
-}
-object triangle11 {
-    object pts {
-        object pt_0 {
-            f32 x = 33
-            f32 y = 22
-            f32 z = 17
-        }
-        object pt_1 {
-            f32 x = 48
-            f32 y = 22
-            f32 z = 17
-        }
-        object pt_2 {
-            f32 x = 33
-            f32 y = 22
-            f32 z = 50
-        }
-    }
-    object color {
-        i32 r = 255
-        i32 g = 255
-        i32 b = 255
-        i32 a = 255
-    }
-    string texture_tag = "albedo"
-    bool is_lit = true
-    bool use_fog = false
-    i32 rot = 0
-    bool flipped = false
-    object normal {
-        f32 x = 0
-        f32 y = 1
-        f32 z = 0
-    }
-    i32 division = 0
-}
-object triangle12 {
-    object pts {
-        object pt_0 {
-            f32 x = 48
-            f32 y = 22
-            f32 z = 50
-        }
-        object pt_1 {
-            f32 x = 48
-            f32 y = 10
-            f32 z = 50
-        }
-        object pt_2 {
-            f32 x = 48
-            f32 y = 22
-            f32 z = 17
-        }
-    }
-    object color {
-        i32 r = 255
-        i32 g = 255
-        i32 b = 255
-        i32 a = 255
-    }
-    string texture_tag = "albedo"
-    bool is_lit = true
-    bool use_fog = false
-    i32 rot = 0
-    bool flipped = true
-    object normal {
-        f32 x = 1
-        f32 y = 0
-        f32 z = 0
-    }
-    i32 division = 0
-}
-object triangle13 {
-    object pts {
-        object pt_0 {
-            f32 x = 48
-            f32 y = 22
-            f32 z = 50
-        }
-        object pt_1 {
-            f32 x = 48
-            f32 y = 22
-            f32 z = 17
-        }
-        object pt_2 {
-            f32 x = 33
-            f32 y = 22
-            f32 z = 50
-        }
-    }
-    object color {
-        i32 r = 255
-        i32 g = 255
-        i32 b = 255
-        i32 a = 255
-    }
-    string texture_tag = "albedo"
-    bool is_lit = true
-    bool use_fog = false
-    i32 rot = 0
-    bool flipped = false
-    object normal {
-        f32 x = 0
-        f32 y = 1
-        f32 z = 0
-    }
-    i32 division = 0
-}
-object triangle14 {
     object pts {
         object pt_0 {
             f32 x = 10
@@ -539,7 +71,511 @@ object triangle14 {
     }
     i32 division = 0
 }
+object triangle2 {
+    object pts {
+        object pt_0 {
+            f32 x = 0
+            f32 y = 0
+            f32 z = 0
+        }
+        object pt_1 {
+            f32 x = 10
+            f32 y = 0
+            f32 z = 0
+        }
+        object pt_2 {
+            f32 x = 5
+            f32 y = 11
+            f32 z = 0
+        }
+    }
+    object color {
+        i32 r = 255
+        i32 g = 255
+        i32 b = 255
+        i32 a = 255
+    }
+    string texture_tag = "albedo"
+    bool is_lit = true
+    bool use_fog = false
+    i32 rot = 0
+    bool flipped = false
+    object normal {
+        f32 x = 0
+        f32 y = 0
+        f32 z = 1
+    }
+    i32 division = 0
+}
+object triangle3 {
+    object pts {
+        object pt_0 {
+            f32 x = 20
+            f32 y = 0
+            f32 z = 20
+        }
+        object pt_1 {
+            f32 x = 10
+            f32 y = 0
+            f32 z = 20
+        }
+        object pt_2 {
+            f32 x = 10
+            f32 y = 10
+            f32 z = 30
+        }
+    }
+    object color {
+        i32 r = 255
+        i32 g = 255
+        i32 b = 255
+        i32 a = 255
+    }
+    string texture_tag = "albedo"
+    bool is_lit = true
+    bool use_fog = false
+    i32 rot = 0
+    bool flipped = false
+    object normal {
+        f32 x = 0
+        f32 y = 0.0099999998
+        f32 z = -0.0099999998
+    }
+    i32 division = 0
+}
+object triangle4 {
+    object pts {
+        object pt_0 {
+            f32 x = 48
+            f32 y = 22
+            f32 z = 50
+        }
+        object pt_1 {
+            f32 x = 48
+            f32 y = 22
+            f32 z = 17
+        }
+        object pt_2 {
+            f32 x = 33
+            f32 y = 22
+            f32 z = 50
+        }
+    }
+    object color {
+        i32 r = 255
+        i32 g = 255
+        i32 b = 255
+        i32 a = 255
+    }
+    string texture_tag = "albedo"
+    bool is_lit = true
+    bool use_fog = false
+    i32 rot = 0
+    bool flipped = false
+    object normal {
+        f32 x = 0
+        f32 y = 1
+        f32 z = 0
+    }
+    i32 division = 0
+}
+object triangle5 {
+    object pts {
+        object pt_0 {
+            f32 x = 48
+            f32 y = 10
+            f32 z = 17
+        }
+        object pt_1 {
+            f32 x = 33
+            f32 y = 10
+            f32 z = 17
+        }
+        object pt_2 {
+            f32 x = 33
+            f32 y = 10
+            f32 z = 50
+        }
+    }
+    object color {
+        i32 r = 255
+        i32 g = 255
+        i32 b = 255
+        i32 a = 255
+    }
+    string texture_tag = "albedo"
+    bool is_lit = true
+    bool use_fog = false
+    i32 rot = 0
+    bool flipped = false
+    object normal {
+        f32 x = 0
+        f32 y = 1
+        f32 z = 0
+    }
+    i32 division = 0
+}
+object triangle6 {
+    object pts {
+        object pt_0 {
+            f32 x = 20
+            f32 y = 10
+            f32 z = 30
+        }
+        object pt_1 {
+            f32 x = 10
+            f32 y = 10
+            f32 z = 30
+        }
+        object pt_2 {
+            f32 x = 10
+            f32 y = 10
+            f32 z = 40
+        }
+    }
+    object color {
+        i32 r = 255
+        i32 g = 255
+        i32 b = 255
+        i32 a = 255
+    }
+    string texture_tag = "albedo"
+    bool is_lit = true
+    bool use_fog = false
+    i32 rot = 0
+    bool flipped = false
+    object normal {
+        f32 x = 0
+        f32 y = 1
+        f32 z = 0
+    }
+    i32 division = 0
+}
+object triangle7 {
+    object pts {
+        object pt_0 {
+            f32 x = 33
+            f32 y = 10
+            f32 z = 30
+        }
+        object pt_1 {
+            f32 x = 33
+            f32 y = 10
+            f32 z = 40
+        }
+        object pt_2 {
+            f32 x = 20
+            f32 y = 10
+            f32 z = 40
+        }
+    }
+    object color {
+        i32 r = 255
+        i32 g = 255
+        i32 b = 255
+        i32 a = 255
+    }
+    string texture_tag = "albedo"
+    bool is_lit = true
+    bool use_fog = false
+    i32 rot = 0
+    bool flipped = false
+    object normal {
+        f32 x = 0
+        f32 y = 1
+        f32 z = 0
+    }
+    i32 division = 0
+}
+object triangle8 {
+    object pts {
+        object pt_0 {
+            f32 x = 0
+            f32 y = 0
+            f32 z = 30
+        }
+        object pt_1 {
+            f32 x = 0
+            f32 y = 11
+            f32 z = 30
+        }
+        object pt_2 {
+            f32 x = 10
+            f32 y = 0
+            f32 z = 30
+        }
+    }
+    object color {
+        i32 r = 255
+        i32 g = 255
+        i32 b = 255
+        i32 a = 255
+    }
+    string texture_tag = "troll"
+    bool is_lit = true
+    bool use_fog = false
+    i32 rot = 2
+    bool flipped = true
+    object normal {
+        f32 x = -0
+        f32 y = -0
+        f32 z = -1
+    }
+    i32 division = 0
+}
+object triangle9 {
+    object pts {
+        object pt_0 {
+            f32 x = 48
+            f32 y = 22
+            f32 z = 50
+        }
+        object pt_1 {
+            f32 x = 48
+            f32 y = 10
+            f32 z = 50
+        }
+        object pt_2 {
+            f32 x = 48
+            f32 y = 22
+            f32 z = 17
+        }
+    }
+    object color {
+        i32 r = 255
+        i32 g = 255
+        i32 b = 255
+        i32 a = 255
+    }
+    string texture_tag = "albedo"
+    bool is_lit = true
+    bool use_fog = false
+    i32 rot = 0
+    bool flipped = true
+    object normal {
+        f32 x = -1
+        f32 y = -0
+        f32 z = -0
+    }
+    i32 division = 0
+}
+object triangle10 {
+    object pts {
+        object pt_0 {
+            f32 x = 48
+            f32 y = 10
+            f32 z = 17
+        }
+        object pt_1 {
+            f32 x = 48
+            f32 y = 10
+            f32 z = 50
+        }
+        object pt_2 {
+            f32 x = 48
+            f32 y = 22
+            f32 z = 17
+        }
+    }
+    object color {
+        i32 r = 255
+        i32 g = 255
+        i32 b = 255
+        i32 a = 255
+    }
+    string texture_tag = "albedo"
+    bool is_lit = true
+    bool use_fog = false
+    i32 rot = 0
+    bool flipped = true
+    object normal {
+        f32 x = -1
+        f32 y = -0
+        f32 z = -0
+    }
+    i32 division = 0
+}
+object triangle11 {
+    object pts {
+        object pt_0 {
+            f32 x = 20
+            f32 y = 10
+            f32 z = 30
+        }
+        object pt_1 {
+            f32 x = 10
+            f32 y = 10
+            f32 z = 40
+        }
+        object pt_2 {
+            f32 x = 20
+            f32 y = 10
+            f32 z = 40
+        }
+    }
+    object color {
+        i32 r = 255
+        i32 g = 0
+        i32 b = 255
+        i32 a = 255
+    }
+    string texture_tag = "albedo"
+    bool is_lit = true
+    bool use_fog = false
+    i32 rot = 0
+    bool flipped = false
+    object normal {
+        f32 x = 0
+        f32 y = 1
+        f32 z = 0
+    }
+    i32 division = 1
+}
+object triangle12 {
+    object pts {
+        object pt_0 {
+            f32 x = 0
+            f32 y = 11
+            f32 z = 30
+        }
+        object pt_1 {
+            f32 x = 10
+            f32 y = 0
+            f32 z = 30
+        }
+        object pt_2 {
+            f32 x = 10
+            f32 y = 11
+            f32 z = 30
+        }
+    }
+    object color {
+        i32 r = 255
+        i32 g = 255
+        i32 b = 255
+        i32 a = 255
+    }
+    string texture_tag = "troll"
+    bool is_lit = true
+    bool use_fog = false
+    i32 rot = 2
+    bool flipped = true
+    object normal {
+        f32 x = -0
+        f32 y = -0
+        f32 z = -1
+    }
+    i32 division = 1
+}
+object triangle13 {
+    object pts {
+        object pt_0 {
+            f32 x = 33
+            f32 y = 22
+            f32 z = 17
+        }
+        object pt_1 {
+            f32 x = 48
+            f32 y = 22
+            f32 z = 17
+        }
+        object pt_2 {
+            f32 x = 33
+            f32 y = 22
+            f32 z = 50
+        }
+    }
+    object color {
+        i32 r = 255
+        i32 g = 255
+        i32 b = 255
+        i32 a = 255
+    }
+    string texture_tag = "albedo"
+    bool is_lit = true
+    bool use_fog = false
+    i32 rot = 0
+    bool flipped = false
+    object normal {
+        f32 x = 0
+        f32 y = 1
+        f32 z = 0
+    }
+    i32 division = 0
+}
+object triangle14 {
+    object pts {
+        object pt_0 {
+            f32 x = 20
+            f32 y = 10
+            f32 z = 40
+        }
+        object pt_1 {
+            f32 x = 10
+            f32 y = 10
+            f32 z = 40
+        }
+        object pt_2 {
+            f32 x = 10
+            f32 y = 10
+            f32 z = 50
+        }
+    }
+    object color {
+        i32 r = 255
+        i32 g = 255
+        i32 b = 255
+        i32 a = 255
+    }
+    string texture_tag = "albedo"
+    bool is_lit = true
+    bool use_fog = false
+    i32 rot = 0
+    bool flipped = false
+    object normal {
+        f32 x = 0
+        f32 y = 1
+        f32 z = 0
+    }
+    i32 division = 0
+}
 object triangle15 {
+    object pts {
+        object pt_0 {
+            f32 x = 20
+            f32 y = 10
+            f32 z = 30
+        }
+        object pt_1 {
+            f32 x = 33
+            f32 y = 10
+            f32 z = 30
+        }
+        object pt_2 {
+            f32 x = 20
+            f32 y = 10
+            f32 z = 40
+        }
+    }
+    object color {
+        i32 r = 255
+        i32 g = 255
+        i32 b = 255
+        i32 a = 255
+    }
+    string texture_tag = "albedo"
+    bool is_lit = true
+    bool use_fog = false
+    i32 rot = 0
+    bool flipped = false
+    object normal {
+        f32 x = 0
+        f32 y = 1
+        f32 z = 0
+    }
+    i32 division = 0
+}
+object triangle16 {
     object pts {
         object pt_0 {
             f32 x = 20
@@ -575,94 +611,22 @@ object triangle15 {
     }
     i32 division = 0
 }
-object triangle16 {
-    object pts {
-        object pt_0 {
-            f32 x = 0
-            f32 y = 11
-            f32 z = 30
-        }
-        object pt_1 {
-            f32 x = 10
-            f32 y = 0
-            f32 z = 30
-        }
-        object pt_2 {
-            f32 x = 10
-            f32 y = 11
-            f32 z = 30
-        }
-    }
-    object color {
-        i32 r = 255
-        i32 g = 255
-        i32 b = 255
-        i32 a = 255
-    }
-    string texture_tag = "troll"
-    bool is_lit = true
-    bool use_fog = false
-    i32 rot = 2
-    bool flipped = true
-    object normal {
-        f32 x = 0
-        f32 y = 0
-        f32 z = 1
-    }
-    i32 division = 1
-}
 object triangle17 {
     object pts {
         object pt_0 {
             f32 x = 0
             f32 y = 0
-            f32 z = 30
+            f32 z = 0
         }
         object pt_1 {
             f32 x = 0
-            f32 y = 11
-            f32 z = 30
-        }
-        object pt_2 {
-            f32 x = 10
             f32 y = 0
-            f32 z = 30
-        }
-    }
-    object color {
-        i32 r = 255
-        i32 g = 255
-        i32 b = 255
-        i32 a = 255
-    }
-    string texture_tag = "troll"
-    bool is_lit = true
-    bool use_fog = false
-    i32 rot = 2
-    bool flipped = true
-    object normal {
-        f32 x = 0
-        f32 y = 0
-        f32 z = 1
-    }
-    i32 division = 0
-}
-object triangle18 {
-    object pts {
-        object pt_0 {
-            f32 x = 48
-            f32 y = 10
-            f32 z = 17
-        }
-        object pt_1 {
-            f32 x = 48
-            f32 y = 10
-            f32 z = 50
+            f32 z = 10
         }
         object pt_2 {
-            f32 x = 48
-            f32 y = 22
-            f32 z = 17
+            f32 x = 0
+            f32 y = 11
+            f32 z = 5
         }
     }
     object color {
@@ -675,7 +639,7 @@ object triangle18 {
     bool is_lit = true
     bool use_fog = false
     i32 rot = 0
-    bool flipped = true
+    bool flipped = false
     object normal {
         f32 x = 1
         f32 y = 0
@@ -683,22 +647,22 @@ object triangle18 {
     }
     i32 division = 0
 }
-object triangle19 {
+object triangle18 {
     object pts {
         object pt_0 {
-            f32 x = 48
-            f32 y = 10
-            f32 z = 17
+            f32 x = 20
+            f32 y = 0
+            f32 z = 20
         }
         object pt_1 {
-            f32 x = 33
+            f32 x = 10
             f32 y = 10
-            f32 z = 17
+            f32 z = 30
         }
         object pt_2 {
-            f32 x = 33
+            f32 x = 20
             f32 y = 10
-            f32 z = 50
+            f32 z = 30
         }
     }
     object color {
@@ -714,537 +678,48 @@ object triangle19 {
     bool flipped = false
     object normal {
         f32 x = 0
-        f32 y = 1
-        f32 z = 0
+        f32 y = 0.0099999998
+        f32 z = -0.0099999998
+    }
+    i32 division = 0
+}
+object triangle19 {
+    object pts {
+        object pt_0 {
+            f32 x = 10
+            f32 y = 25
+            f32 z = 45
+        }
+        object pt_1 {
+            f32 x = 10
+            f32 y = 10
+            f32 z = 40
+        }
+        object pt_2 {
+            f32 x = 20
+            f32 y = 10
+            f32 z = 40
+        }
+    }
+    object color {
+        i32 r = 0
+        i32 g = 255
+        i32 b = 255
+        i32 a = 255
+    }
+    string texture_tag = "albedo"
+    bool is_lit = true
+    bool use_fog = false
+    i32 rot = 0
+    bool flipped = false
+    object normal {
+        f32 x = 0
+        f32 y = -0.00666667
+        f32 z = 0.02
     }
     i32 division = 0
 }
 object data_id0 {
-    string tag = "light"
-    i32 id = 1
-    object transform {
-        object position {
-            f32 x = 42.907223
-            f32 y = 16.510853
-            f32 z = 44.7258
-        }
-        object rotation {
-            f32 x = 0
-            f32 y = 0
-            f32 z = 0
-        }
-        object scale {
-            f32 x = 1
-            f32 y = 1
-            f32 z = 1
-        }
-    }
-    object components {
-        object c0 {
-            string tag = ""
-            string type = ""
-        }
-        object c1 {
-            string tag = ""
-            string type = ""
-        }
-        object c2 {
-            string tag = ""
-            string type = ""
-        }
-        object c3 {
-            string tag = ""
-            string type = ""
-        }
-        object c4 {
-            string tag = ""
-            string type = ""
-        }
-        object c5 {
-            string tag = ""
-            string type = ""
-        }
-        object c6 {
-            string tag = ""
-            string type = ""
-        }
-        object c7 {
-            string tag = ""
-            string type = ""
-        }
-        object c8 {
-            string tag = ""
-            string type = ""
-        }
-        object c9 {
-            string tag = ""
-            string type = ""
-        }
-        object c10 {
-            string tag = ""
-            string type = ""
-        }
-        object c11 {
-            string tag = ""
-            string type = ""
-        }
-        object c12 {
-            string tag = ""
-            string type = ""
-        }
-        object c13 {
-            string tag = ""
-            string type = ""
-        }
-        object c14 {
-            string tag = ""
-            string type = ""
-        }
-        object c15 {
-            string tag = ""
-            string type = ""
-        }
-    }
-    object flags {
-        i32 c0 = 0
-        i32 c1 = 0
-        i32 c2 = 0
-        i32 c3 = 0
-        i32 c4 = 0
-        i32 c5 = 0
-        i32 c6 = 0
-        i32 c7 = 0
-        i32 c8 = 0
-        i32 c9 = 0
-        i32 c10 = 0
-        i32 c11 = 0
-        i32 c12 = 0
-        i32 c13 = 0
-        i32 c14 = 0
-        i32 c15 = 0
-    }
-}
-object data_id1 {
-    string tag = "trigger"
-    i32 id = 0
-    object transform {
-        object position {
-            f32 x = 10
-            f32 y = 15
-            f32 z = 10
-        }
-        object rotation {
-            f32 x = 0
-            f32 y = 0
-            f32 z = 0
-        }
-        object scale {
-            f32 x = 1
-            f32 y = 1
-            f32 z = 1
-        }
-    }
-    object components {
-        object c0 {
-            string tag = "test_component"
-            string type = "RigidBody"
-        }
-        object c1 {
-            string tag = "mesh_component"
-            string type = "SimpleMesh"
-        }
-        object c2 {
-            string tag = ""
-            string type = ""
-        }
-        object c3 {
-            string tag = ""
-            string type = ""
-        }
-        object c4 {
-            string tag = ""
-            string type = ""
-        }
-        object c5 {
-            string tag = ""
-            string type = ""
-        }
-        object c6 {
-            string tag = ""
-            string type = ""
-        }
-        object c7 {
-            string tag = ""
-            string type = ""
-        }
-        object c8 {
-            string tag = ""
-            string type = ""
-        }
-        object c9 {
-            string tag = ""
-            string type = ""
-        }
-        object c10 {
-            string tag = ""
-            string type = ""
-        }
-        object c11 {
-            string tag = ""
-            string type = ""
-        }
-        object c12 {
-            string tag = ""
-            string type = ""
-        }
-        object c13 {
-            string tag = ""
-            string type = ""
-        }
-        object c14 {
-            string tag = ""
-            string type = ""
-        }
-        object c15 {
-            string tag = ""
-            string type = ""
-        }
-    }
-    object flags {
-        i32 c0 = 0
-        i32 c1 = 0
-        i32 c2 = 0
-        i32 c3 = 0
-        i32 c4 = 0
-        i32 c5 = 0
-        i32 c6 = 0
-        i32 c7 = 0
-        i32 c8 = 0
-        i32 c9 = 0
-        i32 c10 = 0
-        i32 c11 = 0
-        i32 c12 = 0
-        i32 c13 = 0
-        i32 c14 = 0
-        i32 c15 = 0
-    }
-}
-object data_id2 {
-    string tag = "trigger"
-    i32 id = 0
-    object transform {
-        object position {
-            f32 x = 10
-            f32 y = 10
-            f32 z = 10
-        }
-        object rotation {
-            f32 x = 0
-            f32 y = 0
-            f32 z = 0
-        }
-        object scale {
-            f32 x = 1
-            f32 y = 1
-            f32 z = 1
-        }
-    }
-    object components {
-        object c0 {
-            string tag = "test_component"
-            string type = "RigidBody"
-        }
-        object c1 {
-            string tag = "mesh_component"
-            string type = "SimpleMesh"
-        }
-        object c2 {
-            string tag = ""
-            string type = ""
-        }
-        object c3 {
-            string tag = ""
-            string type = ""
-        }
-        object c4 {
-            string tag = ""
-            string type = ""
-        }
-        object c5 {
-            string tag = ""
-            string type = ""
-        }
-        object c6 {
-            string tag = ""
-            string type = ""
-        }
-        object c7 {
-            string tag = ""
-            string type = ""
-        }
-        object c8 {
-            string tag = ""
-            string type = ""
-        }
-        object c9 {
-            string tag = ""
-            string type = ""
-        }
-        object c10 {
-            string tag = ""
-            string type = ""
-        }
-        object c11 {
-            string tag = ""
-            string type = ""
-        }
-        object c12 {
-            string tag = ""
-            string type = ""
-        }
-        object c13 {
-            string tag = ""
-            string type = ""
-        }
-        object c14 {
-            string tag = ""
-            string type = ""
-        }
-        object c15 {
-            string tag = ""
-            string type = ""
-        }
-    }
-    object flags {
-        i32 c0 = 0
-        i32 c1 = 0
-        i32 c2 = 0
-        i32 c3 = 0
-        i32 c4 = 0
-        i32 c5 = 0
-        i32 c6 = 0
-        i32 c7 = 0
-        i32 c8 = 0
-        i32 c9 = 0
-        i32 c10 = 0
-        i32 c11 = 0
-        i32 c12 = 0
-        i32 c13 = 0
-        i32 c14 = 0
-        i32 c15 = 0
-    }
-}
-object data_id3 {
-    string tag = "csg_box"
-    i32 id = 72
-    object transform {
-        object position {
-            f32 x = 40.5
-            f32 y = 21.5
-            f32 z = -1
-        }
-        object rotation {
-            f32 x = 0
-            f32 y = 0
-            f32 z = 0
-        }
-        object scale {
-            f32 x = 15
-            f32 y = 1
-            f32 z = 12
-        }
-    }
-    object components {
-        object c0 {
-            string tag = "csg_box_rb"
-            string type = "RigidBody"
-        }
-        object c1 {
-            string tag = "csg_box_sm"
-            string type = "SimpleMesh"
-        }
-        object c2 {
-            string tag = ""
-            string type = ""
-        }
-        object c3 {
-            string tag = ""
-            string type = ""
-        }
-        object c4 {
-            string tag = ""
-            string type = ""
-        }
-        object c5 {
-            string tag = ""
-            string type = ""
-        }
-        object c6 {
-            string tag = ""
-            string type = ""
-        }
-        object c7 {
-            string tag = ""
-            string type = ""
-        }
-        object c8 {
-            string tag = ""
-            string type = ""
-        }
-        object c9 {
-            string tag = ""
-            string type = ""
-        }
-        object c10 {
-            string tag = ""
-            string type = ""
-        }
-        object c11 {
-            string tag = ""
-            string type = ""
-        }
-        object c12 {
-            string tag = ""
-            string type = ""
-        }
-        object c13 {
-            string tag = ""
-            string type = ""
-        }
-        object c14 {
-            string tag = ""
-            string type = ""
-        }
-        object c15 {
-            string tag = ""
-            string type = ""
-        }
-    }
-    object flags {
-        i32 c0 = 0
-        i32 c1 = 0
-        i32 c2 = 0
-        i32 c3 = 0
-        i32 c4 = 0
-        i32 c5 = 0
-        i32 c6 = 0
-        i32 c7 = 0
-        i32 c8 = 0
-        i32 c9 = 0
-        i32 c10 = 0
-        i32 c11 = 0
-        i32 c12 = 0
-        i32 c13 = 0
-        i32 c14 = 0
-        i32 c15 = 0
-    }
-}
-object data_id4 {
-    string tag = "csg_box"
-    i32 id = 72
-    object transform {
-        object position {
-            f32 x = 40.25
-            f32 y = 10
-            f32 z = 11
-        }
-        object rotation {
-            f32 x = 0
-            f32 y = 0
-            f32 z = 0
-        }
-        object scale {
-            f32 x = 6.5
-            f32 y = 1
-            f32 z = 12
-        }
-    }
-    object components {
-        object c0 {
-            string tag = "csg_box_rb"
-            string type = "RigidBody"
-        }
-        object c1 {
-            string tag = "csg_box_sm"
-            string type = "SimpleMesh"
-        }
-        object c2 {
-            string tag = ""
-            string type = ""
-        }
-        object c3 {
-            string tag = ""
-            string type = ""
-        }
-        object c4 {
-            string tag = ""
-            string type = ""
-        }
-        object c5 {
-            string tag = ""
-            string type = ""
-        }
-        object c6 {
-            string tag = ""
-            string type = ""
-        }
-        object c7 {
-            string tag = ""
-            string type = ""
-        }
-        object c8 {
-            string tag = ""
-            string type = ""
-        }
-        object c9 {
-            string tag = ""
-            string type = ""
-        }
-        object c10 {
-            string tag = ""
-            string type = ""
-        }
-        object c11 {
-            string tag = ""
-            string type = ""
-        }
-        object c12 {
-            string tag = ""
-            string type = ""
-        }
-        object c13 {
-            string tag = ""
-            string type = ""
-        }
-        object c14 {
-            string tag = ""
-            string type = ""
-        }
-        object c15 {
-            string tag = ""
-            string type = ""
-        }
-    }
-    object flags {
-        i32 c0 = 0
-        i32 c1 = 0
-        i32 c2 = 0
-        i32 c3 = 0
-        i32 c4 = 0
-        i32 c5 = 0
-        i32 c6 = 0
-        i32 c7 = 0
-        i32 c8 = 0
-        i32 c9 = 0
-        i32 c10 = 0
-        i32 c11 = 0
-        i32 c12 = 0
-        i32 c13 = 0
-        i32 c14 = 0
-        i32 c15 = 0
-    }
-}
-object data_id5 {
     string tag = "csg_box"
     i32 id = 72
     object transform {
@@ -1349,7 +824,112 @@ object data_id5 {
         i32 c15 = 0
     }
 }
-object data_id6 {
+object data_id1 {
+    string tag = "csg_box"
+    i32 id = 72
+    object transform {
+        object position {
+            f32 x = 33.25
+            f32 y = 16.25
+            f32 z = -1
+        }
+        object rotation {
+            f32 x = 0
+            f32 y = 0
+            f32 z = 0
+        }
+        object scale {
+            f32 x = 0.5
+            f32 y = 11.5
+            f32 z = 12
+        }
+    }
+    object components {
+        object c0 {
+            string tag = "csg_box_rb"
+            string type = "RigidBody"
+        }
+        object c1 {
+            string tag = "csg_box_sm"
+            string type = "SimpleMesh"
+        }
+        object c2 {
+            string tag = ""
+            string type = ""
+        }
+        object c3 {
+            string tag = ""
+            string type = ""
+        }
+        object c4 {
+            string tag = ""
+            string type = ""
+        }
+        object c5 {
+            string tag = ""
+            string type = ""
+        }
+        object c6 {
+            string tag = ""
+            string type = ""
+        }
+        object c7 {
+            string tag = ""
+            string type = ""
+        }
+        object c8 {
+            string tag = ""
+            string type = ""
+        }
+        object c9 {
+            string tag = ""
+            string type = ""
+        }
+        object c10 {
+            string tag = ""
+            string type = ""
+        }
+        object c11 {
+            string tag = ""
+            string type = ""
+        }
+        object c12 {
+            string tag = ""
+            string type = ""
+        }
+        object c13 {
+            string tag = ""
+            string type = ""
+        }
+        object c14 {
+            string tag = ""
+            string type = ""
+        }
+        object c15 {
+            string tag = ""
+            string type = ""
+        }
+    }
+    object flags {
+        i32 c0 = 0
+        i32 c1 = 0
+        i32 c2 = 0
+        i32 c3 = 0
+        i32 c4 = 0
+        i32 c5 = 0
+        i32 c6 = 0
+        i32 c7 = 0
+        i32 c8 = 0
+        i32 c9 = 0
+        i32 c10 = 0
+        i32 c11 = 0
+        i32 c12 = 0
+        i32 c13 = 0
+        i32 c14 = 0
+        i32 c15 = 0
+    }
+}
+object data_id2 {
     string tag = "light"
     i32 id = 1
     object transform {
@@ -1454,13 +1034,13 @@ object data_id6 {
         i32 c15 = 0
     }
 }
-object data_id7 {
+object data_id3 {
     string tag = "csg_box"
     i32 id = 72
     object transform {
         object position {
-            f32 x = 33.25
-            f32 y = 16.25
+            f32 x = 40.5
+            f32 y = 10
             f32 z = -1
         }
         object rotation {
@@ -1469,8 +1049,428 @@ object data_id7 {
             f32 z = 0
         }
         object scale {
-            f32 x = 0.5
-            f32 y = 11.5
+            f32 x = 15
+            f32 y = 1
+            f32 z = 12
+        }
+    }
+    object components {
+        object c0 {
+            string tag = "csg_box_rb"
+            string type = "RigidBody"
+        }
+        object c1 {
+            string tag = "csg_box_sm"
+            string type = "SimpleMesh"
+        }
+        object c2 {
+            string tag = ""
+            string type = ""
+        }
+        object c3 {
+            string tag = ""
+            string type = ""
+        }
+        object c4 {
+            string tag = ""
+            string type = ""
+        }
+        object c5 {
+            string tag = ""
+            string type = ""
+        }
+        object c6 {
+            string tag = ""
+            string type = ""
+        }
+        object c7 {
+            string tag = ""
+            string type = ""
+        }
+        object c8 {
+            string tag = ""
+            string type = ""
+        }
+        object c9 {
+            string tag = ""
+            string type = ""
+        }
+        object c10 {
+            string tag = ""
+            string type = ""
+        }
+        object c11 {
+            string tag = ""
+            string type = ""
+        }
+        object c12 {
+            string tag = ""
+            string type = ""
+        }
+        object c13 {
+            string tag = ""
+            string type = ""
+        }
+        object c14 {
+            string tag = ""
+            string type = ""
+        }
+        object c15 {
+            string tag = ""
+            string type = ""
+        }
+    }
+    object flags {
+        i32 c0 = 0
+        i32 c1 = 0
+        i32 c2 = 0
+        i32 c3 = 0
+        i32 c4 = 0
+        i32 c5 = 0
+        i32 c6 = 0
+        i32 c7 = 0
+        i32 c8 = 0
+        i32 c9 = 0
+        i32 c10 = 0
+        i32 c11 = 0
+        i32 c12 = 0
+        i32 c13 = 0
+        i32 c14 = 0
+        i32 c15 = 0
+    }
+}
+object data_id4 {
+    string tag = "light"
+    i32 id = 1
+    object transform {
+        object position {
+            f32 x = 42.907223
+            f32 y = 16.510853
+            f32 z = 44.7258
+        }
+        object rotation {
+            f32 x = 0
+            f32 y = 0
+            f32 z = 0
+        }
+        object scale {
+            f32 x = 1
+            f32 y = 1
+            f32 z = 1
+        }
+    }
+    object components {
+        object c0 {
+            string tag = ""
+            string type = ""
+        }
+        object c1 {
+            string tag = ""
+            string type = ""
+        }
+        object c2 {
+            string tag = ""
+            string type = ""
+        }
+        object c3 {
+            string tag = ""
+            string type = ""
+        }
+        object c4 {
+            string tag = ""
+            string type = ""
+        }
+        object c5 {
+            string tag = ""
+            string type = ""
+        }
+        object c6 {
+            string tag = ""
+            string type = ""
+        }
+        object c7 {
+            string tag = ""
+            string type = ""
+        }
+        object c8 {
+            string tag = ""
+            string type = ""
+        }
+        object c9 {
+            string tag = ""
+            string type = ""
+        }
+        object c10 {
+            string tag = ""
+            string type = ""
+        }
+        object c11 {
+            string tag = ""
+            string type = ""
+        }
+        object c12 {
+            string tag = ""
+            string type = ""
+        }
+        object c13 {
+            string tag = ""
+            string type = ""
+        }
+        object c14 {
+            string tag = ""
+            string type = ""
+        }
+        object c15 {
+            string tag = ""
+            string type = ""
+        }
+    }
+    object flags {
+        i32 c0 = 0
+        i32 c1 = 0
+        i32 c2 = 0
+        i32 c3 = 0
+        i32 c4 = 0
+        i32 c5 = 0
+        i32 c6 = 0
+        i32 c7 = 0
+        i32 c8 = 0
+        i32 c9 = 0
+        i32 c10 = 0
+        i32 c11 = 0
+        i32 c12 = 0
+        i32 c13 = 0
+        i32 c14 = 0
+        i32 c15 = 0
+    }
+}
+object data_id5 {
+    string tag = "Prop;swat;false;0.10;0.00,0.00,0.00,;1.50,1.50,1.50,"
+    i32 id = 55
+    object transform {
+        object position {
+            f32 x = 4
+            f32 y = 1
+            f32 z = 25
+        }
+        object rotation {
+            f32 x = 0
+            f32 y = 0
+            f32 z = 0
+        }
+        object scale {
+            f32 x = 0.75
+            f32 y = 3
+            f32 z = 0.75
+        }
+    }
+    object components {
+        object c0 {
+            string tag = ""
+            string type = ""
+        }
+        object c1 {
+            string tag = ""
+            string type = ""
+        }
+        object c2 {
+            string tag = ""
+            string type = ""
+        }
+        object c3 {
+            string tag = ""
+            string type = ""
+        }
+        object c4 {
+            string tag = ""
+            string type = ""
+        }
+        object c5 {
+            string tag = ""
+            string type = ""
+        }
+        object c6 {
+            string tag = ""
+            string type = ""
+        }
+        object c7 {
+            string tag = ""
+            string type = ""
+        }
+        object c8 {
+            string tag = ""
+            string type = ""
+        }
+        object c9 {
+            string tag = ""
+            string type = ""
+        }
+        object c10 {
+            string tag = ""
+            string type = ""
+        }
+        object c11 {
+            string tag = ""
+            string type = ""
+        }
+        object c12 {
+            string tag = ""
+            string type = ""
+        }
+        object c13 {
+            string tag = ""
+            string type = ""
+        }
+        object c14 {
+            string tag = ""
+            string type = ""
+        }
+        object c15 {
+            string tag = ""
+            string type = ""
+        }
+    }
+    object flags {
+        i32 c0 = 0
+        i32 c1 = 0
+        i32 c2 = 0
+        i32 c3 = 0
+        i32 c4 = 0
+        i32 c5 = 0
+        i32 c6 = 0
+        i32 c7 = 0
+        i32 c8 = 0
+        i32 c9 = 0
+        i32 c10 = 0
+        i32 c11 = 0
+        i32 c12 = 0
+        i32 c13 = 0
+        i32 c14 = 0
+        i32 c15 = 0
+    }
+}
+object data_id6 {
+    string tag = "csg_box"
+    i32 id = 72
+    object transform {
+        object position {
+            f32 x = 40.25
+            f32 y = 10
+            f32 z = 11
+        }
+        object rotation {
+            f32 x = 0
+            f32 y = 0
+            f32 z = 0
+        }
+        object scale {
+            f32 x = 6.5
+            f32 y = 1
+            f32 z = 12
+        }
+    }
+    object components {
+        object c0 {
+            string tag = "csg_box_rb"
+            string type = "RigidBody"
+        }
+        object c1 {
+            string tag = "csg_box_sm"
+            string type = "SimpleMesh"
+        }
+        object c2 {
+            string tag = ""
+            string type = ""
+        }
+        object c3 {
+            string tag = ""
+            string type = ""
+        }
+        object c4 {
+            string tag = ""
+            string type = ""
+        }
+        object c5 {
+            string tag = ""
+            string type = ""
+        }
+        object c6 {
+            string tag = ""
+            string type = ""
+        }
+        object c7 {
+            string tag = ""
+            string type = ""
+        }
+        object c8 {
+            string tag = ""
+            string type = ""
+        }
+        object c9 {
+            string tag = ""
+            string type = ""
+        }
+        object c10 {
+            string tag = ""
+            string type = ""
+        }
+        object c11 {
+            string tag = ""
+            string type = ""
+        }
+        object c12 {
+            string tag = ""
+            string type = ""
+        }
+        object c13 {
+            string tag = ""
+            string type = ""
+        }
+        object c14 {
+            string tag = ""
+            string type = ""
+        }
+        object c15 {
+            string tag = ""
+            string type = ""
+        }
+    }
+    object flags {
+        i32 c0 = 0
+        i32 c1 = 0
+        i32 c2 = 0
+        i32 c3 = 0
+        i32 c4 = 0
+        i32 c5 = 0
+        i32 c6 = 0
+        i32 c7 = 0
+        i32 c8 = 0
+        i32 c9 = 0
+        i32 c10 = 0
+        i32 c11 = 0
+        i32 c12 = 0
+        i32 c13 = 0
+        i32 c14 = 0
+        i32 c15 = 0
+    }
+}
+object data_id7 {
+    string tag = "csg_box"
+    i32 id = 72
+    object transform {
+        object position {
+            f32 x = 40.5
+            f32 y = 21.5
+            f32 z = -1
+        }
+        object rotation {
+            f32 x = 0
+            f32 y = 0
+            f32 z = 0
+        }
+        object scale {
+            f32 x = 15
+            f32 y = 1
             f32 z = 12
         }
     }
@@ -1665,13 +1665,13 @@ object data_id8 {
     }
 }
 object data_id9 {
-    string tag = "csg_box"
-    i32 id = 72
+    string tag = "trigger"
+    i32 id = 0
     object transform {
         object position {
-            f32 x = 40.5
+            f32 x = 10
             f32 y = 10
-            f32 z = -1
+            f32 z = 10
         }
         object rotation {
             f32 x = 0
@@ -1679,18 +1679,18 @@ object data_id9 {
             f32 z = 0
         }
         object scale {
-            f32 x = 15
+            f32 x = 1
             f32 y = 1
-            f32 z = 12
+            f32 z = 1
         }
     }
     object components {
         object c0 {
-            string tag = "csg_box_rb"
+            string tag = "test_component"
             string type = "RigidBody"
         }
         object c1 {
-            string tag = "csg_box_sm"
+            string tag = "mesh_component"
             string type = "SimpleMesh"
         }
         object c2 {
@@ -1770,23 +1770,23 @@ object data_id9 {
     }
 }
 object data_id10 {
-    string tag = "Prop;swat;true;0.10"
-    i32 id = 73
+    string tag = "light"
+    i32 id = 1
     object transform {
         object position {
-            f32 x = 4
-            f32 y = 1
-            f32 z = 25
+            f32 x = 42.782997
+            f32 y = 16.510853
+            f32 z = 25.654322
         }
         object rotation {
             f32 x = 0
-            f32 y = 180
+            f32 y = 0
             f32 z = 0
         }
         object scale {
-            f32 x = 2
-            f32 y = 2
-            f32 z = 2
+            f32 x = 1
+            f32 y = 1
+            f32 z = 1
         }
     }
     object components {
@@ -1875,13 +1875,13 @@ object data_id10 {
     }
 }
 object data_id11 {
-    string tag = "light"
-    i32 id = 1
+    string tag = "trigger"
+    i32 id = 0
     object transform {
         object position {
-            f32 x = 42.782997
-            f32 y = 16.510853
-            f32 z = 25.654322
+            f32 x = 10
+            f32 y = 15
+            f32 z = 10
         }
         object rotation {
             f32 x = 0
@@ -1896,12 +1896,12 @@ object data_id11 {
     }
     object components {
         object c0 {
-            string tag = ""
-            string type = ""
+            string tag = "test_component"
+            string type = "RigidBody"
         }
         object c1 {
-            string tag = ""
-            string type = ""
+            string tag = "mesh_component"
+            string type = "SimpleMesh"
         }
         object c2 {
             string tag = ""

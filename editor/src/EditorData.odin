@@ -17,4 +17,5 @@ PropHandle :: struct {
     collider: oe.Transform,
     is_msc: bool,
     voxel_size: f32,
+    model_tr: oe.Transform,
 }

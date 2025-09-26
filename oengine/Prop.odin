@@ -14,7 +14,23 @@ Prop :: struct {
 
 prop_init :: proc(
     ent: AEntity, model: Model, _position: Vec3, scale: Vec3 = {1, 1, 1}, 
-    _msc := false, voxel_size: f32 = 0.1, render_msc := false) -> (p: Prop) {
+    preset_size: Vec3 = {}, use_preset := false, _msc := false, 
+    voxel_size: f32 = 0.1, render_msc := false) -> (p: Prop) {
+    if (use_preset) {
+        p = Prop {
+            collider = Transform {
+                position = _position,
+                rotation = {},
+                scale = preset_size,
+            },
+            _model = model,
+        };
+
+        add_component(ent, rb_init(p.collider, 1, 0.5, true, ShapeType.BOX));
+
+        return;
+    }
+
     rlbb := rl.GetModelBoundingBox(model);
     size := rlbb.max - rlbb.min;
     position := rlbb.min + size * 0.5;

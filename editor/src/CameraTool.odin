@@ -178,7 +178,8 @@ ct_render :: proc(using self: ^CameraTool) {
             }
 
             rl.DrawModelEx(
-                model, prop.collider.position, {}, 0, prop.collider.scale, oe.WHITE);
+                model, prop.collider.position + prop.model_tr.position, 
+                {}, 0, prop.model_tr.scale, oe.WHITE);
             oe.draw_cube_wireframe(
                 prop.collider.position, 
                 prop.collider.rotation,
@@ -264,7 +265,8 @@ ct_msc_edit :: proc(using self: ^CameraTool) {
                 );
             case .PROP:
                 t := oe.Transform {points_to_add[0], {}, oe.vec3_one()};
-                append(&editor_data.props, PropHandle{"Prop", "", t, false, 0.1});
+                append(&editor_data.props, PropHandle{
+                    "Prop", "", t, false, 0.1, oe.transform_default()});
         }
 
         clear(&points_to_add);

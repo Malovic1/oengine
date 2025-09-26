@@ -244,7 +244,8 @@ update :: proc(camera_tool: CameraTool) {
                         str.clone(active_prop.ent_tag), 
                         str.clone(active_prop.model_tag), 
                         t, active_prop.is_msc, 
-                        active_prop.voxel_size
+                        active_prop.voxel_size,
+                        oe.transform_default()
                     });
                 }
             }
