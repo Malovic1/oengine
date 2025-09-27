@@ -214,6 +214,12 @@ handle_prop_mouse :: proc(
         oe.gui.text_boxes["ModPropScaleY"].text = oe.str_add("", prop.collider.scale.y, allocator = current_allocator);
         oe.gui.text_boxes["ModPropScaleZ"].text = oe.str_add("", prop.collider.scale.z, allocator = current_allocator);
         oe.gui.text_boxes["VSProp"].text = oe.str_add("", prop.voxel_size, allocator = current_allocator);
+        oe.gui.text_boxes["ModPropMPosX"].text = oe.str_add("", prop.model_tr.position.x, allocator = current_allocator);
+        oe.gui.text_boxes["ModPropMPosY"].text = oe.str_add("", prop.model_tr.position.y, allocator = current_allocator);
+        oe.gui.text_boxes["ModPropMPosZ"].text = oe.str_add("", prop.model_tr.position.z, allocator = current_allocator);
+        oe.gui.text_boxes["ModPropMScaleX"].text = oe.str_add("", prop.model_tr.scale.x, allocator = current_allocator);
+        oe.gui.text_boxes["ModPropMScaleY"].text = oe.str_add("", prop.model_tr.scale.y, allocator = current_allocator);
+        oe.gui.text_boxes["ModPropMScaleZ"].text = oe.str_add("", prop.model_tr.scale.z, allocator = current_allocator);
     }
 }
 
