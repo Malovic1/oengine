@@ -1,0 +1,33 @@
+
+{
+	"water": {
+		"path": "../assets/water.png",
+		"type": "Texture"
+	},
+	"albedo": {
+		"path": "../assets/albedo.png",
+		"type": "Texture"
+	},
+	"skybox": {
+		"type": "CubeMap",
+		"path_front": "../assets/skybox/frontx.png",
+		"path_back": "../assets/skybox/backx.png",
+		"path_left": "../assets/skybox/leftx.png",
+		"path_right": "../assets/skybox/rightx.png",
+		"path_top": "../assets/skybox/topx.png",
+		"path_bottom": "../assets/skybox/bottomx.png"
+	},
+	"troll": {
+		"path": "../assets/trollface.png",
+		"type": "Texture"
+	},
+	"normal": {
+		"path": "../assets/normal.png",
+		"type": "Texture"
+	},
+	"orm": {
+		"path": "../assets/orm.png",
+		"type": "Texture"
+	},
+}}
+}

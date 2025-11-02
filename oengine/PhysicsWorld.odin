@@ -362,7 +362,7 @@ resolve_tri_collision :: proc(rb: ^RigidBody, t: TriangleCollider) {
 
         // Project velocity to the normal plane if moving towards it
         if (OE_SLOPE_SLIDING) {
-            if (slope_dot >= OE_SLOPE_THRESHOLD) {
+            if (slope_dot >= OE_SLOPE_THRESHOLD || slope_dot < 0) {
                 vel_normal_dot := linalg.dot(rb.velocity, normal);
                 if vel_normal_dot < 0 {
                     rb.velocity -= normal * vel_normal_dot;

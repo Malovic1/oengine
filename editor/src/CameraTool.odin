@@ -657,6 +657,7 @@ ortho_tri_to_msc_tri :: proc(pts: [3]oe.Vec2, pts_3d: [3]oe.Vec3, mode: CameraMo
 
 @(private = "file")
 render_tri :: proc(using self: ^CameraTool) {
+    if (!editor_data.select_mode[.TRIANGLE]) { return; }
     ray := oe.get_mouse_rc(camera_perspective);
 
     collision: bool;
@@ -671,13 +672,28 @@ render_tri :: proc(using self: ^CameraTool) {
             t := msc.tris[info.id];
             if (!oe.gui_mouse_over()) {
                 clr := GRID_COLOR;
-                if (t.color.r >= GRID_COLOR.r &&
-                    t.color.g >= GRID_COLOR.g &&
-                    t.color.b >= GRID_COLOR.b) {
-                    clr.rgb = t.color.rgb - GRID_COLOR.rgb;
+
+                if (t.color != {}) {
+                    if (t.color.r >= GRID_COLOR.r &&
+                        t.color.g >= GRID_COLOR.g &&
+                        t.color.b >= GRID_COLOR.b) {
+                        clr.rgb = t.color.rgb - GRID_COLOR.rgb;
+                    }
                 }
 
-                rl.DrawTriangle3D(t.pts[0], t.pts[1], t.pts[2], clr);
+                offset := t.normal * 0.1;
+                rl.DrawTriangle3D(
+                    t.pts[0] + offset, 
+                    t.pts[1] + offset, 
+                    t.pts[2] + offset, 
+                    clr
+                );
+                rl.DrawTriangle3D(
+                    t.pts[0] - offset, 
+                    t.pts[1] - offset, 
+                    t.pts[2] - offset, 
+                    clr
+                );
             }
 
             if (oe.mouse_pressed(.LEFT) && !oe.gui_mouse_over()) {
@@ -726,13 +742,28 @@ render_tri :: proc(using self: ^CameraTool) {
 
         for t in tris {
             clr := GRID_COLOR;
-            if (t.color.r >= GRID_COLOR.r &&
-                t.color.g >= GRID_COLOR.g &&
-                t.color.b >= GRID_COLOR.b) {
-                clr.rgb = t.color.rgb - GRID_COLOR.rgb;
+
+            if (t.color != {}) {
+                if (t.color.r >= GRID_COLOR.r &&
+                    t.color.g >= GRID_COLOR.g &&
+                    t.color.b >= GRID_COLOR.b) {
+                    clr.rgb = t.color.rgb - GRID_COLOR.rgb;
+                }
             }
 
-            rl.DrawTriangle3D(t.pts[0], t.pts[1], t.pts[2], clr);
+            offset := t.normal * 0.1;
+            rl.DrawTriangle3D(
+                t.pts[0] + offset, 
+                t.pts[1] + offset, 
+                t.pts[2] + offset, 
+                clr
+            );
+            rl.DrawTriangle3D(
+                t.pts[0] - offset, 
+                t.pts[1] - offset, 
+                t.pts[2] - offset, 
+                clr
+            );
         }
 
         if (oe.key_pressed(.DELETE)) {

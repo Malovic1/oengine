@@ -16,6 +16,36 @@ BUTTON_WIDTH :: 180
 WINDOW_WIDTH :: 300
 WINDOW_HEIGHT :: 250
 
+select_mode_tool :: proc(ct: CameraTool) {
+    SIZE_W :: 200
+    SIZE_H :: 100
+    oe.gui_begin("Select mode", 
+        f32(oe.w_render_width() - SIZE_W), 
+        f32(oe.w_render_height() - SIZE_H) - oe.gui_top_bar_height,
+        SIZE_W, SIZE_H,
+        can_exit = false);
+
+    grid := oe.gui_grid(0, 0, 30, 30);
+    editor_data.select_mode[.TRIANGLE] = oe.gui_tick(
+        editor_data.select_mode[.TRIANGLE], 
+        grid.x, grid.y, grid.width, grid.height, "Triangle"
+    );
+
+    grid = oe.gui_grid(1, 0, 30, 30);
+    editor_data.select_mode[.DATA_ID] = oe.gui_tick(
+        editor_data.select_mode[.DATA_ID], 
+        grid.x, grid.y, grid.width, grid.height, "Data id"
+    );
+
+    grid = oe.gui_grid(2, 0, 30, 30);
+    editor_data.select_mode[.PROP] = oe.gui_tick(
+        editor_data.select_mode[.PROP], 
+        grid.x, grid.y, grid.width, grid.height, "Prop"
+    );
+
+    oe.gui_end();
+}
+
 registry_tool :: proc(ct: CameraTool) {
     oe.gui_begin("Registry", x = 0, y = 0, h = WINDOW_HEIGHT, can_exit = false);
     wr := oe.gui_rect(oe.gui_window("Registry"));

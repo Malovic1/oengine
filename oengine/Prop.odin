@@ -15,7 +15,8 @@ Prop :: struct {
 prop_init :: proc(
     ent: AEntity, model: Model, _position: Vec3, scale: Vec3 = {1, 1, 1}, 
     preset_size: Vec3 = {}, use_preset := false, _msc := false, 
-    voxel_size: f32 = 0.1, render_msc := false) -> (p: Prop) {
+    voxel_size: f32 = 0.1, render_msc := false, 
+    model_pos_off := Vec3{}, model_scale_off := Vec3{}) -> (p: Prop) {
     if (use_preset) {
         p = Prop {
             collider = Transform {
@@ -26,7 +27,17 @@ prop_init :: proc(
             _model = model,
         };
 
-        add_component(ent, rb_init(p.collider, 1, 0.5, true, ShapeType.BOX));
+        if (_msc) {
+            msc := msc_init();
+            msc.render = render_msc;
+            simplify_msc_model(
+                msc, model, 
+                offs = _position + model_pos_off, scale = model_scale_off, 
+                voxel_size = voxel_size);
+            msc_gen_mesh(msc, true);
+        } else {
+            add_component(ent, rb_init(p.collider, 1, 0.5, true, ShapeType.BOX));
+        }
 
         return;
     }

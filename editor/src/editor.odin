@@ -1,3 +1,4 @@
+#+feature dynamic-literals
 package main
 
 import "core:fmt"
@@ -22,6 +23,12 @@ main :: proc() {
     oe.w_set_target_fps(60);
 
     oe.ew_init(oe.vec3_y() * 50);
+
+    editor_data.select_mode = {
+        SelectMode.TRIANGLE = true,
+        SelectMode.DATA_ID = true,
+        SelectMode.PROP = true,
+    };
 
     camera_tool := ct_init();
     oe.ecs_world.camera = &camera_tool.camera_perspective;
@@ -58,6 +65,7 @@ main :: proc() {
         prop_tool(camera_tool);
         edit_mode_tool(&camera_tool);
         texture_select_tool(&camera_tool);
+        select_mode_tool(camera_tool);
 
         current_allocator := context.temp_allocator;
         oe.gui_text(
@@ -84,6 +92,8 @@ main :: proc() {
 }
 
 handle_mouse_ray :: proc(distances: ^[dynamic]f32, collided_dids: ^[dynamic]oe.DataID) {
+    if (!editor_data.select_mode[.DATA_ID]) { return; }
+
     collision_count: i32;
     clear(distances);
     clear(collided_dids);
@@ -151,6 +161,7 @@ handle_mouse_ray :: proc(distances: ^[dynamic]f32, collided_dids: ^[dynamic]oe.D
 
 handle_prop_mouse :: proc(
     distances: ^[dynamic]f32, collided_props: ^[dynamic]i32) {
+    if (!editor_data.select_mode[.PROP]) { return; }
     collision_count: i32;
     clear(distances);
     clear(collided_props);
@@ -350,6 +361,34 @@ render :: proc(camera_tool: CameraTool) {
         msc.render = false;
         rl.rlDisableBackfaceCulling();
         oe.msc_old_render(msc, camera_tool.render_mode);
+
+        // raylib renderbatch bug so i have to put this here to render nothing
+        rl.rlBegin(rl.RL_LINES);
+        rl.rlEnd();
+
+        if (oe.PHYS_DEBUG) {
+            for tri in msc.tris {
+                t := tri.pts;
+
+                rl.DrawLine3D(t[0], t[1], rl.YELLOW);
+                rl.DrawLine3D(t[0], t[2], rl.YELLOW);
+                rl.DrawLine3D(t[1], t[2], rl.YELLOW);
+
+                normal := tri.normal;
+                rl.DrawLine3D(t[0], t[0] + normal, rl.RED);
+                rl.DrawLine3D(t[1], t[1] + normal, rl.RED);
+                rl.DrawLine3D(t[2], t[2] + normal, rl.RED);
+
+                centroid := (t[0] + t[1] + t[2]) / 3;
+                rl.DrawLine3D(centroid, centroid + normal, oe.RED);
+            }
+
+            oe.draw_cube_wireframe(
+                {msc._aabb.x, msc._aabb.y, msc._aabb.z}, {}, 
+                {msc._aabb.width, msc._aabb.height, msc._aabb.depth},
+                oe.PHYS_DEBUG_COLOR
+            ); 
+        }
     }
 
     if (editor_data.hovered_data_id != oe.STR_EMPTY) { 

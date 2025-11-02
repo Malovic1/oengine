@@ -141,6 +141,8 @@ void main()
         texelColor = texture(texture0, fragTexCoord);
     }
 
+    if (texelColor.a < 0.5) { discard; }
+
     vec3 normal = normalize(fragNormal);
     vec3 viewDir = normalize(viewPos - fragPosition);
 
@@ -210,7 +212,8 @@ void main()
     float fogFactor = 1.0/exp((dist*fogDensity)*(dist*fogDensity));
     fogFactor = clamp(fogFactor, 0.0, 1.0);
 
-    finalColor = mix(fogColor, finalColor, fogFactor);
+    vec4 final_texel = mix(fogColor, finalColor, fogFactor);
+    finalColor = final_texel;
 }`;
 
 shader_location :: proc(shader: rl.Shader, uniformName: cstring) -> rl.ShaderLocationIndex {

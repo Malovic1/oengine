@@ -1225,7 +1225,9 @@ msc_load_data_id_od :: proc(tag: string, obj: od.Object) {
                 pos := transform.position;
                 prop_init(
                     ent, model, pos, use_preset = true, preset_size = transform.scale,
-                    _msc = is_msc, voxel_size = voxel_size, render_msc = false);
+                    _msc = is_msc, voxel_size = voxel_size, render_msc = false,
+                    model_pos_off = {x, y, z}, model_scale_off = {sx, sy, sz}
+                );
                 sm := sm_init(model);
                 sm.locked = false;
                 sm.offset = {{x, y, z}, {}, {sx, sy, sz}};
@@ -1682,12 +1684,12 @@ msc_old_render :: proc(using self: ^MSCObject, mode: MscRenderMode = .MESH) {
 
             rl.rlColor4ub(color.r, color.g, color.b, color.a);
             rl.rlBegin(rl.RL_TRIANGLES);
+            rl.rlSetTexture(atlas.texture.id);
 
             // if (asset_exists(tri.texture_tag)) {
             //     tex := get_asset_var(tri.texture_tag, Texture);
             //     rl.rlSetTexture(tex.id);
             // }
-            rl.rlSetTexture(atlas.texture.id);
 
             rl.rlTexCoord2f(uv1.x, uv1.y); rl.rlVertex3f(v1.x, v1.y, v1.z);
             rl.rlTexCoord2f(uv2.x, uv2.y); rl.rlVertex3f(v2.x, v2.y, v2.z);
