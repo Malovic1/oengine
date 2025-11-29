@@ -262,7 +262,7 @@ update :: proc(camera_tool: CameraTool) {
                         str.clone(active_prop.model_tag), 
                         t, active_prop.is_msc, 
                         active_prop.voxel_size,
-                        oe.transform_default()
+                        active_prop.model_tr,
                     });
                 }
             }
@@ -422,8 +422,8 @@ render :: proc(camera_tool: CameraTool) {
                     }
 
                     rl.DrawModelEx(
-                        model, t.position, {}, 0, 
-                        t.scale, oe.WHITE);
+                        model, active_prop.model_tr.position, {}, 0, 
+                        active_prop.model_tr.scale, oe.WHITE);
                 }
             }
         }
