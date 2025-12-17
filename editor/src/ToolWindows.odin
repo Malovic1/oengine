@@ -980,6 +980,21 @@ save_map :: proc(map_name, path: string, use_json: bool) {
     }
 
     oe.save_map(map_name, path, use_json);
+
+    dids := oe.get_reg_data_ids();
+    unregs := make([dynamic]string);
+    defer delete(unregs);
+
+    for did in dids {
+        data := strs.split(did.tag, ";");
+        if (len(data) > 1) {
+            append(&unregs, did.reg_tag); 
+        }
+    }
+
+    for unreg in unregs {
+        oe.unreg_asset(unreg);
+    }
 }
 
 load_map :: proc(path: string, atlas: oe.Atlas, use_json: bool) {
