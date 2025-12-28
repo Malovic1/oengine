@@ -435,7 +435,7 @@ prop_tool :: proc(ct: CameraTool) {
     @static model_tag: string;
     @static is_msc: bool;
     @static voxel_size: f32;
-    @static position, rotation, scale, model_position, model_scale: oe.Vec3;
+    @static position, rotation, scale, model_position, model_scale, model_rot: oe.Vec3;
 
     if (editor_data.active_prop != ACTIVE_EMPTY) {
         prop := &editor_data.props[editor_data.active_prop];
@@ -550,7 +550,7 @@ prop_tool :: proc(ct: CameraTool) {
     grid = oe.gui_grid(7, 2, 40, wr.width * M_SCALE_FACTOR, 10);
     msz_parse := oe.gui_text_box("ModPropMScaleZ", grid.x, grid.y, grid.width, grid.height);
     grid = oe.gui_grid(7, 3, 40, wr.width * M_SCALE_FACTOR, 10);
-    oe.gui_text("Model", 25, grid.x, grid.y);
+    oe.gui_text("M_Scale", 25, grid.x, grid.y);
 
     _msx, msx_ok := sc.parse_f32(msx_parse);
     if (msx_ok) { model_scale.x = _msx; }
@@ -559,11 +559,27 @@ prop_tool :: proc(ct: CameraTool) {
     _msz, msz_ok := sc.parse_f32(msz_parse);
     if (msz_ok) { model_scale.z = _msz; }
 
-    grid = oe.gui_grid(8, 0, 40, wr.width, 10);
+    grid = oe.gui_grid(8, 0, 40, wr.width * M_SCALE_FACTOR, 10);
+    mrx_parse := oe.gui_text_box("ModPropMRotX", grid.x, grid.y, grid.width, grid.height);
+    grid = oe.gui_grid(8, 1, 40, wr.width * M_SCALE_FACTOR, 10);
+    mry_parse := oe.gui_text_box("ModPropMRotY", grid.x, grid.y, grid.width, grid.height);
+    grid = oe.gui_grid(8, 2, 40, wr.width * M_SCALE_FACTOR, 10);
+    mrz_parse := oe.gui_text_box("ModPropMRotZ", grid.x, grid.y, grid.width, grid.height);
+    grid = oe.gui_grid(8, 3, 40, wr.width * M_SCALE_FACTOR, 10);
+    oe.gui_text("M_Rot", 25, grid.x, grid.y);
+
+    _mrx, mrx_ok := sc.parse_f32(mrx_parse);
+    if (mrx_ok) { model_rot.x = _mrx; }
+    _mry, mry_ok := sc.parse_f32(mry_parse);
+    if (mry_ok) { model_rot.y = _mry; }
+    _mrz, mrz_ok := sc.parse_f32(mrz_parse);
+    if (mrz_ok) { model_rot.z = _mrz; }
+
+    grid = oe.gui_grid(9, 0, 40, wr.width, 10);
     is_msc = oe.gui_tick(is_msc, grid.x, grid.y, grid.height, grid.height, "is msc");
-    grid = oe.gui_grid(9, 0, 40, wr.width * SCALE_FACTOR, 10);
+    grid = oe.gui_grid(10, 0, 40, wr.width * SCALE_FACTOR, 10);
     vs_handle := oe.gui_text_box("VSProp", grid.x, grid.y, grid.width, grid.height);
-    grid = oe.gui_grid(9, 1, 40, wr.width * SCALE_FACTOR, 10);
+    grid = oe.gui_grid(10, 1, 40, wr.width * SCALE_FACTOR, 10);
     oe.gui_text("voxel size", 25, grid.x, grid.y);
 
     _vs, vs_ok := sc.parse_f32(vs_handle);
@@ -577,7 +593,7 @@ prop_tool :: proc(ct: CameraTool) {
             prop.collider.position = position;
             prop.collider.rotation = rotation;
             prop.collider.scale = scale;
-            prop.model_tr = oe.Transform {model_position, {}, model_scale};
+            prop.model_tr = oe.Transform {model_position, model_rot, model_scale};
             prop.is_msc = is_msc;
             prop.voxel_size = voxel_size;
         }
@@ -954,13 +970,19 @@ save_map :: proc(map_name, path: string, use_json: bool) {
             oe.str_add("", prop.model_tr.scale.y), ",",
             oe.str_add("", prop.model_tr.scale.z), ",",
         });
+        prop_m_rot := oe.str_add({
+            oe.str_add("", prop.model_tr.rotation.x), ",",
+            oe.str_add("", prop.model_tr.rotation.y), ",",
+            oe.str_add("", prop.model_tr.rotation.z), ",",
+        });
         did_tag_data := oe.str_add({
             prop_tag, ";", 
             prop_model_tag, ";", 
             prop_is_msc, ";", 
             prop_v_size, ";",
             prop_m_pos, ";",
-            prop_m_scale,
+            prop_m_scale, ";",
+            prop_m_rot,
         });
 
         reg_tag := oe.str_add("data_id_", did_tag_data);
@@ -1056,49 +1078,16 @@ msc_load_data_id :: proc(tag: string, obj: od.Object) {
             reg_tag = str_add(reg_tag, rl.GetRandomValue(1000, 9999)); 
         }
 
-        if (window.instance_name != EDITOR_INSTANCE) {
-            ent := aent_init(_tag);
-            ent_tr := get_component(ent, Transform);
-            ent_tr^ = transform;
-
-            model_tag := data[1];
-            is_msc_parse := data[2];
-            vs_parse := data[3];
-
-            is_msc, ok := sc.parse_bool(is_msc_parse);
-            voxel_size, ok2 := sc.parse_f32(vs_parse);
-
-            model: Model;
-            if (asset_manager.registry[model_tag] != nil) {
-                model = get_asset_var(model_tag, Model);
-            }
-
-            if (ok && ok2) {
-                pos := transform.position;
-                prop_init(
-                    ent, model, pos, transform.scale,
-                    _msc = is_msc, voxel_size = voxel_size, render_msc = true);
-                add_component(ent, sm_init(model));
-            }
-
-            reg_asset(
-                reg_tag, 
-                DataID {
-                    reg_tag, 
-                    tag, 
-                    u32(id), 
-                    transform,
-                    {}, {}
-                }
-            );
-            return;
-        }
-
         model_tag := data[1];
         is_msc_parse := data[2];
         vs_parse := data[3];
         pos_offset_parse := data[4];
         scale_offset_parse := data[5];
+
+        rot_offset_parse: string;
+        if (len(data) > 6) {
+            rot_offset_parse = data[6];
+        }
 
         pos_vals := strs.split(pos_offset_parse, ",");
         x, xok := sc.parse_f32(pos_vals[0]);
@@ -1110,6 +1099,18 @@ msc_load_data_id :: proc(tag: string, obj: od.Object) {
         sy, syok := sc.parse_f32(scale_vals[1]);
         sz, szok := sc.parse_f32(scale_vals[2]);
 
+        rx, ry, rz: f32;
+        if (len(data) > 6) {
+            vals := strs.split(rot_offset_parse, ",");
+            x, xok := sc.parse_f32(vals[0]);
+            y, yok := sc.parse_f32(vals[1]);
+            z, zok := sc.parse_f32(vals[2]);
+
+            rx = x;
+            ry = y;
+            rz = z;
+        }
+
         is_msc, ok := sc.parse_bool(is_msc_parse);
         voxel_size, ok2 := sc.parse_f32(vs_parse);
 
@@ -1117,7 +1118,7 @@ msc_load_data_id :: proc(tag: string, obj: od.Object) {
             pos := transform.position;
             append(&editor_data.props, PropHandle{
                 _tag, model_tag, transform, is_msc, voxel_size, 
-                {{x, y, z}, {}, {sx, sy, sz}},
+                {{x, y, z}, {rx, ry, rz}, {sx, sy, sz}},
             });
         }
         return;

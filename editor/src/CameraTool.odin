@@ -177,9 +177,11 @@ ct_render :: proc(using self: ^CameraTool) {
                 color = oe.WHITE;
             }
 
-            rl.DrawModelEx(
-                model, prop.collider.position + prop.model_tr.position, 
-                {}, 0, prop.model_tr.scale, oe.WHITE);
+            r_tr := oe.Transform{
+                prop.collider.position + prop.model_tr.position,
+                prop.model_tr.rotation, prop.model_tr.scale
+            };
+            oe.draw_model(model, r_tr, oe.WHITE);
             oe.draw_cube_wireframe(
                 prop.collider.position, 
                 prop.collider.rotation,

@@ -231,6 +231,9 @@ handle_prop_mouse :: proc(
         oe.gui.text_boxes["ModPropMScaleX"].text = oe.str_add("", prop.model_tr.scale.x, allocator = current_allocator);
         oe.gui.text_boxes["ModPropMScaleY"].text = oe.str_add("", prop.model_tr.scale.y, allocator = current_allocator);
         oe.gui.text_boxes["ModPropMScaleZ"].text = oe.str_add("", prop.model_tr.scale.z, allocator = current_allocator);
+        oe.gui.text_boxes["ModPropMRotX"].text = oe.str_add("", prop.model_tr.rotation.x, allocator = current_allocator);
+        oe.gui.text_boxes["ModPropMRotY"].text = oe.str_add("", prop.model_tr.rotation.y, allocator = current_allocator);
+        oe.gui.text_boxes["ModPropMRotZ"].text = oe.str_add("", prop.model_tr.rotation.z, allocator = current_allocator);
     }
 }
 
