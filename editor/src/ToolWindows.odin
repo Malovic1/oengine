@@ -299,6 +299,11 @@ map_proj_tool :: proc(ct: CameraTool) {
     grid = oe.gui_grid(3, 0, 40, wr.width * 0.5, 10);
     if (oe.gui_button("Save map", grid.x, grid.y, grid.width, grid.height)) {
         path := oe.nfd_folder();
+
+        if (os.exists(path)) {
+            os.remove(path);
+        }
+
         save_map(map_name, path, use_json);
     }
 
