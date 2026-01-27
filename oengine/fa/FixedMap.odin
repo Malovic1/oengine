@@ -69,7 +69,7 @@ map_remove :: proc(_map: ^$T/FixedMap, k: $K) {
     _map.len -= 1;
 }
 
-map_index :: proc(_map: $T/FixedMap, k: $K) -> i32 {
+map_index :: proc(_map: FixedMap($K, $T, $V), k: K) -> i32 {
     for i in 0..<_map.len {
         if (_map.k_data[i] == k) {
             return i;

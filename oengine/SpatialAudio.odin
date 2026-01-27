@@ -10,7 +10,7 @@ MAX_SOUND_DISTANCE :: 10
 
 SpatialAudio :: struct {
     sound: Sound,
-    position, _target: Vec3,
+    position: Vec3,
     strength: f32,
     can_play: bool,
     vol_mod: f32,
@@ -39,15 +39,7 @@ sa_update :: proc(ctx: ^ecs.Context, ent: ^ecs.Entity) {
 
     position = t.position;
 
-    if (ecs_world.camera != nil) { 
-        _target = ecs_world.camera.position; 
-    }
-
-    dist := vec3_dist(_target, position);
-    strength = 1.0 / (dist / MAX_SOUND_DISTANCE + 1.0);
-    strength = clamp(strength, 0.0, 1.0); 
-
-    rl.SetSoundVolume(sound, strength * vol_mod);
+    position_sound(ecs_world.camera^, &sound, position, MAX_SOUND_DISTANCE, strength);
 }
 
 sa_parse :: proc(asset: od.Object) -> rawptr {

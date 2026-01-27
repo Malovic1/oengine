@@ -10,6 +10,7 @@ import od "object_data"
 
 MASS_SCALAR :: 100
 MAX_VEL :: 50
+DEFAULT_FRICTION :: 8.0
 
 HeightMap :: [][]f32
 HeightMapHandle :: struct {
@@ -36,13 +37,22 @@ oe.ent_set_scale(slope, {5, 5, 5});
 
 */
 
+RayInfo :: struct {
+    collision: bool,
+    position: Vec3,
+}
+
 RigidBody :: struct {
     id: u32,
     transform: Transform,
     starting: Transform,
     _difference: Transform,
     grounded: bool,
-    _down: Raycast,
+    _down, _front, _up: Raycast,
+    _dir: Vec3,
+    _front_dist: f32,
+
+    _front_hit, _up_hit: RayInfo,
 
     acceleration, velocity, force: Vec3,
     mass, restitution, friction: f32,
@@ -99,7 +109,7 @@ rb_init_all :: proc(using rb: ^RigidBody, s_density, s_restitution: f32, s_stati
     shape = s_shape;
 
     is_static = s_static;
-    friction = 0.7;
+    friction = DEFAULT_FRICTION;
 
     shape_variant = 0;
 
@@ -109,6 +119,8 @@ rb_init_all :: proc(using rb: ^RigidBody, s_density, s_restitution: f32, s_stati
     for i in 1..<COLLISION_MASK_SIZE+1 {
         collision_mask[i - 1] = i32(i);
     }
+
+    _front_dist = 2;
 }
 
 rb_init_def :: proc(s_starting: Transform, s_density, s_restitution: f32, s_static: bool, s_shape: ShapeType) -> RigidBody {
@@ -190,22 +202,29 @@ rb_fixed_update :: proc(using self: ^RigidBody, dt: f32) {
         position = transform.position,
         target = transform.position - {0, transform.scale.y * 0.5 + 0.5, 0},
     }
-    
-    if (!grounded) {
-        acceleration.y = -ecs_world.physics.gravity.y;
-    } else {
-        acceleration.y = 0;
+
+    _front = {
+        position = transform.position,
+        target = transform.position + _dir * _front_dist,
     }
 
-    grounded = false;
+    _up = {
+        position = transform.position,
+        target = transform.position + {0, transform.scale.y * 0.5 + 0.5, 0},
+    }
 
     velocity.x = math.clamp(velocity.x, -MAX_VEL, MAX_VEL);
     velocity.y = math.clamp(velocity.y, -MAX_VEL, MAX_VEL);
     velocity.z = math.clamp(velocity.z, -MAX_VEL, MAX_VEL);
 
-    velocity += acceleration * dt * DAMPING_VEL_FACTOR;
+    velocity += acceleration * dt;
+
+    velocity.y -= ecs_world.physics.gravity.y * dt;
+
     transform.position += velocity * dt;
     force = acceleration * mass;
+
+    grounded = false;
 }
 
 rb_update :: proc(ctx: ^ecs.Context, ent: ^ecs.Entity) {
@@ -233,6 +252,10 @@ rb_render :: proc(ctx: ^ecs.Context, ent: ^ecs.Entity) {
     } else if (shape == .HEIGHTMAP) {
         // draw_heightmap_wireframe(shape_variant.(HeightMapHandle), transform.position, transform.rotation, transform.scale, PHYS_DEBUG_COLOR);
     }
+
+    rl.DrawLine3D(_down.position, _down.target, RED);
+    rl.DrawLine3D(_front.position, _front.target, RED);
+    rl.DrawLine3D(_up.position, _up.target, RED);
 }
 
 rb_clear :: proc(using self: ^RigidBody) {

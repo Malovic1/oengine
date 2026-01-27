@@ -63,7 +63,7 @@ build_bvh :: proc(tris: [dynamic]TriangleCollider, depth: i32) -> ^BVHNode {
     return node;
 }
 
-rb_bvh_collision :: proc(rb: ^RigidBody, node: ^BVHNode) {
+rb_bvh_collision :: proc(rb: ^RigidBody, node: ^BVHNode, dt: f32) {
     rb_aabb := trans_to_aabb(rb.transform);
 
     if (!aabb_collision(rb_aabb, node.aabb)) {
@@ -77,18 +77,77 @@ rb_bvh_collision :: proc(rb: ^RigidBody, node: ^BVHNode) {
                 rb.grounded = true;
             }
 
-            resolve_tri_collision(rb, tri);
+            resolve_tri_collision(rb, tri, dt);
         }
         return;
     }
 
     if (node.left != nil) {
-        rb_bvh_collision(rb, node.left);
+        rb_bvh_collision(rb, node.left, dt);
     }
 
     if (node.right != nil) {
-        rb_bvh_collision(rb, node.right);
+        rb_bvh_collision(rb, node.right, dt);
     }
+}
+
+rb_bvh_collision_info :: proc(
+    tr: Transform, node: ^BVHNode, dt: f32) -> (bool, MSCCollisionInfo) {
+    rb_aabb := trans_to_aabb(tr);
+    if !aabb_collision(rb_aabb, node.aabb) {
+        return false, {};
+    }
+
+    hit       := false;
+    best_info := MSCCollisionInfo{};
+    best_dist := f32(1e30);
+
+    // Leaf node
+    if node.tris != nil {
+        for tri in node.tris {
+            coll, info := check_tri_collision(
+                tr.position,
+                tr.scale,
+                tri,
+            );
+
+            if coll {
+                d := linalg.distance(tr.position, info.point);
+                if d < best_dist {
+                    best_dist = d;
+                    best_info = info;
+                    hit = true;
+                }
+            }
+        }
+
+        return hit, best_info;
+    }
+
+    // Internal node: must check BOTH children
+    if node.left != nil {
+        l_hit, l_info := rb_bvh_collision_info(tr, node.left, dt);
+        if l_hit {
+            d := linalg.distance(tr.position, l_info.point);
+            best_dist = d;
+            best_info = l_info;
+            hit = true;
+        }
+    }
+
+    if node.right != nil {
+        r_hit, r_info := rb_bvh_collision_info(tr, node.right, dt);
+        if r_hit {
+            d := linalg.distance(tr.position, r_info.point);
+            if !hit || d < best_dist {
+                best_dist = d;
+                best_info = r_info;
+                hit = true;
+            }
+        }
+    }
+
+    return hit, best_info;
 }
 
 OctreeNode :: struct {
@@ -133,21 +192,33 @@ build_octree :: proc(tris: [dynamic]TriangleCollider, aabb: AABB, depth: i32) ->
     return node;
 }
 
-query_octree :: proc(node: ^OctreeNode, rb: ^RigidBody) {
+query_octree :: proc(node: ^OctreeNode, rb: ^RigidBody, dt: f32) {
     aabb := trans_to_aabb(rb.transform);
     if (!aabb_collision(node.aabb, aabb)) { return; }
 
     if (node.is_leaf) {
         if (node.triangle_bvh != nil) {
-            rb_bvh_collision(rb, node.triangle_bvh);
+            rb_bvh_collision(rb, node.triangle_bvh, dt);
         } else {
             for tri in node.triangles {
                 coll, _ := ray_tri_collision(rb._down, tri);
                 if (coll) {
-                    rb.grounded = true;
+                    if (tri.normal.y > OE_SLOPE_THRESHOLD) {
+                        rb.grounded = true;
+                    }
                 }
 
-                resolve_tri_collision(rb, tri);
+                coll2, info := ray_tri_collision(
+                    rb._front, tri
+                );
+                if (coll2) { rb._front_hit = {coll2, info}; }
+
+                coll3, info2 := ray_tri_collision(
+                    rb._up, tri
+                );
+                if (coll3) { rb._up_hit = {coll3, info2}; }
+
+                resolve_tri_collision(rb, tri, dt);
             }
         }
         return;
@@ -156,9 +227,64 @@ query_octree :: proc(node: ^OctreeNode, rb: ^RigidBody) {
     for i in 0..<len(node.children) {
         child := node.children[i];
         if (child != nil) {
-            query_octree(child, rb);
+            query_octree(child, rb, dt);
         }
     }
+}
+
+query_octree_coll :: proc(
+    node: ^OctreeNode, tr: Transform, dt: f32)-> (bool, MSCCollisionInfo) {
+    aabb := trans_to_aabb(tr);
+    if !aabb_collision(node.aabb, aabb) {
+        return false, {};
+    }
+
+    hit        := false;
+    best_info  := MSCCollisionInfo{};
+    best_dist  := f32(1e30);
+
+    if node.is_leaf {
+        if node.triangle_bvh != nil {
+            return rb_bvh_collision_info(tr, node.triangle_bvh, dt);
+        }
+
+        for tri in node.triangles {
+            coll, info := check_tri_collision(
+                tr.position,
+                tr.scale,
+                tri,
+            );
+
+            if coll {
+                d := linalg.distance(tr.position, info.point);
+                if d < best_dist {
+                    best_dist = d;
+                    best_info = info;
+                    hit = true;
+                }
+            }
+        }
+
+        return hit, best_info;
+    }
+
+    // NON-LEAF: must check *all* children
+    for i in 0..<len(node.children) {
+        child := node.children[i];
+        if child == nil { continue; }
+
+        c_hit, c_info := query_octree_coll(child, tr, dt);
+        if c_hit {
+            d := linalg.distance(tr.position, c_info.point);
+            if d < best_dist {
+                best_dist = d;
+                best_info = c_info;
+                hit = true;
+            }
+        }
+    }
+
+    return hit, best_info;
 }
 
 ray_bvh_info :: proc(node: ^BVHNode, ray: Raycast) -> (bool, MSCCollisionInfo) {

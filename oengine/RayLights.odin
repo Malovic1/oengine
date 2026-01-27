@@ -1,21 +1,32 @@
 package oengine
 
 import rl "vendor:raylib"
+import "fa"
 import "core:math"
+import "core:math/linalg"
 
-RAY_MAX_LIGHTS :: 16
+TextureLight :: struct {
+    target: rl.RenderTexture,
+    light: ^Light,
+}
+
+RAY_MAX_LIGHTS :: 15
 
 RayContext :: struct {
     light_count: i32,
     shader: Shader,
+    shadowmaps: [RAY_MAX_LIGHTS]TextureLight,
 }
 
 RayLight :: struct {
+    id:             i32,
     type:           RayLightType,
     enabled:        bool,
     position:       [3]f32,
     target:         [3]f32,
+    vp:             rl.Matrix,
     color:          rl.Color,
+    cast_shadows:   bool,
     range:          f32,
     intensity:      f32,
     attenuation:    f32,
@@ -29,6 +40,8 @@ RayLight :: struct {
     outer_loc:      i32,
     intensity_loc:  i32,
     range_loc:      i32,
+    vp_loc:         i32,
+    cs_loc:         i32,
 }
 
 RayLightType :: enum i32 {
@@ -47,6 +60,7 @@ ray_create_light :: proc(
     intensity: f32 = 1,
     range: f32 = 20.0) -> (light: RayLight) {
     if id < RAY_MAX_LIGHTS {
+        light.id = id;
         light.enabled = true
         light.type = type
         light.position = position
@@ -64,6 +78,8 @@ ray_create_light :: proc(
         light.outer_loc = i32(rl.GetShaderLocation(shader, rl.TextFormat("lights[%i].outer_cutoff", id)));
         light.intensity_loc = i32(rl.GetShaderLocation(shader, rl.TextFormat("lights[%i].intensity", id)));
         light.range_loc = i32(rl.GetShaderLocation(shader, rl.TextFormat("lights[%i].range", id)));
+        light.vp_loc = i32(rl.GetShaderLocation(shader, rl.TextFormat("lightVPs[%i]", id)));
+        light.cs_loc = i32(rl.GetShaderLocation(shader, rl.TextFormat("lightCastShadows[%i]", id)));
 
         update_light_values(shader, light)
     }
@@ -148,4 +164,153 @@ update_light_values :: proc(shader: rl.Shader, light: RayLight) {
 
     color := [4]f32{ f32(light.color.r)/255, f32(light.color.g)/255, f32(light.color.b)/255, f32(light.color.a)/255 }
     rl.SetShaderValue(shader, rl.ShaderLocationIndex(light.colorLoc), &color, .VEC4)
+
+    rl.SetShaderValue(shader, rl.ShaderLocationIndex(light.cs_loc), &light.cast_shadows, .INT);
+
+    if (light.cast_shadows) {
+        rl.SetShaderValueMatrix(
+            shader, 
+            rl.ShaderLocationIndex(light.vp_loc),
+            light.vp,
+        );
+    }
+}
+
+setup_shadows :: proc(fovy: f32 = 270) {
+    shadow_shader := load_shader(
+        rl.LoadShaderFromMemory(DEFAULT_VERT, SHADOWMAP_FRAG));
+
+    for i in 0..<fa.range(world().physics.mscs) {
+        msc := ecs_world.physics.mscs.data[i];
+        for &mesh in msc.meshes {
+            mesh.material.shader = shadow_shader;
+        }
+    }
+
+    for i in 0..<fa.range(ecs_world.ecs_ctx.entities) {
+        entity := ecs_world.ecs_ctx.entities.data[i];
+        if (has_component(entity, SimpleMesh)) {
+            sm := get_component(entity, SimpleMesh);
+            if (!sm.cast_shadows) { continue; }
+            sm_set_shader(sm, shadow_shader);
+        }
+    }
+
+    SH_RES :: 4096
+    id: i32;
+    for i in 0..<world().ecs_ctx.entities.len {
+        ent := ecs_world.ecs_ctx.entities.data[i];
+        if (has_component(ent, Light)) {
+            lc := get_component(ent, Light);
+            if (!lc.data.cast_shadows) { continue; }
+            ecs_world.ray_ctx.shadowmaps[id] = {load_shadowmap_rt(SH_RES, SH_RES), lc};
+            id += 1;
+        }
+    }
+
+    for i in 0..<len(ecs_world.ray_ctx.shadowmaps) {
+        s_map := ecs_world.ray_ctx.shadowmaps[i];
+        if (s_map.light == nil) { continue; }
+
+        light_cam: rl.Camera;
+        light_cam.position = s_map.light.transform.position;
+        light_cam.target = s_map.light.data.target;
+        light_cam.projection = .ORTHOGRAPHIC;
+        light_cam.up = {0, 1, 0};
+        light_cam.fovy = fovy;
+
+        rl.BeginTextureMode(s_map.target);
+        rl.ClearBackground(BLACK);
+
+        rl.BeginMode3D(light_cam);
+
+        view := rl.rlGetMatrixModelview();
+        proj := rl.rlGetMatrixProjection();
+        light_vp := view * proj;
+        s_map.light.data.vp = light_vp;
+
+        using ecs_world;
+
+        rl.rlDisableBackfaceCulling();
+        for i in 0..<fa.range(physics.mscs) {
+            msc_render(physics.mscs.data[i]);
+        }
+
+        for i in 0..<fa.range(ecs_ctx.entities) {
+            entity := ecs_ctx.entities.data[i];
+            if (has_component(entity, SimpleMesh)) {
+                sm := get_component(entity, SimpleMesh);
+                if (!sm.cast_shadows) { continue; }
+            }
+            for j in 0..<fa.range(ecs_ctx._render_systems) {
+                system := ecs_ctx._render_systems.data[j];
+
+                system(&ecs_ctx, entity);
+            }
+        }
+
+        for i in 0..<len(decals) {
+            d := decals[i];
+            decal_render(d, i32(i));
+        }
+
+        rl.EndMode3D();
+        rl.EndTextureMode();
+    }
+
+    for i in 0..<fa.range(world().physics.mscs) {
+        msc := ecs_world.physics.mscs.data[i];
+        for &mesh in msc.meshes {
+            mesh.material.shader = world().ray_ctx.shader;
+        }
+    }
+
+    for i in 0..<fa.range(ecs_world.ecs_ctx.entities) {
+        entity := ecs_world.ecs_ctx.entities.data[i];
+        if (has_component(entity, SimpleMesh)) {
+            sm := get_component(entity, SimpleMesh);
+            if (!sm.cast_shadows) { continue; }
+            sm_set_shader(sm, world().ray_ctx.shader);
+        }
+    }
+}
+
+load_shadowmap_rt :: proc(width, height: i32) -> rl.RenderTexture {
+    target: rl.RenderTexture;
+    target.id = rl.rlLoadFramebuffer(width, height);
+    target.texture.width = width;
+    target.texture.height = height;
+
+    if (target.id > 0) {
+        rl.rlEnableFramebuffer(target.id);
+
+        // Create depth texture
+        // NOTE: No need a color texture attachment for the shadowmap
+        target.depth.id = rl.rlLoadTextureDepth(width, height, false);
+        target.depth.width = width;
+        target.depth.height = height;
+        target.depth.format = rl.PixelFormat(19); // DEPTH_COMPONENT_24BIT?
+        target.depth.mipmaps = 1;
+
+        // Attach depth texture to FBO
+        rl.rlFramebufferAttach(
+            target.id, target.depth.id, 
+            i32(rl.FramebufferAttachType.DEPTH), i32(rl.FramebufferAttachTextureType.TEXTURE2D), 0
+        );
+
+        // Check if fbo is complete with attachments (valid)
+        if (rl.rlFramebufferComplete(target.id)) { dbg_log("Framebuffer object created successfully"); }
+
+        rl.rlDisableFramebuffer();
+    } else {
+        dbg_log("Failed to create framebuffer object");
+    }
+
+    return target;
+}
+
+unload_shadowmap_rt :: proc(target: rl.RenderTexture) {
+    if (target.id > 0) {
+        rl.rlUnloadFramebuffer(target.id);
+    }
 }

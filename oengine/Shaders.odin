@@ -7,6 +7,7 @@ WAVE_FRAG: cstring = `
 #version 330
 
 // Input vertex attributes (from vertex shader)
+in vec3 fragPosition;
 in vec2 fragTexCoord;
 in vec4 fragColor;
 
@@ -28,6 +29,8 @@ uniform float ampY;
 uniform float speedX;
 uniform float speedY;
 
+float tex_size = 2.5;
+
 void main() {
     float pixelWidth = 1.0 / size.x;
     float pixelHeight = 1.0 / size.y;
@@ -35,7 +38,10 @@ void main() {
     float boxLeft = 0.0;
     float boxTop = 0.0;
 
-    vec2 p = fragTexCoord;
+    vec2 world_uv = fragTexCoord * size;
+    vec2 uv = world_uv / tex_size;
+
+    vec2 p = uv;
     p.x += cos((fragTexCoord.y - boxTop) * freqX / ( pixelWidth * 750.0) + (seconds * speedX)) * ampX * pixelWidth;
     p.y += sin((fragTexCoord.x - boxLeft) * freqY * aspect / ( pixelHeight * 750.0) + (seconds * speedY)) * ampY * pixelHeight;
 
@@ -97,6 +103,8 @@ uniform vec4 colDiffuse;
 #define LIGHT_POINT       1
 #define LIGHT_SPOT        2
 
+#define SHADOWMAP_RES     4096
+
 struct Light {
     int enabled;
     int type;
@@ -117,7 +125,52 @@ uniform float fogDensity;
 uniform vec4 fogColor;
 uniform int use_triplanar;
 
+uniform sampler2D shadowMaps[MAX_LIGHTS];
+uniform mat4 lightVPs[MAX_LIGHTS];
+uniform int lightCastShadows[MAX_LIGHTS];
+
 out vec4 finalColor;
+
+float ComputeShadow(
+    int lightIndex,
+    vec3 fragPos,
+    vec3 normal,
+    vec3 lightDir
+) {
+    // Transform fragment into light clip space
+    vec4 fragPosLight = lightVPs[lightIndex] * vec4(fragPos, 1.0);
+    fragPosLight.xyz /= fragPosLight.w;
+    fragPosLight.xyz = fragPosLight.xyz * 0.5 + 0.5;
+
+    // Outside shadow map
+    if (fragPosLight.x < 0.0 || fragPosLight.x > 1.0 ||
+        fragPosLight.y < 0.0 || fragPosLight.y > 1.0 ||
+        fragPosLight.z > 1.0)
+        return 0.0;
+
+    float currentDepth = fragPosLight.z;
+
+    // Slope-scaled bias
+    float bias = max(0.0005 * (1.0 - dot(normal, lightDir)), 0.00005);
+
+    vec2 texelSize = 1.0 / vec2(float(SHADOWMAP_RES));
+    float shadow = 0.0;
+
+    // 3×3 PCF
+    for (int x = -1; x <= 1; x++) {
+        for (int y = -1; y <= 1; y++) {
+            float closestDepth = texture(
+                shadowMaps[lightIndex],
+                fragPosLight.xy + vec2(x, y) * texelSize
+            ).r;
+
+            if (currentDepth - bias > closestDepth)
+                shadow += 1.0;
+        }
+    }
+
+    return shadow / 9.0;
+}
 
 void main()
 {
@@ -190,14 +243,25 @@ void main()
         }
 
         float NdotL = max(dot(normal, lightDir), 0.0);
-        lightSum += lights[i].color.rgb * NdotL * intensity * attenuation;
 
-        if (NdotL > 0.0)
+        float shadow = 0.0;
+        if (lightCastShadows[i] == 1 && NdotL > 0.0)
         {
-            vec3 reflectDir = reflect(-lightDir, normal);
-            float spec = pow(max(dot(viewDir, reflectDir), 0.0), 16.0);
-            specular += spec * lights[i].color.rgb * 0.25 * intensity * attenuation;
+            shadow = ComputeShadow(i, fragPosition, normal, lightDir);
         }
+
+        lightSum += lights[i].color.rgb
+                * NdotL
+                * intensity
+                * attenuation
+                * (1.0 - shadow);
+
+        // if (NdotL > 0.0)
+        // {
+        //     vec3 reflectDir = reflect(-lightDir, normal);
+        //     float spec = pow(max(dot(viewDir, reflectDir), 0.0), 16.0);
+        //     specular += spec * lights[i].color.rgb * 0.25 * intensity * attenuation;
+        // }
     }
 
     vec3 ambientLight = ambient.rgb * texelColor.rgb * tint.rgb * 0.1;
@@ -215,6 +279,11 @@ void main()
     vec4 final_texel = mix(fogColor, finalColor, fogFactor);
     finalColor = final_texel;
 }`;
+
+SHADOWMAP_FRAG: cstring = `
+#version 330
+void main() { }
+`;
 
 shader_location :: proc(shader: rl.Shader, uniformName: cstring) -> rl.ShaderLocationIndex {
     loc := rl.GetShaderLocation(shader, uniformName);

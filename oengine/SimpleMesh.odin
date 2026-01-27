@@ -65,6 +65,7 @@ SimpleMesh :: struct {
     is_sprite: bool, // billboard behaviour
     use_triplanar: bool,
     cached: bool, // internal loading stuff
+    cast_shadows: bool,
     user_call: bool, // allows the user to specify when to render it using the render func
 }
 
@@ -94,6 +95,7 @@ sm_init_all :: proc(using sm: ^SimpleMesh, s_shape: ShapeType, s_color: Color) {
     color = s_color;
     starting_color = color;
     cached = true;
+    cast_shadows = true;
 }
 
 sm_init_def :: proc(s_shape: ShapeType = .BOX, s_color: Color = rl.WHITE) -> SimpleMesh {
@@ -276,6 +278,15 @@ sm_set_texture :: proc(using self: ^SimpleMesh, s_texture: Texture) {
     #partial switch v in tex {
         case Model:
             v.materials[0].maps[rl.MaterialMapIndex.ALBEDO].texture = texture.data;
+    }
+}
+
+sm_set_texture_id :: proc(using self: ^SimpleMesh, s_texture: Texture, mat_id: i32) {
+    texture = s_texture; 
+
+    #partial switch v in tex {
+        case Model:
+            v.materials[mat_id].maps[rl.MaterialMapIndex.ALBEDO].texture = texture.data;
     }
 }
 

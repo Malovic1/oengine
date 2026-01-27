@@ -12,6 +12,7 @@ DAMPING_VEL_FACTOR :: 0.994
 
 MAX_RBS :: 1024
 MAX_JOINTS :: 1024
+MAX_RAYCASTS :: 128
 MAX_MSCS :: 64
 
 WORLD_SIZE :: 200
@@ -83,6 +84,8 @@ pw_update :: proc(using self: ^PhysicsWorld, dt: f32) {
             rb := bodies.data[i];
             if (rb == nil) { continue; }
             rb_fixed_update(rb, delta_time / f32(iterations));
+            rb._front_hit = {};
+            rb._up_hit = {};
 
             insert_octree(tree.root, int(rb.id), get_aabb(int(rb.id)));
                     
@@ -99,7 +102,7 @@ pw_update :: proc(using self: ^PhysicsWorld, dt: f32) {
                 //     resolve_tri_collision(rb, tri);
                 // }
                 if (msc.tree != nil) {
-                    query_octree(msc.tree, rb);
+                    query_octree(msc.tree, rb, dt);
                 }
             }
         }
@@ -119,9 +122,17 @@ pw_update :: proc(using self: ^PhysicsWorld, dt: f32) {
                 if (ignored(rb, rb2)) { continue; }
 
                 coll, _ := rc_is_colliding(rb._down, rb2.transform, .BOX);
-                if (coll) {
-                    rb.grounded = true;
-                }
+                if (coll) { rb.grounded = true; }
+
+                coll2, info := rc_is_colliding(
+                    rb._front, rb2.transform, .BOX
+                );
+                if (coll2) { rb._front_hit = {coll2, info}; }
+
+                coll3, info2 := rc_is_colliding(
+                    rb._up, rb2.transform, .BOX
+                );
+                if (coll3) { rb2._up_hit = {coll3, info2}; }
 
                 if (!collision_transforms(rb.transform, rb2.transform)) { continue; }
 
@@ -326,7 +337,7 @@ resolve_collision :: proc(rb: ^RigidBody, normal: Vec3, depth: f32) {
 }
 
 @(private)
-resolve_tri_collision :: proc(rb: ^RigidBody, t: TriangleCollider) {
+resolve_tri_collision :: proc(rb: ^RigidBody, t: TriangleCollider, dt: f32) {
     // Get the dimensions of the cube
     cube_dimensions := rb.transform.scale; // Assuming `scale` is used to store dimensions here
 
@@ -348,34 +359,117 @@ resolve_tri_collision :: proc(rb: ^RigidBody, t: TriangleCollider) {
 
     normal := adjusted_diff / dist;
 
+    surface_normal := t.normal;
+    resolve_normal := normal;
+
     up := vec3_y();
-    slope_dot := linalg.dot(normal, up);
+    slope_dot := linalg.dot(surface_normal, up);
 
     RAD :: 1
     if dist < RAD {
+        penetration := RAD - dist;
+
         // Adjust position considering the cube dimensions
         rb.transform.position += Vec3{
-            normal.x * (RAD - dist) * half_dimensions.x,
-            normal.y * (RAD - dist) * half_dimensions.y,
-            normal.z * (RAD - dist) * half_dimensions.z,
+            resolve_normal.x * penetration * half_dimensions.x,
+            resolve_normal.y * penetration * half_dimensions.y,
+            resolve_normal.z * penetration * half_dimensions.z,
         };
+
+        EPSILON :: 0.0001
 
         // Project velocity to the normal plane if moving towards it
         if (OE_SLOPE_SLIDING) {
             if (slope_dot >= OE_SLOPE_THRESHOLD || slope_dot < 0) {
-                vel_normal_dot := linalg.dot(rb.velocity, normal);
-                if vel_normal_dot < 0 {
-                    rb.velocity -= normal * vel_normal_dot;
+                vel_normal_dot := linalg.dot(rb.velocity, surface_normal);
+                if vel_normal_dot < -EPSILON {
+                    rb.velocity -= surface_normal * vel_normal_dot;
+
+                    // slope friction
+                    MOVING_EPSILON :: 0.1
+                    vel_len := linalg.length(rb.velocity.xz);
+                    if (slope_dot < 1.0 && vel_len < MOVING_EPSILON) {
+                        recalc := linalg.dot(rb.velocity, surface_normal);
+                        vel_tangent := rb.velocity - surface_normal * recalc;
+                        speed := linalg.length(vel_tangent);
+                        if speed > EPSILON {
+                            friction := min(rb.friction * dt, speed);
+                            vel_tangent *= max(0, speed - friction) / speed;
+                        }
+                        rb.velocity = vel_tangent;
+                    }
                 }
             } else {
                 rb.grounded = false;
             }
         } else {
-            vel_normal_dot := linalg.dot(rb.velocity, normal);
-            if vel_normal_dot < 0 {
-                rb.velocity -= normal * vel_normal_dot;
+            vel_normal_dot := linalg.dot(rb.velocity, surface_normal);
+            if vel_normal_dot < -EPSILON {
+                rb.velocity -= surface_normal * vel_normal_dot;
             }
         }
 
     }
+}
+
+@(private)
+check_tri_collision :: proc(
+    position: Vec3,
+    scale: Vec3, // box dimensions
+    t: TriangleCollider,
+) -> (bool, MSCCollisionInfo) {
+    result: MSCCollisionInfo;
+
+    // Closest point on triangle to box center
+    closest := closest_point_on_triangle(
+        position,
+        t.pts[0],
+        t.pts[1],
+        t.pts[2],
+    );
+
+    diff := position - closest;
+
+    half := scale * 0.5;
+
+    // Ellipsoid-style normalization
+    adjusted := Vec3{
+        diff.x / half.x,
+        diff.y / half.y,
+        diff.z / half.z,
+    };
+
+    dist := linalg.length(adjusted);
+
+    RAD :: 1.0;
+
+    if dist >= RAD {
+        return false, result; // no hit
+    }
+
+    // Avoid divide-by-zero
+    EPS :: 1e-6;
+    if dist < EPS {
+        // Fallback: triangle normal
+        normal := linalg.normalize(
+            linalg.cross(
+                t.pts[1] - t.pts[0],
+                t.pts[2] - t.pts[0],
+            )
+        );
+
+        result.t = t;
+        result.point = closest;
+        result.normal = normal;
+
+        return true, result;
+    }
+
+    normal := adjusted / dist;
+
+    result.t = t;
+    result.point = closest;
+    result.normal = normal;
+
+    return true, result;
 }

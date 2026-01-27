@@ -58,7 +58,6 @@ cm_update :: proc(using self: ^Camera) {
 
 cm_set_fps :: proc(using self: ^Camera, sensitivity: f32, is_mouse_locked: bool) {
     if (is_mouse_locked) {
-        rl.HideCursor();
         curr_mp = rl.GetMousePosition();
         mouseDelta := Vec2 {curr_mp.x - prev_mp.x, -(curr_mp.y - prev_mp.y)};
         rotation.y += mouseDelta.x * sensitivity;
@@ -71,8 +70,6 @@ cm_set_fps :: proc(using self: ^Camera, sensitivity: f32, is_mouse_locked: bool)
         prev_mp = curr_mp;
         rl.SetMousePosition(rl.GetScreenWidth() / 2, rl.GetScreenHeight() / 2);
         prev_mp = rl.GetMousePosition();
-    } else {
-        rl.ShowCursor();
     }
     
     cameraRotation: Mat4 = mat4_rotate_XYZ(rl.DEG2RAD * rotation.x, rl.DEG2RAD * rotation.y, rl.DEG2RAD * rotation.z);
@@ -134,7 +131,6 @@ cm_set_third_person :: proc(
     distance_from_player: f32,
     offset: Vec3 = {0, 1, 0}) {
     if (is_mouse_locked) {
-        rl.HideCursor();
         curr_mp = rl.GetMousePosition();
         mouseDelta := Vec2 {curr_mp.x - prev_mp.x, -(curr_mp.y - prev_mp.y)};
         rotation.y += mouseDelta.x * sensitivity;
@@ -147,8 +143,6 @@ cm_set_third_person :: proc(
         prev_mp = curr_mp;
         rl.SetMousePosition(rl.GetScreenWidth() / 2, rl.GetScreenHeight() / 2);
         prev_mp = rl.GetMousePosition();
-    } else {
-        rl.ShowCursor();
     }
 
     // Build camera rotation matrix

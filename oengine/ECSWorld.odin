@@ -352,6 +352,23 @@ ew_fixed_update :: proc(custom_update: proc(dt: f32) = nil) {
 ew_render :: proc() {
     using ecs_world;
 
+    for i in 0..<len(ray_ctx.shadowmaps) {
+        s_map := ray_ctx.shadowmaps[i];
+        if (s_map.light == nil) { continue; }
+
+        slot := i32(i) + 1;
+        rl.rlActiveTextureSlot(slot); // avoid 0-4 used by other textures
+        rl.rlEnableTexture(ray_ctx.shadowmaps[i].target.depth.id);
+        rl.SetShaderValue(
+            ray_ctx.shader, 
+            shader_location(
+                ray_ctx.shader, 
+                rl.TextFormat("shadowMaps[%i]", s_map.light.id)
+            ), 
+            &slot, .INT
+        );
+    }
+
     rl.rlDisableBackfaceCulling();
     for i in 0..<fa.range(physics.mscs) {
         msc_render(physics.mscs.data[i]);
