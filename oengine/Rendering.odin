@@ -836,11 +836,14 @@ gen_skybox :: proc(c_map: Texture, size: f32 = 400) -> SkyBoxMesh {
     return {mesh, material};
 }
 
-draw_skybox_mesh :: proc(skybox: SkyBoxMesh) {
+draw_skybox_mesh :: proc(skybox: SkyBoxMesh, rot: Vec3 = {}) {
     rl.rlDisableBackfaceCulling();
     rl.rlPushMatrix();
     pos := ecs_world.camera.position;
     rl.rlTranslatef(pos.x, pos.y, pos.z);
+    rl.rlRotatef(rot.x, 1, 0, 0);
+    rl.rlRotatef(rot.y, 0, 1, 0);
+    rl.rlRotatef(rot.z, 0, 0, 1);
     rl.DrawMesh(skybox.mesh, skybox.material, rl.Matrix(1));
     rl.rlPopMatrix();
 }

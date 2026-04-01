@@ -74,11 +74,11 @@ pw_update :: proc(using self: ^PhysicsWorld, dt: f32) {
     delta_time = dt;
     if (paused) { return; }
 
-    @static candidates: [dynamic]int;
+    candidates: [dynamic]int;
+    defer delete(candidates);
 
     for n: i32; n < iterations; n += 1 {
         bo_clear_tree(tree.root);
-        clear(&candidates);
 
         for i := 0; i < fa.range(bodies); i += 1 {
             rb := bodies.data[i];
@@ -86,11 +86,12 @@ pw_update :: proc(using self: ^PhysicsWorld, dt: f32) {
             rb_fixed_update(rb, delta_time / f32(iterations));
             rb._front_hit = {};
             rb._up_hit = {};
+            fa.clear(&rb.contacts);
 
             insert_octree(tree.root, int(rb.id), get_aabb(int(rb.id)));
                     
-            for i in 0..<fa.range(mscs) {
-                msc := mscs.data[i];
+            for j in 0..<fa.range(mscs) {
+                msc := mscs.data[j];
                 if (msc == nil) { continue; }
                 if (!aabb_collision(msc._aabb, trans_to_aabb(rb.transform))) {
                     continue;
@@ -98,13 +99,12 @@ pw_update :: proc(using self: ^PhysicsWorld, dt: f32) {
 
                 if (rb.is_static) do continue;
 
-                // for tri in msc.tris {
-                //     resolve_tri_collision(rb, tri);
-                // }
                 if (msc.tree != nil) {
                     query_octree(msc.tree, rb, dt);
                 }
             }
+
+            resolve_contacts(rb, dt);
         }
 
         for i in 0..<fa.range(bodies) {
@@ -124,15 +124,15 @@ pw_update :: proc(using self: ^PhysicsWorld, dt: f32) {
                 coll, _ := rc_is_colliding(rb._down, rb2.transform, .BOX);
                 if (coll) { rb.grounded = true; }
 
-                coll2, info := rc_is_colliding(
+                info := rc_is_colliding_info(
                     rb._front, rb2.transform, .BOX
                 );
-                if (coll2) { rb._front_hit = {coll2, info}; }
+                if (info.collision) { rb._front_hit = info; }
 
-                coll3, info2 := rc_is_colliding(
+                info2 := rc_is_colliding_info(
                     rb._up, rb2.transform, .BOX
                 );
-                if (coll3) { rb2._up_hit = {coll3, info2}; }
+                if (info2.collision) { rb2._up_hit = info2; }
 
                 if (!collision_transforms(rb.transform, rb2.transform)) { continue; }
 
@@ -338,78 +338,216 @@ resolve_collision :: proc(rb: ^RigidBody, normal: Vec3, depth: f32) {
 
 @(private)
 resolve_tri_collision :: proc(rb: ^RigidBody, t: TriangleCollider, dt: f32) {
-    // Get the dimensions of the cube
-    cube_dimensions := rb.transform.scale; // Assuming `scale` is used to store dimensions here
+    if (rb.shape != .CAPSULE) {
+        center := rb.transform.position;
+        extents := rb.transform.scale * 0.5;
 
-    // Scale the player's position
-    scaled_position := rb.transform.position;
+        // Move triangle into AABB space
+        v0 := t.pts[0] - center;
+        v1 := t.pts[1] - center;
+        v2 := t.pts[2] - center;
 
-    // Calculate the closest point on the triangle
-    closest := closest_point_on_triangle(scaled_position, t.pts[0], t.pts[1], t.pts[2]);
-    diff := scaled_position - closest;
+        // Triangle edges
+        e0 := v1 - v0;
+        e1 := v2 - v1;
+        e2 := v0 - v2;
 
-    // Adjust the distance calculation to account for cube dimensions
-    half_dimensions := cube_dimensions * 0.5;
-    adjusted_diff := Vec3{
-        diff.x / half_dimensions.x,
-        diff.y / half_dimensions.y,
-        diff.z / half_dimensions.z,
-    };
-    dist := linalg.length(adjusted_diff);
+        penetration := F32_MAX;
+        best_axis := Vec3{};
 
-    normal := adjusted_diff / dist;
+        test_axis :: proc(v0, v1, v2, axis: Vec3, penetration: ^f32, extents: Vec3, best_axis: ^Vec3) -> bool {
+            if linalg.length2(axis) < 0.000001 {
+                return true; // skip degenerate axis
+            }
 
-    surface_normal := t.normal;
-    resolve_normal := normal;
+            // Normalize axis for stable penetration depth
+            axis_n := linalg.normalize(axis);
 
-    up := vec3_y();
-    slope_dot := linalg.dot(surface_normal, up);
+            p0 := linalg.dot(v0, axis_n);
+            p1 := linalg.dot(v1, axis_n);
+            p2 := linalg.dot(v2, axis_n);
 
-    RAD :: 1
-    if dist < RAD {
-        penetration := RAD - dist;
+            min_p := min(p0, min(p1, p2));
+            max_p := max(p0, max(p1, p2));
 
-        // Adjust position considering the cube dimensions
-        rb.transform.position += Vec3{
-            resolve_normal.x * penetration * half_dimensions.x,
-            resolve_normal.y * penetration * half_dimensions.y,
-            resolve_normal.z * penetration * half_dimensions.z,
+            r :=
+                extents.x * abs(axis_n.x) +
+                extents.y * abs(axis_n.y) +
+                extents.z * abs(axis_n.z);
+
+            if min_p > r || max_p < -r {
+                return false; // separating axis → no collision
+            }
+
+            overlap := min(r - min_p, max_p + r);
+
+            if overlap < penetration^ {
+                penetration^ = overlap;
+                best_axis^ = axis_n;
+            }
+
+            return true;
         };
 
-        EPSILON :: 0.0001
+        // --- 1. AABB face axes ---
+        if !test_axis(v0, v1, v2, vec3_x(), &penetration, extents, &best_axis) do return;
+        if !test_axis(v0, v1, v2, vec3_y(), &penetration, extents, &best_axis) do return;
+        if !test_axis(v0, v1, v2, vec3_z(), &penetration, extents, &best_axis) do return;
 
-        // Project velocity to the normal plane if moving towards it
-        if (OE_SLOPE_SLIDING) {
-            if (slope_dot >= OE_SLOPE_THRESHOLD || slope_dot < 0) {
-                vel_normal_dot := linalg.dot(rb.velocity, surface_normal);
-                if vel_normal_dot < -EPSILON {
-                    rb.velocity -= surface_normal * vel_normal_dot;
+        // --- 2. Triangle normal ---
+        tri_normal := linalg.cross(e0, e1);
+        if !test_axis(v0, v1, v2, tri_normal, &penetration, extents, &best_axis) do return;
 
-                    // slope friction
-                    MOVING_EPSILON :: 0.1
-                    vel_len := linalg.length(rb.velocity.xz);
-                    if (slope_dot < 1.0 && vel_len < MOVING_EPSILON) {
-                        recalc := linalg.dot(rb.velocity, surface_normal);
-                        vel_tangent := rb.velocity - surface_normal * recalc;
-                        speed := linalg.length(vel_tangent);
-                        if speed > EPSILON {
-                            friction := min(rb.friction * dt, speed);
-                            vel_tangent *= max(0, speed - friction) / speed;
-                        }
-                        rb.velocity = vel_tangent;
-                    }
-                }
-            } else {
-                rb.grounded = false;
-            }
-        } else {
-            vel_normal_dot := linalg.dot(rb.velocity, surface_normal);
-            if vel_normal_dot < -EPSILON {
-                rb.velocity -= surface_normal * vel_normal_dot;
+        // --- 3. Edge cross products (9 axes) ---
+        box_axes := [3]Vec3{vec3_x(), vec3_y(), vec3_z()};
+        tri_edges := [3]Vec3{e0, e1, e2};
+
+        for e in tri_edges {
+            for a in box_axes {
+                axis := linalg.cross(a, e);
+                if !test_axis(v0, v1, v2, axis, &penetration, extents, &best_axis) do return;
             }
         }
 
+        // --- Collision confirmed ---
+        resolve_normal := best_axis;
+
+        // Make sure it pushes OUT of triangle
+        to_center := center - t.pts[0];
+        if linalg.dot(resolve_normal, to_center) < 0 {
+            resolve_normal = -resolve_normal;
+        }
+
+        // Apply positional correction
+        // rb.transform.position += resolve_normal * penetration;
+        if (rb.contacts.len < MAX_CONTACTS) {
+            fa.append(&rb.contacts, Contact{resolve_normal, penetration});
+        }
+
+        return;
     }
+
+    // --- Capsule definition ---
+    radius := rb.transform.scale.x * 0.5;
+    height := rb.transform.scale.y;
+
+    // assume position is bottom of capsule
+    p0 := rb.transform.position;
+    p1 := p0 + Vec3{0, height, 0};
+
+    // --- Closest points ---
+    seg_pt, tri_pt := closest_pt_segment_triangle(p0, p1, t);
+
+    delta := seg_pt - tri_pt;
+    dist2 := linalg.dot(delta, delta);
+
+    if dist2 >= radius * radius {
+        return;
+    }
+
+    dist := linalg.sqrt(dist2);
+
+    // --- Compute normal ---
+    normal: Vec3;
+
+    if dist > 0.00001 {
+        normal = delta / dist;
+    } else {
+        // fallback if perfectly overlapping
+        normal = t.normal;
+    }
+
+    penetration := radius - dist;
+
+    // --- Optional: stabilize ground contact ---
+    up := vec3_y();
+    if linalg.dot(normal, up) > 0.5 {
+        normal = t.normal;
+    }
+
+    // --- Resolve position ---
+    if (rb.contacts.len < MAX_CONTACTS) {
+        fa.append(&rb.contacts, Contact{normal, penetration});
+    }
+}
+
+resolve_contacts :: proc(rb: ^RigidBody, dt: f32) {
+    if rb.contacts.len == 0 {
+        return;
+    }
+
+    EPSILON :: 0.0001
+    MAX_STEP := rb.transform.scale.y * 0.5
+    ITER_SUBSTEPS :: 2
+
+    up := vec3_y()
+
+    for substep in 0..<ITER_SUBSTEPS {
+
+        total_normal := Vec3{}
+        total_weight: f32 = 0.0
+        max_penetration: f32 = 0.0
+
+        for i in 0..<rb.contacts.len {
+            c := rb.contacts.data[i]
+
+            total_normal += c.normal * c.penetration
+            total_weight += c.penetration
+
+            if c.penetration > max_penetration {
+                max_penetration = c.penetration
+            }
+        }
+
+        if total_weight < EPSILON {
+            break
+        }
+
+        resolve_normal := linalg.normalize(total_normal / total_weight)
+
+        slope_dot := linalg.dot(resolve_normal, up)
+
+        if slope_dot > 0.5 {
+            resolve_normal = up
+        }
+
+        move_vec := resolve_normal * max_penetration
+        move_len := linalg.length(move_vec)
+
+        if move_len > MAX_STEP {
+            move_vec *= MAX_STEP / move_len
+        }
+
+        rb.transform.position += move_vec
+
+        vel_dot := linalg.dot(rb.velocity, resolve_normal)
+
+        if vel_dot < -EPSILON {
+            rb.velocity -= resolve_normal * vel_dot
+
+            if OE_SLOPE_SLIDING && (slope_dot >= OE_SLOPE_THRESHOLD || slope_dot < 0) {
+
+                MOVING_EPSILON :: 0.1
+                vel_len := linalg.length(rb.velocity.xz)
+
+                if slope_dot < 1.0 && vel_len < MOVING_EPSILON {
+
+                    recalc := linalg.dot(rb.velocity, resolve_normal)
+                    vel_tangent := rb.velocity - resolve_normal * recalc
+
+                    speed := linalg.length(vel_tangent)
+                    if speed > EPSILON {
+                        friction := min(rb.friction * dt, speed)
+                        vel_tangent *= max(0, speed - friction) / speed
+                    }
+
+                    rb.velocity = vel_tangent
+                }
+            }
+        }
+    }
+
+    fa.clear(&rb.contacts)
 }
 
 @(private)

@@ -242,6 +242,44 @@ ray_tri_collision :: proc(ray: Raycast, t: TriangleCollider) -> (bool, Vec3){
     return false, {};
 }
 
+ray_tri_collision_info :: proc(ray: Raycast, t: TriangleCollider) -> RayInfo {
+    edge1 := t.pts[1] - t.pts[0];
+    edge2 := t.pts[2] - t.pts[0];
+
+    dir := linalg.normalize(ray.target - ray.position); // Use normalized direction
+    h := linalg.cross(dir, edge2);
+    a := linalg.dot(edge1, h);
+
+    if (linalg.abs(a) < 1e-8) {
+        return {}; // Ray is parallel to the triangle
+    }
+
+    f := 1.0 / a;
+    s := ray.position - t.pts[0];
+    u := f * linalg.dot(s, h);
+
+    if (u < 0.0 || u > 1.0) {
+        return {};
+    }
+
+    q := linalg.cross(s, edge1);
+    v := f * linalg.dot(dir, q);
+
+    if (v < 0.0 || u + v > 1.0) {
+        return {};
+    }
+
+    t_hit := f * linalg.dot(edge2, q);
+
+    ray_length := linalg.length(ray.target - ray.position);
+    if (t_hit > 1e-8 && t_hit <= ray_length) { // Ensure hit is within ray segment
+        intersection_point := ray.position + dir * t_hit;
+        return {true, intersection_point, t.normal};
+    }
+
+    return {};
+}
+
 ray_tri_resolve :: proc(ray: ^Raycast, t: TriangleCollider) {
     intersect, point := ray_tri_collision(ray^, t);
 

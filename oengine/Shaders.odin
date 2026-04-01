@@ -3,24 +3,49 @@ package oengine
 import rl "vendor:raylib"
 import "core:fmt"
 
+WAVE_VERT: cstring = `
+#version 330
+
+in vec3 vertexPosition;
+in vec2 vertexTexCoord;
+in vec4 vertexColor;
+
+out vec2 fragTexCoord;
+out vec4 fragColor;
+out vec3 fragPosition;
+
+uniform mat4 mvp;
+uniform mat4 matModel;
+
+void main() {
+    vec4 worldPos = matModel * vec4(vertexPosition, 1.0);
+    
+    fragPosition = worldPos.xyz;
+    fragTexCoord = vertexTexCoord;
+    fragColor = vertexColor;
+
+    gl_Position = mvp * vec4(vertexPosition, 1.0);
+}
+`;
+
 WAVE_FRAG: cstring = `
 #version 330
 
-// Input vertex attributes (from vertex shader)
 in vec3 fragPosition;
 in vec2 fragTexCoord;
 in vec4 fragColor;
 
-// Input uniform values
 uniform sampler2D texture0;
 uniform vec4 colDiffuse;
 
-// Output fragment color
 out vec4 finalColor;
 
 uniform float seconds;
 
 uniform vec2 size;
+uniform vec3 viewPos;
+uniform float fogDensity;
+uniform vec4 fogColor;
 
 uniform float freqX;
 uniform float freqY;
@@ -34,18 +59,32 @@ float tex_size = 2.5;
 void main() {
     float pixelWidth = 1.0 / size.x;
     float pixelHeight = 1.0 / size.y;
-    float aspect = pixelHeight / pixelWidth;
-    float boxLeft = 0.0;
-    float boxTop = 0.0;
 
     vec2 world_uv = fragTexCoord * size;
-    vec2 uv = world_uv / tex_size;
+    vec2 tile = floor(world_uv);   // which tile
+    vec2 local = fract(world_uv);  // inside tile
+    vec2 p = local;
 
-    vec2 p = uv;
-    p.x += cos((fragTexCoord.y - boxTop) * freqX / ( pixelWidth * 750.0) + (seconds * speedX)) * ampX * pixelWidth;
-    p.y += sin((fragTexCoord.x - boxLeft) * freqY * aspect / ( pixelHeight * 750.0) + (seconds * speedY)) * ampY * pixelHeight;
+    // make each tile slightly different
+    float tileOffset = tile.x + tile.y;
 
-    finalColor = texture(texture0, p)*colDiffuse*fragColor;
+    // your original waves, but influenced by tile
+    p.x += cos((local.y + tileOffset) * freqX + seconds * speedX) * ampX;
+    p.y += sin((local.x + tileOffset) * freqY + seconds * speedY) * ampY;
+
+    float angle = tileOffset * 6.2831;
+    vec2 dir = vec2(cos(angle), sin(angle));
+
+    p += dir * sin(dot(local, dir) * freqX + seconds * speedX) * ampX;
+
+    finalColor = texture(texture0, p + tile) * colDiffuse * fragColor;
+
+    float dist = length(viewPos - fragPosition);
+    float fogFactor = 1.0/exp((dist*fogDensity)*(dist*fogDensity));
+    fogFactor = clamp(fogFactor, 0.0, 1.0);
+
+    vec4 final_texel = mix(fogColor, finalColor, fogFactor);
+    finalColor = final_texel;
 }`;
 
 DEFAULT_VERT: cstring = `
@@ -278,6 +317,31 @@ void main()
 
     vec4 final_texel = mix(fogColor, finalColor, fogFactor);
     finalColor = final_texel;
+}`;
+
+TRANSPARENT_FRAG: cstring = `
+#version 330
+
+// Input vertex attributes (from vertex shader)
+in vec2 fragTexCoord;
+in vec4 fragColor;
+
+// Input uniform values
+uniform sampler2D texture0;
+uniform vec4 colDiffuse;
+
+// Output fragment color
+out vec4 finalColor;
+
+// NOTE: Add your custom variables here
+
+void main()
+{
+    vec4 texelColor = texture(texture0, fragTexCoord);
+
+    if (texelColor.a < 0.5) { discard; }
+
+    finalColor = texelColor*colDiffuse*fragColor;
 }`;
 
 SHADOWMAP_FRAG: cstring = `

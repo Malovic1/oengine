@@ -130,6 +130,7 @@ parse :: proc(data: string) -> Object {
         }
 
         line := strings.trim_space(line);
+        if (line == "") { line_number += 1; continue; }
         split := split_line(line);
 
         type := split[0];

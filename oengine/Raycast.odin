@@ -124,6 +124,138 @@ rc_is_colliding :: proc(using self: Raycast, transform: Transform, shape: ShapeT
     return false, {};
 }
 
+rc_is_colliding_info :: proc(using self: Raycast, transform: Transform, shape: ShapeType) -> RayInfo {
+    if (shape == ShapeType.BOX) {
+        tmin, tmax, tymin, tymax, tzmin, tzmax: f32;
+        
+        // apply rotation to ray
+        rotationMatrix: Mat4 = mat4_from_yaw_pitch_roll(
+            transform.rotation.y * rl.DEG2RAD,
+            transform.rotation.x * rl.DEG2RAD,
+            transform.rotation.z * rl.DEG2RAD,
+        );
+
+        rayDirRaw: Vec3 = target - position;
+        ray_length := vec3_length(rayDirRaw);
+        if (ray_length <= 0.0001) {
+            return {}; // No valid direction
+        }
+
+        rayDirection: Vec3 = vec3_normalize(rayDirRaw);
+        rotatedRayDirection: Vec3 = vec3_transform(rayDirection, rotationMatrix);
+        
+        boxSize: Vec3 = transform.scale;
+        boxMin: Vec3 = transform.position - boxSize * 0.5;
+        boxMax: Vec3 = transform.position + boxSize * 0.5;
+
+        tmin = (boxMin.x - position.x) / rayDirection.x;
+        tmax = (boxMax.x - position.x) / rayDirection.x;
+
+        hit_normal: Vec3;
+
+        if (tmin > tmax) {
+            tmin, tmax = tmax, tmin;
+
+            if (rayDirection.x > 0) {
+                hit_normal = {-1, 0, 0};
+            } else {
+                hit_normal = {1, 0, 0};
+            }
+        }
+
+        tymin = (boxMin.y - position.y) / rayDirection.y;
+        tymax = (boxMax.y - position.y) / rayDirection.y;
+
+        if (tymin > tymax) {
+            tymin, tymax = tymax, tymin;
+
+            if (rayDirection.y > 0) {
+                hit_normal = {0, -1, 0};
+            } else {
+                hit_normal = {0, 1, 0};
+            }
+        }
+
+        if ((tmin > tymax) || (tymin > tmax)) {
+            return {};
+        }
+
+        if (tymin > tmin) {
+            tmin = tymin;
+        }
+
+        if (tymax < tmax) {
+            tmax = tymax;
+        }
+
+        tzmin = (boxMin.z - position.z) / rayDirection.z;
+        tzmax = (boxMax.z - position.z) / rayDirection.z;
+
+        if (tzmin > tzmax) {
+            tzmin, tzmax = tzmax, tzmin;
+
+            if (rayDirection.z > 0) {
+                hit_normal = {0, 0, -1};
+            } else {
+                hit_normal = {0, 0, 1};
+            }
+        }
+
+        if ((tmin > tzmax) || (tzmin > tmax)) {
+            return {};
+        }
+
+        if (tzmin > tmin) {
+            tmin = tzmin;
+        }
+
+        if (tzmax < tmax) {
+            tmax = tzmax;
+        }
+
+        if (tmin < 0.0 || tmin > ray_length) {
+            return {};
+        }
+
+        // Calculate contact point for a box
+        contactPoint := position + rayDirection * tmin;
+        return {true, contactPoint, hit_normal};
+    }
+     
+    if (shape == ShapeType.SPHERE) {
+        t1, t2: f32;
+
+        rayDirection: Vec3 = vec3_normalize(target - position);
+        sphereCenter: Vec3 = transform.position;
+        sphereRadius: f32 = transform.scale.x * 0.5;
+
+        oc: Vec3 = position - sphereCenter;
+        a: f32 = vec3_dot(rayDirection, rayDirection);
+        b: f32 = 2.0 * vec3_dot(oc, rayDirection);
+        c: f32 = vec3_dot(oc, oc) - sphereRadius * sphereRadius;
+        discriminant: f32 = b * b - 4 * a * c;
+
+        if (discriminant < 0) {
+            return {};
+        }
+
+        sqrtDiscriminant: f32 = f32(math.sqrt(discriminant));
+        t1 = (-b - sqrtDiscriminant) / (2.0 * a);
+        t2 = (-b + sqrtDiscriminant) / (2.0 * a);
+
+        if (t1 >= 0 || t2 >= 0) {
+            // // Calculate contact point for a sphere
+            contactPoint := position + rayDirection * t1; // You can choose either t1 or t2
+            normal := linalg.normalize(contactPoint - sphereCenter);
+            return {true, contactPoint, normal};
+        }
+
+        return {};
+    }
+
+    return {};
+}
+
 MSCCollisionInfo :: struct {
     t: TriangleCollider,
     point: Vec3,

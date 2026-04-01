@@ -127,6 +127,25 @@ bo_clear_tree :: proc(node: ^BodyOctreeNode) {
     }
 }
 
+bo_remove :: proc(node: ^BodyOctreeNode, body_id: i32) {
+    // Remove from this node
+    for i in 0..<len(node.objects) {
+        if (node.objects[i] == body_id) {
+            ordered_remove(&node.objects, i);
+            break;
+        }
+    }
+
+    // Recurse into children
+    if (!node.is_leaf) {
+        for child in node.children {
+            if (child != nil) {
+                bo_remove(child, body_id);
+            }
+        }
+    }
+}
+
 get_aabb :: proc(id: int) -> BO_AABB {
     rb := ecs_world.physics.bodies.data[id];
 
@@ -137,7 +156,8 @@ get_aabb :: proc(id: int) -> BO_AABB {
         };
     }
 
-    return make_aabb(rb.transform.position, rb.transform.scale * 0.5);
+    padding: f32 = 0.1;
+    return make_aabb(rb.transform.position, rb.transform.scale * 0.5 + padding);
 }
 
 aabb_overlap :: proc(a, b: BO_AABB) -> bool {

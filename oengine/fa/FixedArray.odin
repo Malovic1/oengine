@@ -61,6 +61,22 @@ remove_arr :: proc(arr: ^$T/FixedArray, #any_int id: i32) {
     arr.len -= 1;
 }
 
+remove_unordered_arr :: proc(arr: ^$T/FixedArray, #any_int id: i32) {
+    if id < 0 || id >= arr.len { return; }
+
+    arr.data[id] = arr.data[arr.len - 1];  // swap last element into removed slot
+    arr.data[arr.len - 1] = arr.empty;     // clear old last slot
+    arr.len -= 1;
+}
+
+remove_unordered_arr_ex :: proc(arr: ^FixedArray($T, $V), #any_int id: i32, empty: T) {
+    if id < 0 || id >= arr.len { return; }
+
+    arr.data[id] = arr.data[arr.len - 1];  // swap last element into removed slot
+    arr.data[arr.len - 1] = empty;     // clear old last slot
+    arr.len -= 1;
+}
+
 clear_arr :: proc(arr: ^$T/FixedArray) {
     for i in 0..<arr.cap {
         arr.data[i] = arr.empty;
@@ -95,4 +111,8 @@ insert :: insert_arr
 range :: range_arr
 append :: append_arr
 remove :: remove_arr
+unord_remove :: proc { 
+    remove_unordered_arr, 
+    remove_unordered_arr_ex, 
+}
 clear :: clear_arr

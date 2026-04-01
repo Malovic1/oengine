@@ -260,7 +260,7 @@ w_begin_render :: proc() {
     rl.BeginTextureMode(window.target);
 }
 
-DBG_INFO_STAT_COUNT :: 9
+DBG_INFO_STAT_COUNT :: 10
 DBG_INFO_POS_COUNT :: 5
 
 w_end_render :: proc() {
@@ -304,6 +304,7 @@ w_end_render :: proc() {
             str_add("tris: ", tri_count, allocator = current_allocator),
             str_add("decals: ", len(ecs_world.decals), allocator = current_allocator),
             str_add("lights: ", ecs_world.ray_ctx.light_count, allocator = current_allocator),
+            str_add("phys_tick: ", ecs_world.phys_tick, "%v%.5f", allocator = current_allocator),
         };
 
         for i in 0..<len(text_info) {

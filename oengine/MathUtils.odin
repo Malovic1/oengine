@@ -94,6 +94,98 @@ closest_point_on_triangle :: proc(p, a, b, c: Vec3) -> Vec3 {
     return a + ab * v + ac * w // = u*a + v*b + w*c, u = va * denom = 1.0-v-w
 }
 
+closest_pt_segment_segment :: proc(p1, q1, p2, q2: Vec3) -> (Vec3, Vec3) {
+    d1 := q1 - p1;
+    d2 := q2 - p2;
+    r  := p1 - p2;
+
+    a := linalg.dot(d1, d1);
+    e := linalg.dot(d2, d2);
+    f := linalg.dot(d2, r);
+
+    s, t: f32;
+
+    if a <= 0.000001 {
+        s = 0;
+        t = clamp(f / e, 0, 1);
+    } else {
+        c := linalg.dot(d1, r);
+
+        if e <= 0.000001 {
+            t = 0;
+            s = clamp(-c / a, 0, 1);
+        } else {
+            b := linalg.dot(d1, d2);
+            denom := a*e - b*b;
+
+            if denom != 0 {
+                s = clamp((b*f - c*e) / denom, 0, 1);
+            } else {
+                s = 0;
+            }
+
+            t = (b*s + f) / e;
+
+            if t < 0 {
+                t = 0;
+                s = clamp(-c / a, 0, 1);
+            } else if t > 1 {
+                t = 1;
+                s = clamp((b - c) / a, 0, 1);
+            }
+        }
+    }
+
+    c1 := p1 + d1 * s;
+    c2 := p2 + d2 * t;
+
+    return c1, c2;
+}
+
+closest_pt_segment_triangle :: proc(p0, p1: Vec3, t: TriangleCollider) -> (Vec3, Vec3) {
+
+    best_seg := Vec3{};
+    best_tri := Vec3{};
+    best_dist2 := F32_MAX;
+
+    // --- 1. Segment endpoints vs triangle ---
+    tri_pt := closest_point_on_triangle(p0, t.pts[0], t.pts[1], t.pts[2]);
+    d2 := linalg.length2(p0 - tri_pt);
+    if d2 < best_dist2 {
+        best_dist2 = d2;
+        best_seg = p0;
+        best_tri = tri_pt;
+    }
+
+    tri_pt = closest_point_on_triangle(p1, t.pts[0], t.pts[1], t.pts[2]);
+    d2 = linalg.length2(p1 - tri_pt);
+    if d2 < best_dist2 {
+        best_dist2 = d2;
+        best_seg = p1;
+        best_tri = tri_pt;
+    }
+
+    // --- 2. Segment vs triangle edges ---
+    edges := [3][2]Vec3{
+        {t.pts[0], t.pts[1]},
+        {t.pts[1], t.pts[2]},
+        {t.pts[2], t.pts[0]},
+    };
+
+    for edge in edges {
+        s_pt, e_pt := closest_pt_segment_segment(p0, p1, edge[0], edge[1]);
+        d2 = linalg.length2(s_pt - e_pt);
+
+        if d2 < best_dist2 {
+            best_dist2 = d2;
+            best_seg = s_pt;
+            best_tri = e_pt;
+        }
+    }
+
+    return best_seg, best_tri;
+}
+
 next_power_of_2 :: proc(v: i32) -> i32 {
     x := v;
     x -= 1;

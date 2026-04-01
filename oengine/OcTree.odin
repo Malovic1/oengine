@@ -72,12 +72,24 @@ rb_bvh_collision :: proc(rb: ^RigidBody, node: ^BVHNode, dt: f32) {
 
     if (node.tris != nil) {
         for tri in node.tris {
+            resolve_tri_collision(rb, tri, dt);
+
             coll, _ := ray_tri_collision(rb._down, tri);
             if (coll) {
-                rb.grounded = true;
+                if (tri.normal.y > OE_SLOPE_THRESHOLD) {
+                    rb.grounded = true;
+                }
             }
 
-            resolve_tri_collision(rb, tri, dt);
+            info := ray_tri_collision_info(
+                rb._front, tri
+            );
+            if (info.collision) { rb._front_hit = info; }
+
+            info2 := ray_tri_collision_info(
+                rb._up, tri
+            );
+            if (info2.collision) { rb._up_hit = info2; }
         }
         return;
     }
@@ -201,6 +213,8 @@ query_octree :: proc(node: ^OctreeNode, rb: ^RigidBody, dt: f32) {
             rb_bvh_collision(rb, node.triangle_bvh, dt);
         } else {
             for tri in node.triangles {
+                resolve_tri_collision(rb, tri, dt);
+
                 coll, _ := ray_tri_collision(rb._down, tri);
                 if (coll) {
                     if (tri.normal.y > OE_SLOPE_THRESHOLD) {
@@ -208,17 +222,15 @@ query_octree :: proc(node: ^OctreeNode, rb: ^RigidBody, dt: f32) {
                     }
                 }
 
-                coll2, info := ray_tri_collision(
+                info := ray_tri_collision_info(
                     rb._front, tri
                 );
-                if (coll2) { rb._front_hit = {coll2, info}; }
+                if (info.collision) { rb._front_hit = info; }
 
-                coll3, info2 := ray_tri_collision(
+                info2 := ray_tri_collision_info(
                     rb._up, tri
                 );
-                if (coll3) { rb._up_hit = {coll3, info2}; }
-
-                resolve_tri_collision(rb, tri, dt);
+                if (info2.collision) { rb._up_hit = info2; }
             }
         }
         return;

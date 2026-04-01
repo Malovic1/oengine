@@ -409,6 +409,15 @@ set_model_shader :: proc(m: ^Model, shader: Shader) {
     }
 }
 
+set_model_tex_filter :: proc(m: Model, filter: rl.TextureFilter) {
+    for i in 0..<m.materialCount {
+        rl.SetTextureFilter(
+            m.materials[i].maps[rl.MaterialMapIndex.ALBEDO].texture, 
+            filter
+        );
+    }
+}
+
 rand_sign :: proc() -> i32 {
     val := rl.GetRandomValue(0, 1);
     if (val == 0) { return -1; }

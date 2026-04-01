@@ -233,6 +233,17 @@ MSCObject :: struct {
     use_triplanar: bool,
 }
 
+TriInfo :: struct {
+    v0, v1, v2: Vec3,
+    offs: Vec3,
+    texture_tag: string,
+    normal: Vec3,
+}
+
+TriInfoArray :: struct {
+    data: [dynamic]TriInfo,
+}
+
 msc_init :: proc() -> ^MSCObject {
     using self := new(MSCObject);
 

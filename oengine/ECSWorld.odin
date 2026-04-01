@@ -25,6 +25,11 @@ ecs_world: struct {
 
     accumulator: f32,
     physics_thread: ^thread.Thread,
+    phys_tick: f64,
+
+    shaders: struct {
+        transparent: Shader,
+    },
 }
 
 ew_init :: proc(s_gravity: Vec3, s_iter: i32 = 8) {
@@ -94,6 +99,10 @@ ew_init :: proc(s_gravity: Vec3, s_iter: i32 = 8) {
     physics_thread = thread.create_and_start(ew_fixed_thread);
 
     cache_init();
+
+    shaders = {
+        transparent = load_shader(rl.LoadShaderFromMemory("", TRANSPARENT_FRAG)),
+    };
 }
 
 ew_toggle_physics :: proc() {
@@ -201,7 +210,11 @@ ew_remove_ent :: proc(#any_int id: u32) {
         rb_id := fa.get_id(ecs_world.physics.bodies, rb);
 
         if (rb_id != -1) {
-            fa.remove(&ecs_world.physics.bodies, rb_id);
+            bo_remove(ecs_world.physics.tree.root, rb_id);
+            remove_component(ent, RigidBody);
+            fa.unord_remove(&ecs_world.physics.bodies, rb_id, nil);
+            moved_rb := ecs_world.physics.bodies.data[rb_id];
+            if (moved_rb != nil) { moved_rb.id = auto_cast rb_id; }
         }
     }
 
@@ -319,6 +332,7 @@ ew_fixed_thread :: proc() {
     for (!rl.WindowShouldClose()) {
         current_time := rl.GetTime();
         dt := current_time - last_time;
+        phys_tick = dt;
         if (dt >= FIXED_TIME_STEP) {
             if (!w_transform_changed() && window.instance_name != "oengine-editor") {
                 pw_update(&physics, FIXED_TIME_STEP);

@@ -12,6 +12,7 @@ Fluid :: struct {
     texture: Texture,
     color: Color,
     _shader: Shader,
+    mesh: Model,
     
     freq_x:  f32,
     freq_y:  f32,
@@ -31,7 +32,11 @@ f_init_all :: proc(using f: ^Fluid, s_texture: Texture) {
     texture = s_texture;
     color = WHITE;
 
-    _shader = load_shader(rl.LoadShaderFromMemory(nil, WAVE_FRAG));
+    _shader = load_shader(rl.LoadShaderFromMemory(WAVE_VERT, WAVE_FRAG));
+
+    mesh = load_model(rl.LoadModelFromMesh(rl.GenMeshPlane(1, 1, 1, 1)));
+    mesh.materials[0].maps[rl.MaterialMapIndex.ALBEDO].texture = texture;
+    set_model_shader(&mesh, _shader);
 
     freqXLoc   := shader_location(_shader, "freqX");
     freqYLoc   := shader_location(_shader, "freqY");
@@ -78,23 +83,42 @@ f_custom_render :: proc(t: ^Transform, f: ^Fluid) {
 
     transform = t^;
 
+    pos := world().camera.position;
+    rl.SetShaderValue(_shader, shader_location(_shader, "viewPos"), &pos, .VEC3);
+
     seconds := f32(rl.GetTime());
     rl.SetShaderValue(_shader, shader_location(_shader, "seconds"), &seconds, .FLOAT);
+
+    color_loc := shader_location(_shader, "fogColor");
+    clr := world().ray_ctx.fog_color;
+    color_f := Vec4 {
+        f32(clr.r) / 255,
+        f32(clr.g) / 255,
+        f32(clr.b) / 255,
+        f32(clr.a) / 255,
+    };
+    rl.SetShaderValue(_shader, color_loc, &color_f, .VEC4);
+
+    density_loc := shader_location(_shader, "fogDensity");
+    density_v := world().ray_ctx.fog_density;
+    rl.SetShaderValue(_shader, density_loc, &density_v, .FLOAT);
 
     render_pos := transform.position;
     render_pos.y = transform.position.y + transform.scale.y * 0.5;
 
-    rl.BeginShaderMode(_shader);
+    draw_model(mesh, transform, color);
 
-    draw_textured_plane(
-        texture, 
-        render_pos, 
-        transform.scale.xz, 
-        transform.rotation.y,
-        color
-    );
-
-    rl.EndShaderMode();
+    // rl.BeginShaderMode(_shader);
+    //
+    // draw_textured_plane(
+    //     texture, 
+    //     render_pos, 
+    //     transform.scale.xz, 
+    //     transform.rotation.y,
+    //     color
+    // );
+    //
+    // rl.EndShaderMode();
 }
 
 f_set :: proc(using self: ^Fluid, name: string, val: f32) {

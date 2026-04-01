@@ -16,6 +16,8 @@ RayContext :: struct {
     light_count: i32,
     shader: Shader,
     shadowmaps: [RAY_MAX_LIGHTS]TextureLight,
+    fog_density: f32,
+    fog_color: Color,
 }
 
 RayLight :: struct {
@@ -112,6 +114,7 @@ ray_fog_color :: proc(shader: rl.Shader, color: Color) {
         f32(color.a) / 255,
     };
 
+    ecs_world.ray_ctx.fog_color = color;
     rl.SetShaderValue(shader, color_loc, &color_f, .VEC4);
 }
 
@@ -119,6 +122,7 @@ ray_fog_density :: proc(shader: rl.Shader, density: f32) {
     density_loc := shader_location(shader, "fogDensity");
     density_v := density;
 
+    ecs_world.ray_ctx.fog_density = density;
     rl.SetShaderValue(shader, density_loc, &density_v, .FLOAT);
 }
 

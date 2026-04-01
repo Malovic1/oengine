@@ -6,6 +6,7 @@ import rl "vendor:raylib"
 import ecs "ecs"
 import "core:math/linalg"
 import "core:math"
+import "core:time"
 
 Prop :: struct {
     collider: Transform,
@@ -34,7 +35,8 @@ prop_init :: proc(
                 msc, model, 
                 offs = _position + model_pos_off, scale = model_scale_off, 
                 voxel_size = voxel_size);
-            msc_gen_mesh(msc, true);
+            if (!render_msc) { msc_gen_mesh(msc, true); }
+            else { msc_build(msc); }
         } else {
             add_component(ent, rb_init(p.collider, 1, 0.5, true, ShapeType.BOX));
         }
@@ -60,7 +62,8 @@ prop_init :: proc(
         msc.render = render_msc;
         simplify_msc_model(
             msc, model, offs = _position, scale = scale, voxel_size = voxel_size);
-        msc_gen_mesh(msc, true);
+        if (!render_msc) { msc_gen_mesh(msc, true); }
+        else { msc_build(msc); }
     } else {
         add_component(ent, rb_init(p.collider, 1, 0.5, true, ShapeType.BOX));
     }
@@ -87,7 +90,27 @@ simplify_msc_model :: proc(
         voxel_size = 0.1
     }
 
+    if (len(asset_manager.simple_model_pool[model.path].data) != 0) {
+        arr := asset_manager.simple_model_pool[model.path];
+        for i in 0..<len(arr.data) {
+            tri := arr.data[i];
+            v0 := tri.v0;
+            v1 := tri.v1;
+            v2 := tri.v2;
+            tag := tri.texture_tag;
+            normal := tri.normal;
+            msc_append_tri(
+                self, v0, v1, v2, offs, texture_tag = tag, normal = normal)
+        }
+        return;
+    }
+
+    info_arr := TriInfoArray {make([dynamic]TriInfo)};
+
     for mi in 0..<model.meshCount {
+        if (mi == model.excluded_mesh) { 
+            continue; 
+        }
         mesh := model.meshes[mi]
 
         V := int(mesh.vertexCount)
@@ -194,8 +217,12 @@ simplify_msc_model :: proc(
 
             msc_append_tri(
                 self, v0, v1, v2, offs, texture_tag = tag, normal = normal)
+
+            append(&info_arr.data, TriInfo{v0, v1, v2, offs, tag, normal});
         }
     }
+
+    asset_manager.simple_model_pool[model.path] = info_arr;
 }
 
 hash_voxel :: proc(x, y, z: int) -> u64 {

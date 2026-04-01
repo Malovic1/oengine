@@ -62,6 +62,7 @@ asset_manager: struct {
     component_types: map[ComponentParse]typeid,
     component_loaders: map[string]LoaderFunc,
     component_reg: map[ComponentType]rawptr,
+    simple_model_pool: map[string]TriInfoArray,
 }
 
 reg_component :: proc(
@@ -233,7 +234,7 @@ AssetJob :: struct {
 
 CJobPair :: struct{tag: string, asset: [6]Image}
 TJobPair :: struct{tag: string, asset: Image}
-MJobPair :: struct{tag: string, path: string}
+MJobPair :: struct{tag: string, path: string, excluded_mesh: i32}
 cubemap_job: [dynamic]CJobPair;
 texture_job: [dynamic]TJobPair;
 model_job: [dynamic]MJobPair;
@@ -272,9 +273,13 @@ load_asset_job :: proc(_data: rawptr) {
         append(&texture_job, TJobPair{strs.clone(tag), tex});
     } else if job.type == "Model" {
         res := get_path(data["path"].(string));
+        excluded_mesh: i32 = -1;
+        if (data["excluded_mesh"] != nil) {
+            excluded_mesh = data["excluded_mesh"].(i32);
+        }
         // mdl := load_model(strs.clone(res));
         // reg_asset(strs.clone(tag), mdl);
-        append(&model_job, MJobPair{strs.clone(tag), res});
+        append(&model_job, MJobPair{strs.clone(tag), res, excluded_mesh});
     }
 
     sync.atomic_add(&jobs_done, 1);
@@ -393,6 +398,7 @@ load_registry_od :: proc(path: string, threaded := false) {
 
     for pair in model_job {
         mdl := load_model(pair.path);
+        mdl.excluded_mesh = pair.excluded_mesh;
         reg_asset(pair.tag, mdl);
     }
 

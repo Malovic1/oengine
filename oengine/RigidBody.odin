@@ -37,9 +37,16 @@ oe.ent_set_scale(slope, {5, 5, 5});
 
 */
 
+Contact :: struct {
+    normal: Vec3,
+    penetration: f32,
+}
+
+MAX_CONTACTS :: 8
+
 RayInfo :: struct {
     collision: bool,
-    position: Vec3,
+    position, normal: Vec3,
 }
 
 RigidBody :: struct {
@@ -70,6 +77,7 @@ RigidBody :: struct {
     joints: fa.FixedArray(u32, MAX_JOINTS),
 
     collision_mask: [COLLISION_MASK_SIZE]i32,
+    contacts: fa.FixedArray(Contact, MAX_CONTACTS),
 }
 
 rb_init :: proc {
@@ -119,6 +127,8 @@ rb_init_all :: proc(using rb: ^RigidBody, s_density, s_restitution: f32, s_stati
     for i in 1..<COLLISION_MASK_SIZE+1 {
         collision_mask[i - 1] = i32(i);
     }
+
+    contacts = fa.fixed_array(Contact, MAX_CONTACTS);
 
     _front_dist = 2;
 }
