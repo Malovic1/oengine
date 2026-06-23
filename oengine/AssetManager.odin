@@ -6,7 +6,7 @@ import "core:os"
 import "core:path/filepath"
 import sc "core:strconv"
 import strs "core:strings"
-import rl "vendor:raylib"
+
 import "fa"
 import od "object_data"
 import "core:encoding/json"
@@ -380,7 +380,7 @@ load_registry_od :: proc(path: string, threaded := false) {
         for i in 0..<len(pair.asset) {
             sky[i] = load_texture(
                 pair.asset[i].path,
-                rl.LoadTextureFromImage(pair.asset[i].data)
+                rl_LoadTextureFromImage(pair.asset[i].data)
             );
             deinit_image(pair.asset[i]);
         }
@@ -391,7 +391,7 @@ load_registry_od :: proc(path: string, threaded := false) {
     for pair in texture_job {
         reg_asset(
             pair.tag, 
-            load_texture(pair.asset.path, rl.LoadTextureFromImage(pair.asset.data))
+            load_texture(pair.asset.path, rl_LoadTextureFromImage(pair.asset.data))
         );
         deinit_image(pair.asset);
     }
@@ -603,9 +603,9 @@ am_texture_atlas :: proc() -> Atlas {
     atlas.width = width;
     atlas.height = height;
 
-    render_target := rl.LoadRenderTexture(width, height);
-    rl.BeginTextureMode(render_target);
-    rl.ClearBackground(BLANK);
+    render_target := rl_LoadRenderTexture(width, height);
+    rl_BeginTextureMode(render_target);
+    rl_ClearBackground(BLANK);
 
     free_rects := make([dynamic]Rect);
     append(&free_rects, Rect{0, 0, f32(width), f32(height)});
@@ -619,7 +619,7 @@ am_texture_atlas :: proc() -> Atlas {
         rect := Rect{placement.x, placement.y, f32(tex.width), f32(tex.height)};
         atlas_texture(&atlas, rect, tex.tag, true);
 
-        rl.DrawTexturePro(
+        rl_DrawTexturePro(
             tex,
             {0, 0, f32(tex.width), f32(tex.height)},
             {rect.x, rect.y, rect.width, rect.height},
@@ -629,7 +629,7 @@ am_texture_atlas :: proc() -> Atlas {
         split_free_space(&free_rects, rect);
     }
 
-    rl.EndTextureMode();
+    rl_EndTextureMode();
     atlas.texture = tex_flip_vert(load_texture(render_target.texture));
 
     return atlas;
@@ -670,7 +670,7 @@ load_asset :: proc(asset: ^Asset) {
 @(private)
 get_path :: proc(path: string) -> string {
     absolute, ok := filepath.abs(path);
-    res, err := filepath.rel(string(rl.GetWorkingDirectory()), absolute);
+    res, err := filepath.rel(string(rl_GetWorkingDirectory()), absolute);
     t: bool;
     res, t = strs.replace_all(res, "\\", "/");
     return res;
@@ -756,11 +756,11 @@ reg_asset :: proc(tag: string, asset: Asset) {
     defer sync.unlock(&asset_mutex);
     #partial switch &v in asset {
         case Texture:
-            rl.GenTextureMipmaps(&v);
-            rl.rlTextureParameters(
+            rl_GenTextureMipmaps(&v);
+            rl_rlTextureParameters(
                 v.id, 
-                rl.RL_TEXTURE_MIN_FILTER,
-                rl.RL_TEXTURE_FILTER_MIP_LINEAR, 
+                rl_RL_TEXTURE_MIN_FILTER,
+                rl_RL_TEXTURE_FILTER_MIP_LINEAR, 
             );
     }
     registry[tag] = asset;

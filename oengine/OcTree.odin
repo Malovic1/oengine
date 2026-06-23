@@ -1,7 +1,7 @@
 package oengine
 
 import "core:fmt"
-import rl "vendor:raylib"
+
 import "fa"
 import "core:math/linalg"
 
@@ -78,6 +78,7 @@ rb_bvh_collision :: proc(rb: ^RigidBody, node: ^BVHNode, dt: f32) {
             if (coll) {
                 if (tri.normal.y > OE_SLOPE_THRESHOLD) {
                     rb.grounded = true;
+                    rb._down_info.t = tri;
                 }
             }
 
@@ -219,6 +220,7 @@ query_octree :: proc(node: ^OctreeNode, rb: ^RigidBody, dt: f32) {
                 if (coll) {
                     if (tri.normal.y > OE_SLOPE_THRESHOLD) {
                         rb.grounded = true;
+                        rb._down_info.t = tri;
                     }
                 }
 
@@ -347,6 +349,14 @@ ray_bvh_info :: proc(node: ^BVHNode, ray: Raycast) -> (bool, MSCCollisionInfo) {
 
 ray_octree_info :: proc(
     node: ^OctreeNode, ray: Raycast) -> (bool, MSCCollisionInfo) {
+    t := Transform {
+        {node.aabb.x, node.aabb.y, node.aabb.z},
+        {},
+        {node.aabb.width, node.aabb.height, node.aabb.depth},
+    };
+    coll, _ := rc_is_colliding(ray, t, .BOX);
+    if (!coll) { return false, {}; }
+
     hit_found := false;
     closest_info: MSCCollisionInfo;
     closest_dist := F32_MAX;
@@ -360,8 +370,6 @@ ray_octree_info :: proc(
             tri := node.triangles[i];
             coll, point := ray_tri_collision(ray, tri);
             if (coll) {
-                // normal := linalg.normalize(
-                //     linalg.cross(tri.pts[1] - tri.pts[0], tri.pts[2] - tri.pts[0]));
                 normal := tri.normal;
                 dist := linalg.length2(ray.position - point);
 

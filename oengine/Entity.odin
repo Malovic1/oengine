@@ -2,7 +2,7 @@ package oengine
 
 import "core:fmt"
 import ecs "ecs"
-import rl "vendor:raylib"
+
 import "fa"
 import "core:math/linalg"
 

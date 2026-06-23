@@ -1,6 +1,6 @@
 package oengine
 
-import rl "vendor:raylib"
+
 import "core:fmt"
 import ecs "ecs"
 import "core:encoding/json"
@@ -16,8 +16,8 @@ ParticleBehaviour :: #type proc(p: ^Particle);
 
 default_behaviour :: proc(p: ^Particle) {
     p.data.accel = -p.data.grav;
-    p.data.vel += p.data.accel * rl.GetFrameTime();
-    p.position += p.data.vel * rl.GetFrameTime();
+    p.data.vel += p.data.accel * rl_GetFrameTime();
+    p.position += p.data.vel * rl_GetFrameTime();
 }
 
 Particle :: struct {
@@ -56,7 +56,7 @@ particle_init :: proc(spawn_pos: Vec3 = {},
     data.color2 = WHITE;
 
     render = proc(using self: ^Particle) {
-        rl.DrawBillboard(ecs_world.camera.rl_matrix, texture, position, size.x, tint);
+        rl_DrawBillboard(ecs_world.camera.rl_matrix, texture, position, size.x, tint);
     }
 
     return res;
@@ -94,7 +94,7 @@ ps_update :: proc(ctx: ^ecs.Context, ent: ^ecs.Entity) {
 
     for i in 0..<len(particles) {
         p := particles[i];
-        p.life_time -= 10 * rl.GetFrameTime();
+        p.life_time -= 10 * rl_GetFrameTime();
 
         if (p.life_time <= 0) do append(&_removed_particles, i);
 
@@ -120,11 +120,11 @@ ps_render :: proc(ctx: ^ecs.Context, ent: ^ecs.Entity) {
     if (is_nil(ps)) do return;
     using ps;
 
-    if (disable_depth_mask) { rl.rlDisableDepthMask(); }
+    if (disable_depth_mask) { rl_rlDisableDepthMask(); }
     for p in particles {
         p->render();
     }
-    if (disable_depth_mask) { rl.rlEnableDepthMask(); }
+    if (disable_depth_mask) { rl_rlEnableDepthMask(); }
 }
 
 ps_parse :: proc(asset: od.Object) -> rawptr {

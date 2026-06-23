@@ -1,12 +1,12 @@
 package oengine
 
-import rl "vendor:raylib"
+
 import "fa"
 import "core:math"
 import "core:math/linalg"
 
 TextureLight :: struct {
-    target: rl.RenderTexture,
+    target: rl_RenderTexture,
     light: ^Light,
 }
 
@@ -26,8 +26,8 @@ RayLight :: struct {
     enabled:        bool,
     position:       [3]f32,
     target:         [3]f32,
-    vp:             rl.Matrix,
-    color:          rl.Color,
+    vp:             rl_Matrix,
+    color:          rl_Color,
     cast_shadows:   bool,
     range:          f32,
     intensity:      f32,
@@ -57,8 +57,8 @@ ray_create_light :: proc(
     type: RayLightType, 
     position, 
     target: [3]f32, 
-    color: rl.Color, 
-    shader: rl.Shader, 
+    color: rl_Color, 
+    shader: rl_Shader, 
     intensity: f32 = 1,
     range: f32 = 20.0) -> (light: RayLight) {
     if id < RAY_MAX_LIGHTS {
@@ -71,17 +71,17 @@ ray_create_light :: proc(
         light.intensity = intensity;
         light.range = range;
 
-        light.enabledLoc = i32(rl.GetShaderLocation(shader, rl.TextFormat("lights[%i].enabled", id)))
-        light.typeLoc = i32(rl.GetShaderLocation(shader, rl.TextFormat("lights[%i].type", id)))
-        light.positionLoc = i32(rl.GetShaderLocation(shader, rl.TextFormat("lights[%i].position", id)))
-        light.targetLoc = i32(rl.GetShaderLocation(shader, rl.TextFormat("lights[%i].target", id)))
-        light.colorLoc = i32(rl.GetShaderLocation(shader, rl.TextFormat("lights[%i].color", id)))
-        light.inner_loc = i32(rl.GetShaderLocation(shader, rl.TextFormat("lights[%i].inner_cutoff", id)));
-        light.outer_loc = i32(rl.GetShaderLocation(shader, rl.TextFormat("lights[%i].outer_cutoff", id)));
-        light.intensity_loc = i32(rl.GetShaderLocation(shader, rl.TextFormat("lights[%i].intensity", id)));
-        light.range_loc = i32(rl.GetShaderLocation(shader, rl.TextFormat("lights[%i].range", id)));
-        light.vp_loc = i32(rl.GetShaderLocation(shader, rl.TextFormat("lightVPs[%i]", id)));
-        light.cs_loc = i32(rl.GetShaderLocation(shader, rl.TextFormat("lightCastShadows[%i]", id)));
+        light.enabledLoc = i32(rl_GetShaderLocation(shader, rl_TextFormat("lights[%i].enabled", id)))
+        light.typeLoc = i32(rl_GetShaderLocation(shader, rl_TextFormat("lights[%i].type", id)))
+        light.positionLoc = i32(rl_GetShaderLocation(shader, rl_TextFormat("lights[%i].position", id)))
+        light.targetLoc = i32(rl_GetShaderLocation(shader, rl_TextFormat("lights[%i].target", id)))
+        light.colorLoc = i32(rl_GetShaderLocation(shader, rl_TextFormat("lights[%i].color", id)))
+        light.inner_loc = i32(rl_GetShaderLocation(shader, rl_TextFormat("lights[%i].inner_cutoff", id)));
+        light.outer_loc = i32(rl_GetShaderLocation(shader, rl_TextFormat("lights[%i].outer_cutoff", id)));
+        light.intensity_loc = i32(rl_GetShaderLocation(shader, rl_TextFormat("lights[%i].intensity", id)));
+        light.range_loc = i32(rl_GetShaderLocation(shader, rl_TextFormat("lights[%i].range", id)));
+        light.vp_loc = i32(rl_GetShaderLocation(shader, rl_TextFormat("lightVPs[%i]", id)));
+        light.cs_loc = i32(rl_GetShaderLocation(shader, rl_TextFormat("lightCastShadows[%i]", id)));
 
         update_light_values(shader, light)
     }
@@ -89,22 +89,22 @@ ray_create_light :: proc(
     return
 }
 
-ray_light_cutoffs :: proc(shader: rl.Shader, light: RayLight, inner, outer: f32) {
+ray_light_cutoffs :: proc(shader: rl_Shader, light: RayLight, inner, outer: f32) {
     inner_cos := math.cos(inner * Deg2Rad);
     outer_cos := math.cos(outer * Deg2Rad);
 
-    rl.SetShaderValue(shader, rl.ShaderLocationIndex(light.inner_loc), &inner_cos, .FLOAT);
-    rl.SetShaderValue(shader, rl.ShaderLocationIndex(light.outer_loc), &outer_cos, .FLOAT);
+    rl_SetShaderValue(shader, rl_ShaderLocationIndex(light.inner_loc), &inner_cos, .FLOAT);
+    rl_SetShaderValue(shader, rl_ShaderLocationIndex(light.outer_loc), &outer_cos, .FLOAT);
 }
 
-update_light_count :: proc(shader: rl.Shader, count: i32) {
-    loc := rl.GetShaderLocation(shader, "light_count");
+update_light_count :: proc(shader: rl_Shader, count: i32) {
+    loc := rl_GetShaderLocation(shader, "light_count");
 
     count := count;
-    rl.SetShaderValue(shader, loc, &count, .INT);
+    rl_SetShaderValue(shader, loc, &count, .INT);
 }
 
-ray_fog_color :: proc(shader: rl.Shader, color: Color) {
+ray_fog_color :: proc(shader: rl_Shader, color: Color) {
     color_loc := shader_location(shader, "fogColor");
 
     color_f := Vec4 {
@@ -115,74 +115,74 @@ ray_fog_color :: proc(shader: rl.Shader, color: Color) {
     };
 
     ecs_world.ray_ctx.fog_color = color;
-    rl.SetShaderValue(shader, color_loc, &color_f, .VEC4);
+    rl_SetShaderValue(shader, color_loc, &color_f, .VEC4);
 }
 
-ray_fog_density :: proc(shader: rl.Shader, density: f32) {
+ray_fog_density :: proc(shader: rl_Shader, density: f32) {
     density_loc := shader_location(shader, "fogDensity");
     density_v := density;
 
     ecs_world.ray_ctx.fog_density = density;
-    rl.SetShaderValue(shader, density_loc, &density_v, .FLOAT);
+    rl_SetShaderValue(shader, density_loc, &density_v, .FLOAT);
 }
 
-ray_ambient :: proc(shader: rl.Shader, ambient: Color) {
-    ambient_loc := rl.GetShaderLocation(shader, "ambient");
+ray_ambient :: proc(shader: rl_Shader, ambient: Color) {
+    ambient_loc := rl_GetShaderLocation(shader, "ambient");
     ambient_val := Vec4 {
         f32(ambient.r) / 255,
         f32(ambient.g) / 255,
         f32(ambient.b) / 255,
         f32(ambient.a) / 255,
     };
-    rl.SetShaderValue(shader, ambient_loc, &ambient_val, .VEC4);
+    rl_SetShaderValue(shader, ambient_loc, &ambient_val, .VEC4);
 }
 
-ray_view_loc :: proc(shader: rl.Shader) {
-    shader.locs[rl.ShaderLocationIndex.VECTOR_VIEW] = i32(rl.GetShaderLocation(shader, "viewPos"));
+ray_view_loc :: proc(shader: rl_Shader) {
+    shader.locs[rl_ShaderLocationIndex.VECTOR_VIEW] = i32(rl_GetShaderLocation(shader, "viewPos"));
 }
 
-ray_set_view :: proc(shader: rl.Shader, camera: Camera) {
+ray_set_view :: proc(shader: rl_Shader, camera: Camera) {
     position := camera.position;
 
-    rl.SetShaderValue(
+    rl_SetShaderValue(
         shader, 
-        rl.ShaderLocationIndex(shader.locs[rl.ShaderLocationIndex.VECTOR_VIEW]), 
+        rl_ShaderLocationIndex(shader.locs[rl_ShaderLocationIndex.VECTOR_VIEW]), 
         &position, 
         .VEC3
     );
 }
 
-update_light_values :: proc(shader: rl.Shader, light: RayLight) {
+update_light_values :: proc(shader: rl_Shader, light: RayLight) {
     light := light
 
-    rl.SetShaderValue(shader, rl.ShaderLocationIndex(light.enabledLoc), &light.enabled, .INT)
-    rl.SetShaderValue(shader, rl.ShaderLocationIndex(light.typeLoc), &light.type, .INT)
+    rl_SetShaderValue(shader, rl_ShaderLocationIndex(light.enabledLoc), &light.enabled, .INT)
+    rl_SetShaderValue(shader, rl_ShaderLocationIndex(light.typeLoc), &light.type, .INT)
 
-    rl.SetShaderValue(shader, rl.ShaderLocationIndex(light.positionLoc), &light.position, .VEC3)
+    rl_SetShaderValue(shader, rl_ShaderLocationIndex(light.positionLoc), &light.position, .VEC3)
 
-    rl.SetShaderValue(shader, rl.ShaderLocationIndex(light.targetLoc), &light.target, .VEC3)
+    rl_SetShaderValue(shader, rl_ShaderLocationIndex(light.targetLoc), &light.target, .VEC3)
 
-    rl.SetShaderValue(shader, rl.ShaderLocationIndex(light.intensity_loc), &light.intensity, .FLOAT);
+    rl_SetShaderValue(shader, rl_ShaderLocationIndex(light.intensity_loc), &light.intensity, .FLOAT);
 
-    rl.SetShaderValue(shader, rl.ShaderLocationIndex(light.range_loc), &light.range, .FLOAT);
+    rl_SetShaderValue(shader, rl_ShaderLocationIndex(light.range_loc), &light.range, .FLOAT);
 
     color := [4]f32{ f32(light.color.r)/255, f32(light.color.g)/255, f32(light.color.b)/255, f32(light.color.a)/255 }
-    rl.SetShaderValue(shader, rl.ShaderLocationIndex(light.colorLoc), &color, .VEC4)
+    rl_SetShaderValue(shader, rl_ShaderLocationIndex(light.colorLoc), &color, .VEC4)
 
-    rl.SetShaderValue(shader, rl.ShaderLocationIndex(light.cs_loc), &light.cast_shadows, .INT);
+    rl_SetShaderValue(shader, rl_ShaderLocationIndex(light.cs_loc), &light.cast_shadows, .INT);
 
     if (light.cast_shadows) {
-        rl.SetShaderValueMatrix(
+        rl_SetShaderValueMatrix(
             shader, 
-            rl.ShaderLocationIndex(light.vp_loc),
+            rl_ShaderLocationIndex(light.vp_loc),
             light.vp,
         );
     }
 }
 
-setup_shadows :: proc(fovy: f32 = 270) {
+setup_shadows :: proc(fovy: f32 = 315) {
     shadow_shader := load_shader(
-        rl.LoadShaderFromMemory(DEFAULT_VERT, SHADOWMAP_FRAG));
+        rl_LoadShaderFromMemory(DEFAULT_VERT, SHADOWMAP_FRAG));
 
     for i in 0..<fa.range(world().physics.mscs) {
         msc := ecs_world.physics.mscs.data[i];
@@ -216,26 +216,26 @@ setup_shadows :: proc(fovy: f32 = 270) {
         s_map := ecs_world.ray_ctx.shadowmaps[i];
         if (s_map.light == nil) { continue; }
 
-        light_cam: rl.Camera;
+        light_cam: rl_Camera;
         light_cam.position = s_map.light.transform.position;
         light_cam.target = s_map.light.data.target;
         light_cam.projection = .ORTHOGRAPHIC;
         light_cam.up = {0, 1, 0};
         light_cam.fovy = fovy;
 
-        rl.BeginTextureMode(s_map.target);
-        rl.ClearBackground(BLACK);
+        rl_BeginTextureMode(s_map.target);
+        rl_ClearBackground(BLACK);
 
-        rl.BeginMode3D(light_cam);
+        rl_BeginMode3D(light_cam);
 
-        view := rl.rlGetMatrixModelview();
-        proj := rl.rlGetMatrixProjection();
+        view := rl_rlGetMatrixModelview();
+        proj := rl_rlGetMatrixProjection();
         light_vp := view * proj;
         s_map.light.data.vp = light_vp;
 
         using ecs_world;
 
-        rl.rlDisableBackfaceCulling();
+        rl_rlDisableBackfaceCulling();
         for i in 0..<fa.range(physics.mscs) {
             msc_render(physics.mscs.data[i]);
         }
@@ -258,8 +258,8 @@ setup_shadows :: proc(fovy: f32 = 270) {
             decal_render(d, i32(i));
         }
 
-        rl.EndMode3D();
-        rl.EndTextureMode();
+        rl_EndMode3D();
+        rl_EndTextureMode();
     }
 
     for i in 0..<fa.range(world().physics.mscs) {
@@ -279,33 +279,33 @@ setup_shadows :: proc(fovy: f32 = 270) {
     }
 }
 
-load_shadowmap_rt :: proc(width, height: i32) -> rl.RenderTexture {
-    target: rl.RenderTexture;
-    target.id = rl.rlLoadFramebuffer(width, height);
+load_shadowmap_rt :: proc(width, height: i32) -> rl_RenderTexture {
+    target: rl_RenderTexture;
+    target.id = rl_rlLoadFramebuffer(width, height);
     target.texture.width = width;
     target.texture.height = height;
 
     if (target.id > 0) {
-        rl.rlEnableFramebuffer(target.id);
+        rl_rlEnableFramebuffer(target.id);
 
         // Create depth texture
         // NOTE: No need a color texture attachment for the shadowmap
-        target.depth.id = rl.rlLoadTextureDepth(width, height, false);
+        target.depth.id = rl_rlLoadTextureDepth(width, height, false);
         target.depth.width = width;
         target.depth.height = height;
-        target.depth.format = rl.PixelFormat(19); // DEPTH_COMPONENT_24BIT?
+        target.depth.format = rl_PixelFormat(19); // DEPTH_COMPONENT_24BIT?
         target.depth.mipmaps = 1;
 
         // Attach depth texture to FBO
-        rl.rlFramebufferAttach(
+        rl_rlFramebufferAttach(
             target.id, target.depth.id, 
-            i32(rl.FramebufferAttachType.DEPTH), i32(rl.FramebufferAttachTextureType.TEXTURE2D), 0
+            i32(rl_FramebufferAttachType.DEPTH), i32(rl_FramebufferAttachTextureType.TEXTURE2D), 0
         );
 
         // Check if fbo is complete with attachments (valid)
-        if (rl.rlFramebufferComplete(target.id)) { dbg_log("Framebuffer object created successfully"); }
+        if (rl_rlFramebufferComplete(target.id)) { dbg_log("Framebuffer object created successfully"); }
 
-        rl.rlDisableFramebuffer();
+        rl_rlDisableFramebuffer();
     } else {
         dbg_log("Failed to create framebuffer object");
     }
@@ -313,8 +313,8 @@ load_shadowmap_rt :: proc(width, height: i32) -> rl.RenderTexture {
     return target;
 }
 
-unload_shadowmap_rt :: proc(target: rl.RenderTexture) {
+unload_shadowmap_rt :: proc(target: rl_RenderTexture) {
     if (target.id > 0) {
-        rl.rlUnloadFramebuffer(target.id);
+        rl_rlUnloadFramebuffer(target.id);
     }
 }

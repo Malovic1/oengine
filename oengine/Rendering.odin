@@ -1,6 +1,6 @@
 package oengine
 
-import rl "vendor:raylib"
+
 import "core:fmt"
 import "core:math"
 import strs "core:strings"
@@ -15,7 +15,7 @@ DECAL_PERMANENT :: -1
 SkyBox :: [6]Texture;
 CubeMap :: [6]Texture;
 
-DEFAULT_MATERIAL: rl.Material;
+DEFAULT_MATERIAL: rl_Material;
 
 CubeMapSide :: enum {
     FRONT,
@@ -37,8 +37,8 @@ world_fog: struct {
 
 Decal :: struct {
     position, normal: Vec3,
-    mesh: rl.Mesh,
-    material: rl.Material,
+    mesh: rl_Mesh,
+    material: rl_Material,
     size: Vec2,
     color: Color,
     texture_tag: string,
@@ -60,10 +60,10 @@ new_decal :: proc(pos, normal: Vec3, size: Vec2, texture_tag: string, color: Col
     verts1 := compute_quad(d.normal, d.size, d.position - offset);
     verts2 := compute_quad(-d.normal, d.size, d.position + offset);
     d.mesh = make_double_sided_quad_mesh(verts1, verts2, d.normal, -d.normal);
-    d.material = rl.LoadMaterialDefault();
+    d.material = rl_LoadMaterialDefault();
     d.material.shader = world().ray_ctx.shader;
-    d.material.maps[rl.MaterialMapIndex.ALBEDO].color = d.color;
-    d.material.maps[rl.MaterialMapIndex.ALBEDO].texture = get_asset_var(
+    d.material.maps[rl_MaterialMapIndex.ALBEDO].color = d.color;
+    d.material.maps[rl_MaterialMapIndex.ALBEDO].texture = get_asset_var(
         texture_tag, Texture
     );
 
@@ -71,7 +71,7 @@ new_decal :: proc(pos, normal: Vec3, size: Vec2, texture_tag: string, color: Col
 }
 
 decal_render :: proc(using d: ^Decal, id: i32) {
-    rl.DrawMesh(mesh, material, rl.Matrix(1));
+    rl_DrawMesh(mesh, material, rl_Matrix(1));
 
     if (life_time != DECAL_PERMANENT) {
         life_time -= delta_time();
@@ -111,20 +111,20 @@ tile_texture :: proc(texture: Texture, tx: i32) -> Texture {
     width := f32(texture.width) / f32(tx);
     height := f32(texture.height) / f32(tx);
 
-    target := rl.LoadRenderTexture(texture.width, texture.height);
+    target := rl_LoadRenderTexture(texture.width, texture.height);
 
-    rl.BeginTextureMode(target);
-    rl.ClearBackground(rl.WHITE);
+    rl_BeginTextureMode(target);
+    rl_ClearBackground(rl_WHITE);
 
     for i in 0..<tx {
         for j in 0..<tx {
             x := f32(j) * width;
             y := f32(i) * height;
-            rl.DrawTextureEx(texture, {x, y}, 0, 1 / f32(tx), rl.WHITE);
+            rl_DrawTextureEx(texture, {x, y}, 0, 1 / f32(tx), rl_WHITE);
         }
     }
 
-    rl.EndTextureMode();
+    rl_EndTextureMode();
 
     return load_texture(target.texture);
 }
@@ -136,26 +136,26 @@ tile_texture_xy :: proc(texture: Texture, tx, ty: i32) -> Texture {
     width := f32(texture.width);
     height := f32(texture.height);
 
-    target := rl.LoadRenderTexture(tex_width, tex_height);
+    target := rl_LoadRenderTexture(tex_width, tex_height);
 
-    rl.BeginTextureMode(target);
-    rl.ClearBackground(rl.WHITE);
+    rl_BeginTextureMode(target);
+    rl_ClearBackground(rl_WHITE);
 
     for i in 0..<tx {
         for j in 0..<ty {
             x := f32(i) * width;
             y := f32(j) * height;
 
-            rl.DrawTexturePro(
+            rl_DrawTexturePro(
                 texture,
                 {0, 0, f32(texture.width), f32(texture.height)},
                 {x, y, width, height},
-                {}, 0, rl.WHITE
+                {}, 0, rl_WHITE
             );
         }
     }
 
-    rl.EndTextureMode();
+    rl_EndTextureMode();
 
     return load_texture(target.texture);
 }
@@ -181,9 +181,9 @@ gen_cubemap_texture :: proc(cubemap: CubeMap, fullres := true) -> Texture {
     full_width := tile_w * 4;
     full_height := tile_h * 3;
 
-    target := rl.LoadRenderTexture(i32(full_width), i32(full_height));
-    rl.BeginTextureMode(target);
-    rl.ClearBackground(rl.WHITE);
+    target := rl_LoadRenderTexture(i32(full_width), i32(full_height));
+    rl_BeginTextureMode(target);
+    rl_ClearBackground(rl_WHITE);
 
     draw_face :: proc(
         cubemap: CubeMap,
@@ -191,12 +191,12 @@ gen_cubemap_texture :: proc(cubemap: CubeMap, fullres := true) -> Texture {
         tile_w: f32, tile_h: f32,
         flip_x := false, flip_y := false) {
         tex := cubemap[side];
-        src := rl.Rectangle{0, 0, f32(tex.width), f32(tex.height)};
+        src := rl_Rectangle{0, 0, f32(tex.width), f32(tex.height)};
         if flip_x { src.width *= -1; }
         if flip_y { src.height *= -1; }
 
-        dst := rl.Rectangle{dst_x, dst_y, tile_w, tile_h};
-        rl.DrawTexturePro(tex, src, dst, {}, 0.0, rl.WHITE);
+        dst := rl_Rectangle{dst_x, dst_y, tile_w, tile_h};
+        rl_DrawTexturePro(tex, src, dst, {}, 0.0, rl_WHITE);
     }
 
     // TOP
@@ -214,7 +214,7 @@ gen_cubemap_texture :: proc(cubemap: CubeMap, fullres := true) -> Texture {
     // FRONT
     draw_face(cubemap, CubeMapSide.FRONT, 3 * tile_w, tile_h, tile_w, tile_h);
 
-    rl.EndTextureMode();
+    rl_EndTextureMode();
 
     return load_texture(target.texture);
 }
@@ -236,60 +236,60 @@ tex_widths: [6]f32;
                 tex_heights[CubeMapSide.FRONT] +
                 tex_heights[CubeMapSide.BOTTOM];
 
-    target := rl.LoadRenderTexture(i32(full_width), i32(full_height));
+    target := rl_LoadRenderTexture(i32(full_width), i32(full_height));
 
-    rl.BeginTextureMode(target);
-    rl.ClearBackground(rl.WHITE);
+    rl_BeginTextureMode(target);
+    rl_ClearBackground(rl_WHITE);
 
-    rl.DrawTexturePro(
+    rl_DrawTexturePro(
         cubemap[CubeMapSide.BOTTOM],
         {0, 0, -tex_widths[CubeMapSide.BOTTOM], -tex_heights[CubeMapSide.BOTTOM]},
         {tex_widths[CubeMapSide.BOTTOM], 0, 
         tex_widths[CubeMapSide.BOTTOM], tex_heights[CubeMapSide.BOTTOM]},
-        {}, 0, rl.WHITE
+        {}, 0, rl_WHITE
     );
 
-    rl.DrawTexturePro(
+    rl_DrawTexturePro(
         cubemap[CubeMapSide.LEFT],
         {0, 0, -tex_widths[CubeMapSide.LEFT], tex_heights[CubeMapSide.LEFT]},
         {0, tex_heights[CubeMapSide.LEFT], 
         tex_widths[CubeMapSide.LEFT], tex_heights[CubeMapSide.LEFT]},
-        {}, 0, rl.WHITE
+        {}, 0, rl_WHITE
     );
 
-    rl.DrawTexturePro(
+    rl_DrawTexturePro(
         cubemap[CubeMapSide.BACK],
         {0, 0, -tex_widths[CubeMapSide.BACK], tex_heights[CubeMapSide.BACK]},
         {tex_widths[CubeMapSide.BACK], tex_heights[CubeMapSide.BACK], 
         tex_widths[CubeMapSide.BACK], tex_heights[CubeMapSide.BACK]},
-        {}, 0, rl.WHITE
+        {}, 0, rl_WHITE
     );
 
-    rl.DrawTexturePro(
+    rl_DrawTexturePro(
         cubemap[CubeMapSide.RIGHT],
         {0, 0, tex_widths[CubeMapSide.RIGHT], tex_heights[CubeMapSide.RIGHT]},
         {2 * tex_widths[CubeMapSide.RIGHT], tex_heights[CubeMapSide.RIGHT], 
         tex_widths[CubeMapSide.RIGHT], tex_heights[CubeMapSide.RIGHT]},
-        {}, 0, rl.WHITE
+        {}, 0, rl_WHITE
     );
 
-    rl.DrawTexturePro(
+    rl_DrawTexturePro(
         cubemap[CubeMapSide.FRONT],
         {0, 0, tex_widths[CubeMapSide.FRONT], tex_heights[CubeMapSide.FRONT]},
         {3 * tex_widths[CubeMapSide.FRONT], tex_heights[CubeMapSide.FRONT], 
         tex_widths[CubeMapSide.FRONT], tex_heights[CubeMapSide.FRONT]},
-        {}, 0, rl.WHITE
+        {}, 0, rl_WHITE
     );
 
-    rl.DrawTexturePro(
+    rl_DrawTexturePro(
         cubemap[CubeMapSide.TOP],
         {0, 0, tex_widths[CubeMapSide.TOP], tex_heights[CubeMapSide.TOP]},
         {tex_widths[CubeMapSide.TOP], 2 * tex_heights[CubeMapSide.TOP], 
         tex_widths[CubeMapSide.TOP], tex_heights[CubeMapSide.TOP]},
-        {}, 0, rl.WHITE
+        {}, 0, rl_WHITE
     );
 
-    rl.EndTextureMode();
+    rl_EndTextureMode();
 
     return load_texture(target.texture);
 */
@@ -308,10 +308,10 @@ loading_screen :: proc(
     text_color := BLACK,
     text_size: f32 = 20,
     text_pos: bit_set[TextPosition] = {}) {
-    rl.BeginDrawing();
-    rl.ClearBackground(bg_color);
+    rl_BeginDrawing();
+    rl_ClearBackground(bg_color);
     if (bg != {}) {
-        rl.DrawTexturePro(
+        rl_DrawTexturePro(
             bg, 
             {0, 0, f32(bg.width), f32(bg.height)},
             {0, 0, f32(w_render_width()), f32(w_render_height())},
@@ -321,7 +321,7 @@ loading_screen :: proc(
         );
     }
 
-    text_scale := rl.MeasureTextEx(
+    text_scale := rl_MeasureTextEx(
         gui_default_font, 
         strs.clone_to_cstring(text), 
         text_size, gui_text_spacing
@@ -348,86 +348,86 @@ loading_screen :: proc(
 
     gui_text(text, text_size, text_position.x, text_position.y, true, text_color);
 
-    rl.EndDrawing();
+    rl_EndDrawing();
 }
 
 draw_aabb_wires :: proc(aabb: AABB, color: Color) {
-    rl.DrawCubeWires({aabb.x, aabb.y, aabb.z}, aabb.width, aabb.height, aabb.depth, color);
+    rl_DrawCubeWires({aabb.x, aabb.y, aabb.z}, aabb.width, aabb.height, aabb.depth, color);
 }
 
 draw_quad :: proc(points: [4]Vec3, tex: Texture, clr: Color) {
-    rl.rlPushMatrix();
+    rl_rlPushMatrix();
 
-    rl.rlColor4ub(clr.r, clr.g, clr.b, clr.a);
-    rl.rlBegin(rl.RL_QUADS);
-    rl.rlSetTexture(tex.id);
+    rl_rlColor4ub(clr.r, clr.g, clr.b, clr.a);
+    rl_rlBegin(rl_RL_QUADS);
+    rl_rlSetTexture(tex.id);
 
     // Vertex 1
-    rl.rlTexCoord2f(0, 0); 
-    rl.rlVertex3f(points[0].x, points[0].y, points[0].z);
+    rl_rlTexCoord2f(0, 0); 
+    rl_rlVertex3f(points[0].x, points[0].y, points[0].z);
 
     // Vertex 2
-    rl.rlTexCoord2f(0, 1); 
-    rl.rlVertex3f(points[1].x, points[1].y, points[1].z);
+    rl_rlTexCoord2f(0, 1); 
+    rl_rlVertex3f(points[1].x, points[1].y, points[1].z);
 
     // Vertex 3
-    rl.rlTexCoord2f(1, 1); 
-    rl.rlVertex3f(points[2].x, points[2].y, points[2].z);
+    rl_rlTexCoord2f(1, 1); 
+    rl_rlVertex3f(points[2].x, points[2].y, points[2].z);
 
     // Vertex 4
-    rl.rlTexCoord2f(1, 0); 
-    rl.rlVertex3f(points[3].x, points[3].y, points[3].z);
+    rl_rlTexCoord2f(1, 0); 
+    rl_rlVertex3f(points[3].x, points[3].y, points[3].z);
 
-    rl.rlEnd();
-    rl.rlSetTexture(0);
+    rl_rlEnd();
+    rl_rlSetTexture(0);
 
-    rl.rlPopMatrix();
+    rl_rlPopMatrix();
 }
 
 draw_sprite :: proc(pos: Vec3, size: Vec2, rot: Vec3, tex: Texture, clr: Color) {
-    rl.rlPushMatrix();
+    rl_rlPushMatrix();
 
-    rl.rlTranslatef(pos.x, pos.y, pos.z);
-    rl.rlRotatef(rot.x, 1, 0, 0);
-    rl.rlRotatef(rot.y, 0, 1, 0);
-    rl.rlRotatef(rot.z, 0, 0, 1);
-    rl.rlScalef(size.x, size.y, 1);
+    rl_rlTranslatef(pos.x, pos.y, pos.z);
+    rl_rlRotatef(rot.x, 1, 0, 0);
+    rl_rlRotatef(rot.y, 0, 1, 0);
+    rl_rlRotatef(rot.z, 0, 0, 1);
+    rl_rlScalef(size.x, size.y, 1);
 
-    rl.rlColor4ub(clr.r, clr.g, clr.b, clr.a);
-    rl.rlBegin(rl.RL_QUADS);
-    rl.rlSetTexture(tex.id);
+    rl_rlColor4ub(clr.r, clr.g, clr.b, clr.a);
+    rl_rlBegin(rl_RL_QUADS);
+    rl_rlSetTexture(tex.id);
 
-    rl.rlTexCoord2f(0, 0); rl.rlVertex3f(-0.5, 0.5, 0);
-    rl.rlTexCoord2f(0, 1); rl.rlVertex3f(-0.5, -0.5, 0);
-    rl.rlTexCoord2f(1, 1); rl.rlVertex3f(0.5, -0.5, 0);
-    rl.rlTexCoord2f(1, 0); rl.rlVertex3f(0.5, 0.5, 0);
+    rl_rlTexCoord2f(0, 0); rl_rlVertex3f(-0.5, 0.5, 0);
+    rl_rlTexCoord2f(0, 1); rl_rlVertex3f(-0.5, -0.5, 0);
+    rl_rlTexCoord2f(1, 1); rl_rlVertex3f(0.5, -0.5, 0);
+    rl_rlTexCoord2f(1, 0); rl_rlVertex3f(0.5, 0.5, 0);
 
-    rl.rlEnd();
-    rl.rlSetTexture(0);
+    rl_rlEnd();
+    rl_rlSetTexture(0);
 
-    rl.rlPopMatrix();
+    rl_rlPopMatrix();
 }
 
 draw_debug_axis :: proc(size: f32 = 1) {
-    rl.DrawLine3D({}, vec3_x() * size, BLUE);
-    rl.DrawLine3D({}, vec3_y() * size, RED);
-    rl.DrawLine3D({}, vec3_z() * size, GREEN);
+    rl_DrawLine3D({}, vec3_x() * size, BLUE);
+    rl_DrawLine3D({}, vec3_y() * size, RED);
+    rl_DrawLine3D({}, vec3_z() * size, GREEN);
 }
 
 draw_data_id :: proc(using self: DataID) {
     draw_cube_wireframe(transform.position, transform.rotation, transform.scale, WHITE);
-    rl.DrawBillboard(ecs_world.camera.rl_matrix, tag_image, transform.position, 0.5, YELLOW);
+    rl_DrawBillboard(ecs_world.camera.rl_matrix, tag_image, transform.position, 0.5, YELLOW);
 }
 
-draw_text_codepoint_3d :: proc(font: rl.Font, codepoint: char, pos: Vec3, size: f32, backface: bool, tint: Color) {
-    index := rl.GetGlyphIndex(font, codepoint);
+draw_text_codepoint_3d :: proc(font: rl_Font, codepoint: char, pos: Vec3, size: f32, backface: bool, tint: Color) {
+    index := rl_GetGlyphIndex(font, codepoint);
     scale := size / f32(font.baseSize);
     position := pos;
 
     position.x += f32(font.glyphs[index].offsetX - font.glyphPadding) / f32(font.baseSize) * scale;
     position.z += f32(font.glyphs[index].offsetY - font.glyphPadding) / f32(font.baseSize) * scale;
 
-    srcRec := rl.Rectangle {
+    srcRec := rl_Rectangle {
         font.recs[index].x - f32(font.glyphPadding), font.recs[index].y - f32(font.glyphPadding),
         font.recs[index].width + 2.0 * f32(font.glyphPadding), font.recs[index].height + 2.0 * f32(font.glyphPadding)
     };
@@ -446,42 +446,42 @@ draw_text_codepoint_3d :: proc(font: rl.Font, codepoint: char, pos: Vec3, size: 
     tw := (srcRec.x + srcRec.width) / f32(font.texture.width);
     th := (srcRec.y + srcRec.height) / f32(font.texture.height);
 
-    rl.rlCheckRenderBatchLimit(4 + 4 * i32(backface));
-    rl.rlSetTexture(font.texture.id);
+    rl_rlCheckRenderBatchLimit(4 + 4 * i32(backface));
+    rl_rlSetTexture(font.texture.id);
 
-    rl.rlPushMatrix();
-    rl.rlTranslatef(position.x, position.y, position.z);
-    rl.rlRotatef(90, 1, 0, 0);
+    rl_rlPushMatrix();
+    rl_rlTranslatef(position.x, position.y, position.z);
+    rl_rlRotatef(90, 1, 0, 0);
 
-    rl.rlBegin(rl.RL_QUADS);
-    rl.rlColor4ub(tint.r, tint.g, tint.b, tint.a);
+    rl_rlBegin(rl_RL_QUADS);
+    rl_rlColor4ub(tint.r, tint.g, tint.b, tint.a);
 
     // Front Face
-    rl.rlNormal3f(0.0, 1.0, 0.0);                                   // Normal Pointing Up
-    rl.rlTexCoord2f(tx, ty); rl.rlVertex3f(x,         y, z);              // Top Left Of The Texture and Quad
-    rl.rlTexCoord2f(tx, th); rl.rlVertex3f(x,         y, z + height);     // Bottom Left Of The Texture and Quad
-    rl.rlTexCoord2f(tw, th); rl.rlVertex3f(x + width, y, z + height);     // Bottom Right Of The Texture and Quad
-    rl.rlTexCoord2f(tw, ty); rl.rlVertex3f(x + width, y, z);              // Top Right Of The Texture and Quad
+    rl_rlNormal3f(0.0, 1.0, 0.0);                                   // Normal Pointing Up
+    rl_rlTexCoord2f(tx, ty); rl_rlVertex3f(x,         y, z);              // Top Left Of The Texture and Quad
+    rl_rlTexCoord2f(tx, th); rl_rlVertex3f(x,         y, z + height);     // Bottom Left Of The Texture and Quad
+    rl_rlTexCoord2f(tw, th); rl_rlVertex3f(x + width, y, z + height);     // Bottom Right Of The Texture and Quad
+    rl_rlTexCoord2f(tw, ty); rl_rlVertex3f(x + width, y, z);              // Top Right Of The Texture and Quad
 
     if (backface)
     {
         // Back Face
-        rl.rlNormal3f(0.0, -1.0, 0.0);                              // Normal Pointing Down
-        rl.rlTexCoord2f(tx, ty); rl.rlVertex3f(x,         y, z);          // Top Right Of The Texture and Quad
-        rl.rlTexCoord2f(tw, ty); rl.rlVertex3f(x + width, y, z);          // Top Left Of The Texture and Quad
-        rl.rlTexCoord2f(tw, th); rl.rlVertex3f(x + width, y, z + height); // Bottom Left Of The Texture and Quad
-        rl.rlTexCoord2f(tx, th); rl.rlVertex3f(x,         y, z + height); // Bottom Right Of The Texture and Quad
+        rl_rlNormal3f(0.0, -1.0, 0.0);                              // Normal Pointing Down
+        rl_rlTexCoord2f(tx, ty); rl_rlVertex3f(x,         y, z);          // Top Right Of The Texture and Quad
+        rl_rlTexCoord2f(tw, ty); rl_rlVertex3f(x + width, y, z);          // Top Left Of The Texture and Quad
+        rl_rlTexCoord2f(tw, th); rl_rlVertex3f(x + width, y, z + height); // Bottom Left Of The Texture and Quad
+        rl_rlTexCoord2f(tx, th); rl_rlVertex3f(x,         y, z + height); // Bottom Right Of The Texture and Quad
     }
 
-    rl.rlEnd();
-    rl.rlPopMatrix();
+    rl_rlEnd();
+    rl_rlPopMatrix();
 
-    rl.rlSetTexture(0);
+    rl_rlSetTexture(0);
 }
 
-measure_text_3d :: proc(font: rl.Font, text: string, size, spacing, line_spacing: f32) -> Vec3 {
+measure_text_3d :: proc(font: rl_Font, text: string, size, spacing, line_spacing: f32) -> Vec3 {
     ctext := strs.clone_to_cstring(text);
-    len := rl.TextLength(ctext);
+    len := rl_TextLength(ctext);
     temp_len: i32;
     len_counter: i32;
 
@@ -499,8 +499,8 @@ measure_text_3d :: proc(font: rl.Font, text: string, size, spacing, line_spacing
 
         next: i32;
         r := string([]u8{text[i]});
-        letter = rl.GetCodepoint(strs.clone_to_cstring(r), &next);
-        index = rl.GetGlyphIndex(font, letter);
+        letter = rl_GetCodepoint(strs.clone_to_cstring(r), &next);
+        index = rl_GetGlyphIndex(font, letter);
 
         if (letter == 0x3f) do next = 1;
         i += int(next) - 1;
@@ -528,7 +528,7 @@ measure_text_3d :: proc(font: rl.Font, text: string, size, spacing, line_spacing
     return vec;
 }
 
-draw_text_3d :: proc(font: rl.Font, text: string, position: Vec3, size: f32, color: Color, spacing: f32 = 0.5, line_spacing: f32 = 0, rotate: bool = true, backface: bool = false) {
+draw_text_3d :: proc(font: rl_Font, text: string, position: Vec3, size: f32, color: Color, spacing: f32 = 0.5, line_spacing: f32 = 0, rotate: bool = true, backface: bool = false) {
     ctext := strs.clone_to_cstring(text);
 
     scale := size / f32(font.baseSize);
@@ -541,18 +541,18 @@ draw_text_3d :: proc(font: rl.Font, text: string, position: Vec3, size: f32, col
     text_offset_x: f32 = 0;
     text_offset_y: f32 = 0;
 
-    rl.rlPushMatrix();
+    rl_rlPushMatrix();
     if (rotate) {
         rot := Rad2Deg * math.atan2_f32(position.z - ecs_world.camera.position.z, ecs_world.camera.position.x - position.x) + 90;
-        rl.rlRotatef(rot, 0, 1, 0);
+        rl_rlRotatef(rot, 0, 1, 0);
     }
 
-    length := rl.TextLength(strs.clone_to_cstring(text));
+    length := rl_TextLength(strs.clone_to_cstring(text));
     for i := 0; i < int(length); {
         codepoint_byte_count: i32;
         r := string([]u8{text[i]});
-        codepoint := rl.GetCodepoint(strs.clone_to_cstring(r), &codepoint_byte_count);
-        index := rl.GetGlyphIndex(font, codepoint);
+        codepoint := rl_GetCodepoint(strs.clone_to_cstring(r), &codepoint_byte_count);
+        index := rl_GetGlyphIndex(font, codepoint);
 
         if (codepoint == 0x3f) do codepoint_byte_count = 1;
 
@@ -578,7 +578,7 @@ draw_text_3d :: proc(font: rl.Font, text: string, position: Vec3, size: f32, col
         i += int(codepoint_byte_count);
     }
 
-    rl.rlPopMatrix();
+    rl_rlPopMatrix();
 }
 
 GridAxis :: enum {
@@ -590,55 +590,55 @@ GridAxis :: enum {
 draw_grid3D :: proc(slices, spacing: i32, color: Color, axis: GridAxis = .XZ) {
     halfSlices := slices / 2;
 
-    rl.rlBegin(rl.RL_LINES);
+    rl_rlBegin(rl_RL_LINES);
         for i := -halfSlices; i <= halfSlices; i += 1 {
             if (i == 0) {
-                rl.rlColor4ub(color.r, color.g, color.b, color.a);
+                rl_rlColor4ub(color.r, color.g, color.b, color.a);
             } else {
-                rl.rlColor4ub(color.r - 50, color.g - 50, color.b - 50, color.a);
+                rl_rlColor4ub(color.r - 50, color.g - 50, color.b - 50, color.a);
             }
 
             // Determine grid axis
             switch axis {
                 case .XZ:
-                    rl.rlVertex3f(f32(i*spacing), 0.0, f32(-halfSlices*spacing));
-                    rl.rlVertex3f(f32(i*spacing), 0.0, f32(halfSlices*spacing));
+                    rl_rlVertex3f(f32(i*spacing), 0.0, f32(-halfSlices*spacing));
+                    rl_rlVertex3f(f32(i*spacing), 0.0, f32(halfSlices*spacing));
 
-                    rl.rlVertex3f(f32(-halfSlices*spacing), 0.0, f32(i*spacing));
-                    rl.rlVertex3f(f32(halfSlices*spacing), 0.0, f32(i*spacing));
+                    rl_rlVertex3f(f32(-halfSlices*spacing), 0.0, f32(i*spacing));
+                    rl_rlVertex3f(f32(halfSlices*spacing), 0.0, f32(i*spacing));
                 case .XY:
-                    rl.rlVertex3f(f32(i*spacing), f32(-halfSlices*spacing), 0.0);
-                    rl.rlVertex3f(f32(i*spacing), f32(halfSlices*spacing), 0.0);
+                    rl_rlVertex3f(f32(i*spacing), f32(-halfSlices*spacing), 0.0);
+                    rl_rlVertex3f(f32(i*spacing), f32(halfSlices*spacing), 0.0);
 
-                    rl.rlVertex3f(f32(-halfSlices*spacing), f32(i*spacing), 0.0);
-                    rl.rlVertex3f(f32(halfSlices*spacing), f32(i*spacing), 0.0);
+                    rl_rlVertex3f(f32(-halfSlices*spacing), f32(i*spacing), 0.0);
+                    rl_rlVertex3f(f32(halfSlices*spacing), f32(i*spacing), 0.0);
                 case .ZY:
-                    rl.rlVertex3f(0.0, f32(i*spacing), f32(-halfSlices*spacing));
-                    rl.rlVertex3f(0.0, f32(i*spacing), f32(halfSlices*spacing));
+                    rl_rlVertex3f(0.0, f32(i*spacing), f32(-halfSlices*spacing));
+                    rl_rlVertex3f(0.0, f32(i*spacing), f32(halfSlices*spacing));
 
-                    rl.rlVertex3f(0.0, f32(-halfSlices*spacing), f32(i*spacing));
-                    rl.rlVertex3f(0.0, f32(halfSlices*spacing), f32(i*spacing));
+                    rl_rlVertex3f(0.0, f32(-halfSlices*spacing), f32(i*spacing));
+                    rl_rlVertex3f(0.0, f32(halfSlices*spacing), f32(i*spacing));
             }
         }
-    rl.rlEnd();
+    rl_rlEnd();
 }
 
 draw_grid2D :: proc(slices, spacing: i32, color: Color) {
-    rl.rlPushMatrix();
+    rl_rlPushMatrix();
 
-    rl.rlTranslatef(f32(-slices * spacing) * 0.5, f32(-slices * spacing) * 0.5, 0);
+    rl_rlTranslatef(f32(-slices * spacing) * 0.5, f32(-slices * spacing) * 0.5, 0);
 
     for i: i32 = 0; i <= slices; i += 1 {
         y := i * spacing;
-        rl.DrawLine(0, y, slices * spacing, y, color);
+        rl_DrawLine(0, y, slices * spacing, y, color);
 
         x := i * spacing;
-        rl.DrawLine(x, 0, x, slices * spacing, color);
+        rl_DrawLine(x, 0, x, slices * spacing, color);
     }
 
-    rl.DrawCircleV(vec2_one() * f32(slices) * 0.5 * f32(spacing), 5, RED);
+    rl_DrawCircleV(vec2_one() * f32(slices) * 0.5 * f32(spacing), 5, RED);
 
-    rl.rlPopMatrix();
+    rl_rlPopMatrix();
 }
 
 draw_grid2D_inf :: proc(camera_pos: Vec2, slices, spacing: i32, color: Color) {
@@ -661,20 +661,20 @@ draw_grid2D_inf :: proc(camera_pos: Vec2, slices, spacing: i32, color: Color) {
     end_x   := i32(math.ceil(max_x / f32(spacing))) * spacing;
     end_y   := i32(math.ceil(max_y / f32(spacing))) * spacing;
 
-    rl.rlPushMatrix();
-    rl.rlTranslatef(-camera_pos.x + half_w, -camera_pos.y + half_h, 0); // Center camera in screen
+    rl_rlPushMatrix();
+    rl_rlTranslatef(-camera_pos.x + half_w, -camera_pos.y + half_h, 0); // Center camera in screen
 
     // Vertical lines
     for x := start_x; x <= end_x; x += spacing {
-        rl.DrawLine(x, start_y, x, end_y, color);
+        rl_DrawLine(x, start_y, x, end_y, color);
     }
 
     // Horizontal lines
     for y := start_y; y <= end_y; y += spacing {
-        rl.DrawLine(start_x, y, end_x, y, color);
+        rl_DrawLine(start_x, y, end_x, y, color);
     }
 
-    rl.rlPopMatrix();
+    rl_rlPopMatrix();
 }
 
 draw_textured_plane :: proc(texture: Texture, pos: Vec3, scale: Vec2, rot: f32, color: Color) {
@@ -684,102 +684,102 @@ draw_textured_plane :: proc(texture: Texture, pos: Vec3, scale: Vec2, rot: f32, 
     width := scale.x;
     depth := scale.y;
 
-    rl.rlSetTexture(texture.id);
+    rl_rlSetTexture(texture.id);
 
-    rl.rlPushMatrix();
-    rl.rlTranslatef(x, y, z);
-    rl.rlRotatef(rot, 0.0, 1.0, 0.0);
-    rl.rlTranslatef(-x, -y, -z);
+    rl_rlPushMatrix();
+    rl_rlTranslatef(x, y, z);
+    rl_rlRotatef(rot, 0.0, 1.0, 0.0);
+    rl_rlTranslatef(-x, -y, -z);
 
-    rl.rlBegin(rl.RL_QUADS);
-    rl.rlColor4ub(color.r, color.g, color.b, color.a);
+    rl_rlBegin(rl_RL_QUADS);
+    rl_rlColor4ub(color.r, color.g, color.b, color.a);
     // Top Face
-    rl.rlNormal3f(0.0, 1.0, 0.0); // Normal Pointing Up
-    rl.rlTexCoord2f(0.0, 1.0);
-    rl.rlVertex3f(x - width / 2, y, z - depth / 2); // Top Left Of The Texture and Quad
-    rl.rlTexCoord2f(0.0, 0.0);
-    rl.rlVertex3f(x - width / 2, y, z + depth / 2); // Bottom Left Of The Texture and Quad
-    rl.rlTexCoord2f(1.0, 0.0);
-    rl.rlVertex3f(x + width / 2, y, z + depth / 2); // Bottom Right Of The Texture and Quad
-    rl.rlTexCoord2f(1.0, 1.0);
-    rl.rlVertex3f(x + width / 2, y, z - depth / 2); // Top Right Of The Texture and Quad
+    rl_rlNormal3f(0.0, 1.0, 0.0); // Normal Pointing Up
+    rl_rlTexCoord2f(0.0, 1.0);
+    rl_rlVertex3f(x - width / 2, y, z - depth / 2); // Top Left Of The Texture and Quad
+    rl_rlTexCoord2f(0.0, 0.0);
+    rl_rlVertex3f(x - width / 2, y, z + depth / 2); // Bottom Left Of The Texture and Quad
+    rl_rlTexCoord2f(1.0, 0.0);
+    rl_rlVertex3f(x + width / 2, y, z + depth / 2); // Bottom Right Of The Texture and Quad
+    rl_rlTexCoord2f(1.0, 1.0);
+    rl_rlVertex3f(x + width / 2, y, z - depth / 2); // Top Right Of The Texture and Quad
     // Bottom Face
-    rl.rlNormal3f(0.0, -1.0, 0.0); // Normal Pointing Down
-    rl.rlTexCoord2f(1.0, 1.0);
-    rl.rlVertex3f(x - width / 2, y, z - depth / 2); // Top Right Of The Texture and Quad
-    rl.rlTexCoord2f(0.0, 1.0);
-    rl.rlVertex3f(x + width / 2, y, z - depth / 2); // Top Left Of The Texture and Quad
-    rl.rlTexCoord2f(0.0, 0.0);
-    rl.rlVertex3f(x + width / 2, y, z + depth / 2); // Bottom Left Of The Texture and Quad
-    rl.rlTexCoord2f(1.0, 0.0);
-    rl.rlVertex3f(x - width / 2, y, z + depth / 2); // Bottom Right Of The Texture and Quad
-    rl.rlEnd();
-    rl.rlPopMatrix();
+    rl_rlNormal3f(0.0, -1.0, 0.0); // Normal Pointing Down
+    rl_rlTexCoord2f(1.0, 1.0);
+    rl_rlVertex3f(x - width / 2, y, z - depth / 2); // Top Right Of The Texture and Quad
+    rl_rlTexCoord2f(0.0, 1.0);
+    rl_rlVertex3f(x + width / 2, y, z - depth / 2); // Top Left Of The Texture and Quad
+    rl_rlTexCoord2f(0.0, 0.0);
+    rl_rlVertex3f(x + width / 2, y, z + depth / 2); // Bottom Left Of The Texture and Quad
+    rl_rlTexCoord2f(1.0, 0.0);
+    rl_rlVertex3f(x - width / 2, y, z + depth / 2); // Bottom Right Of The Texture and Quad
+    rl_rlEnd();
+    rl_rlPopMatrix();
 
-    rl.rlSetTexture(0);
+    rl_rlSetTexture(0);
 }
 
 draw_cube_wireframe :: proc(pos, rot, scale: Vec3, color: Color) {
-    rl.rlPushMatrix();
-    rl.rlTranslatef(pos.x, pos.y, pos.z);
-    rl.rlRotatef(rot.x, 1, 0, 0);
-    rl.rlRotatef(rot.y, 0, 1, 0);
-    rl.rlRotatef(rot.z, 0, 0, 1);
+    rl_rlPushMatrix();
+    rl_rlTranslatef(pos.x, pos.y, pos.z);
+    rl_rlRotatef(rot.x, 1, 0, 0);
+    rl_rlRotatef(rot.y, 0, 1, 0);
+    rl_rlRotatef(rot.z, 0, 0, 1);
 
-    rl.DrawCubeWiresV({}, scale, color);
+    rl_DrawCubeWiresV({}, scale, color);
 
-    rl.rlPopMatrix();
+    rl_rlPopMatrix();
 }
 
 draw_sphere_wireframe :: proc(pos, rot: Vec3, radius: f32, color: Color) {
-    rl.rlPushMatrix();
-    rl.rlTranslatef(pos.x, pos.y, pos.z);
-    rl.rlRotatef(rot.x, 1, 0, 0);
-    rl.rlRotatef(rot.y, 0, 1, 0);
-    rl.rlRotatef(rot.z, 0, 0, 1);
+    rl_rlPushMatrix();
+    rl_rlTranslatef(pos.x, pos.y, pos.z);
+    rl_rlRotatef(rot.x, 1, 0, 0);
+    rl_rlRotatef(rot.y, 0, 1, 0);
+    rl_rlRotatef(rot.z, 0, 0, 1);
 
-    rl.DrawSphereWires({}, radius, DEF_RINGS, DEF_SLICES, color);
+    rl_DrawSphereWires({}, radius, DEF_RINGS, DEF_SLICES, color);
 
-    rl.rlPopMatrix();
+    rl_rlPopMatrix();
 }
 
 draw_capsule_wireframe :: proc(pos, rot: Vec3, radius, height: f32, color: Color) {
-    rl.rlPushMatrix();
-    rl.rlRotatef(rot.x, 1, 0, 0);
-    rl.rlRotatef(rot.y, 0, 1, 0);
-    rl.rlRotatef(rot.z, 0, 0, 1);
+    rl_rlPushMatrix();
+    rl_rlRotatef(rot.x, 1, 0, 0);
+    rl_rlRotatef(rot.y, 0, 1, 0);
+    rl_rlRotatef(rot.z, 0, 0, 1);
 
-    rl.DrawCapsuleWires(
+    rl_DrawCapsuleWires(
         {pos.x, pos.y - height * 0.5, pos.z},
         {pos.x, pos.y + height * 0.5, pos.z},
         radius, DEF_SLICES, DEF_RINGS, color,
     );
 
-    rl.rlPopMatrix();
+    rl_rlPopMatrix();
 }
 
 draw_skybox :: proc(textures: [6]Texture, tint: Color, scale: i32 = 200) {
-    rl.rlEnableBackfaceCulling();
+    rl_rlEnableBackfaceCulling();
     fix: f32 = 0.5;
-    rl.rlPushMatrix();
-    rl.rlTranslatef(ecs_world.camera.position.x, ecs_world.camera.position.y, ecs_world.camera.position.z);
+    rl_rlPushMatrix();
+    rl_rlTranslatef(ecs_world.camera.position.x, ecs_world.camera.position.y, ecs_world.camera.position.z);
     draw_cube_texture_rl(textures[0].data, {0, 0, f32(scale) * 0.5}, f32(scale), -f32(scale), 0, tint); // front
     draw_cube_texture_rl(textures[1].data, {0, 0, -f32(scale) * 0.5}, f32(scale), -f32(scale), 0, tint); // back
     draw_cube_texture_rl(textures[2].data, {-f32(scale) * 0.5, 0, 0}, 0, -f32(scale), f32(scale), tint); // left
     draw_cube_texture_rl(textures[3].data, {f32(scale) * 0.5, 0, 0}, 0, -f32(scale), f32(scale), tint); // right
     draw_cube_texture_rl(textures[4].data, {0, f32(scale) * 0.5, 0}, -f32(scale), 0, -f32(scale), tint); // top
     draw_cube_texture_rl(textures[5].data, {0, -f32(scale) * 0.5, 0}, -f32(scale), 0, f32(scale), tint); // bottom
-    rl.rlPopMatrix();
+    rl_rlPopMatrix();
 }
 
 set_skybox_filtering :: proc(skybox: [6]Texture) {
     for i: i32 = 0; i < 6; i += 1 {
-        rl.rlTextureParameters(skybox[i].id, rl.RL_TEXTURE_MAG_FILTER,
-                            rl.RL_TEXTURE_FILTER_LINEAR);
-        rl.rlTextureParameters(skybox[i].id, rl.RL_TEXTURE_WRAP_S,
-                            rl.RL_TEXTURE_WRAP_CLAMP);
-        rl.rlTextureParameters(skybox[i].id, rl.RL_TEXTURE_WRAP_T,
-                            rl.RL_TEXTURE_WRAP_CLAMP);
+        rl_rlTextureParameters(skybox[i].id, rl_RL_TEXTURE_MAG_FILTER,
+                            rl_RL_TEXTURE_FILTER_LINEAR);
+        rl_rlTextureParameters(skybox[i].id, rl_RL_TEXTURE_WRAP_S,
+                            rl_RL_TEXTURE_WRAP_CLAMP);
+        rl_rlTextureParameters(skybox[i].id, rl_RL_TEXTURE_WRAP_T,
+                            rl_RL_TEXTURE_WRAP_CLAMP);
     }
 }
 
@@ -791,15 +791,15 @@ mesh_loaders := [?]proc() -> Model {
 }
 
 load_mesh_cube :: proc() -> Model {
-    return load_model(rl.LoadModelFromMesh(rl.GenMeshCube(1, 1, 1)));
+    return load_model(rl_LoadModelFromMesh(rl_GenMeshCube(1, 1, 1)));
 }
 
 load_mesh_sphere :: proc() -> Model {
-    return load_model(rl.LoadModelFromMesh(rl.GenMeshSphere(0.5, DEF_RINGS, DEF_SLICES)));
+    return load_model(rl_LoadModelFromMesh(rl_GenMeshSphere(0.5, DEF_RINGS, DEF_SLICES)));
 }
 
 load_mesh_cylinder :: proc() -> Model {
-    model := rl.LoadModelFromMesh(rl.GenMeshCylinder(0.5, 1, DEF_SLICES));
+    model := rl_LoadModelFromMesh(rl_GenMeshCylinder(0.5, 1, DEF_SLICES));
 
     if (sys_os() == .Linux) do return load_model(model);
 
@@ -814,10 +814,10 @@ load_mesh_capsule :: proc() -> Model {
         return load_mesh_cube();
     }
 
-    return load_model(rl.LoadModel(strs.clone_to_cstring(str_add({OE_MESHES_PATH, "capsule.obj"}))));
+    return load_model(rl_LoadModel(strs.clone_to_cstring(str_add({OE_MESHES_PATH, "capsule.obj"}))));
 }
 
-allocate_mesh :: proc(mesh: ^rl.Mesh) {
+allocate_mesh :: proc(mesh: ^rl_Mesh) {
     mesh.vertices = raw_data(make([]f32, mesh.vertexCount * 3));
     mesh.texcoords = raw_data(make([]f32, mesh.vertexCount * 2));
     mesh.normals = raw_data(make([]f32, mesh.vertexCount * 3));
@@ -825,30 +825,30 @@ allocate_mesh :: proc(mesh: ^rl.Mesh) {
 }
 
 SkyBoxMesh :: struct {
-    mesh: rl.Mesh,
-    material: rl.Material,
+    mesh: rl_Mesh,
+    material: rl_Material,
 };
 
 gen_skybox :: proc(c_map: Texture, size: f32 = 400) -> SkyBoxMesh {
     mesh := gen_mesh_cubemap(vec3_one() * size, c_map);
-    material := rl.LoadMaterialDefault();
-    rl.SetMaterialTexture(&material, .ALBEDO, c_map);
+    material := rl_LoadMaterialDefault();
+    rl_SetMaterialTexture(&material, .ALBEDO, c_map);
     return {mesh, material};
 }
 
 draw_skybox_mesh :: proc(skybox: SkyBoxMesh, rot: Vec3 = {}) {
-    rl.rlDisableBackfaceCulling();
-    rl.rlPushMatrix();
+    rl_rlDisableBackfaceCulling();
+    rl_rlPushMatrix();
     pos := ecs_world.camera.position;
-    rl.rlTranslatef(pos.x, pos.y, pos.z);
-    rl.rlRotatef(rot.x, 1, 0, 0);
-    rl.rlRotatef(rot.y, 0, 1, 0);
-    rl.rlRotatef(rot.z, 0, 0, 1);
-    rl.DrawMesh(skybox.mesh, skybox.material, rl.Matrix(1));
-    rl.rlPopMatrix();
+    rl_rlTranslatef(pos.x, pos.y, pos.z);
+    rl_rlRotatef(rot.x, 1, 0, 0);
+    rl_rlRotatef(rot.y, 0, 1, 0);
+    rl_rlRotatef(rot.z, 0, 0, 1);
+    rl_DrawMesh(skybox.mesh, skybox.material, rl_Matrix(1));
+    rl_rlPopMatrix();
 }
 
-gen_mesh_cubemap :: proc(scale: Vec3, c_map: Texture) -> (mesh: rl.Mesh) {
+gen_mesh_cubemap :: proc(scale: Vec3, c_map: Texture) -> (mesh: rl_Mesh) {
     width := scale.x;
     height := scale.y;
     length := scale.z;
@@ -971,11 +971,11 @@ gen_mesh_cubemap :: proc(scale: Vec3, c_map: Texture) -> (mesh: rl.Mesh) {
         k += 1;
     }
 
-    rl.UploadMesh(&mesh, false);
+    rl_UploadMesh(&mesh, false);
     return;
 }
 
-make_double_sided_quad_mesh :: proc(verts1, verts2: [4]Vec3, normal1, normal2: Vec3) -> rl.Mesh {
+make_double_sided_quad_mesh :: proc(verts1, verts2: [4]Vec3, normal1, normal2: Vec3) -> rl_Mesh {
     // We will have 12 vertices total
     positions := []f32{
         // Front face (verts1)
@@ -1051,7 +1051,7 @@ make_double_sided_quad_mesh :: proc(verts1, verts2: [4]Vec3, normal1, normal2: V
         9, 10, 11,
     }
 
-    mesh := rl.Mesh{}
+    mesh := rl_Mesh{}
     mesh.vertexCount = 12
     mesh.triangleCount = 4
 
@@ -1060,13 +1060,13 @@ make_double_sided_quad_mesh :: proc(verts1, verts2: [4]Vec3, normal1, normal2: V
     mesh.texcoords = &texcoords[0]
     mesh.indices = &indices[0]
 
-    rl.UploadMesh(&mesh, false)
+    rl_UploadMesh(&mesh, false)
 
     return mesh
 }
 
-gen_mesh_triangle :: proc(verts: [3]Vec3, #any_int uv_rot: i32 = 0) -> rl.Mesh {
-    mesh: rl.Mesh;
+gen_mesh_triangle :: proc(verts: [3]Vec3, #any_int uv_rot: i32 = 0) -> rl_Mesh {
+    mesh: rl_Mesh;
     mesh.triangleCount = 1;
     mesh.vertexCount = mesh.triangleCount * 3;
     allocate_mesh(&mesh);
@@ -1102,25 +1102,25 @@ gen_mesh_triangle :: proc(verts: [3]Vec3, #any_int uv_rot: i32 = 0) -> rl.Mesh {
     mesh.texcoords[4] = uv3.x;
     mesh.texcoords[5] = uv3.y;
 
-    rl.UploadMesh(&mesh, false);
+    rl_UploadMesh(&mesh, false);
     return mesh;
 }
 
 gen_sprite :: proc(width: f32 = 1.0, height: f32 = 1.0, tex: Texture = {}) -> Model {
     mesh := gen_mesh_quad(width, height);
-    res := load_model(rl.LoadModelFromMesh(mesh));
+    res := load_model(rl_LoadModelFromMesh(mesh));
     res.materials[0].shader = world().ray_ctx.shader;
 
     if (tex != {}) {
-        res.materials[0].maps[rl.MaterialMapIndex.ALBEDO].texture = tex;
+        res.materials[0].maps[rl_MaterialMapIndex.ALBEDO].texture = tex;
     }
 
     return res;
 }
 
 gen_mesh_quad :: proc(
-    width: f32, height: f32, flip_z := true, flip_uv_y := true) -> rl.Mesh {
-    mesh: rl.Mesh;
+    width: f32, height: f32, flip_z := true, flip_uv_y := true) -> rl_Mesh {
+    mesh: rl_Mesh;
     mesh.triangleCount = 2;
     mesh.vertexCount = 6; // 2 triangles * 3
     allocate_mesh(&mesh);
@@ -1180,7 +1180,7 @@ gen_mesh_quad :: proc(
         mesh.colors[i*4+3] = 255;  // A (fully opaque)
     }
 
-    rl.UploadMesh(&mesh, false);
+    rl_UploadMesh(&mesh, false);
     return mesh;
 }
 
@@ -1210,17 +1210,17 @@ draw_model :: proc(
     }
 
     if (is_lit) { 
-        rl.BeginShaderMode(ecs_world.ray_ctx.shader);
-        rl.DrawModelEx(
+        rl_BeginShaderMode(ecs_world.ray_ctx.shader);
+        rl_DrawModelEx(
             model, 
             final_position, 
             rot_axis, rot_angle * Rad2Deg, 
             transform.scale * offset.scale, color
         ); 
-        rl.EndShaderMode();
+        rl_EndShaderMode();
     }
     else { 
-        rl.DrawModelEx(
+        rl_DrawModelEx(
             model, 
             final_position, 
             rot_axis, rot_angle * Rad2Deg, 
@@ -1235,19 +1235,19 @@ shape_transform_renders := [?]proc(Texture, Transform, Color) {
 };
 
 draw_sphere_texture :: proc(texture: Texture, transform: Transform, color: Color) {
-    sphere_shape := rl.LoadModelFromMesh(rl.GenMeshSphere(0.5, DEF_RINGS, DEF_SLICES));
-    sphere_shape.materials[0].maps[rl.MaterialMapIndex.ALBEDO].texture = texture.data;
+    sphere_shape := rl_LoadModelFromMesh(rl_GenMeshSphere(0.5, DEF_RINGS, DEF_SLICES));
+    sphere_shape.materials[0].maps[rl_MaterialMapIndex.ALBEDO].texture = texture.data;
 
-    rl.rlPushMatrix();
-    rl.rlTranslatef(transform.position.x, transform.position.y, transform.position.z);
-    rl.rlRotatef(transform.rotation.x, 1, 0, 0);
-    rl.rlRotatef(transform.rotation.y, 0, 1, 0);
-    rl.rlRotatef(transform.rotation.z, 0, 0, 1);
-    rl.rlScalef(transform.scale.x, transform.scale.y, transform.scale.z);
+    rl_rlPushMatrix();
+    rl_rlTranslatef(transform.position.x, transform.position.y, transform.position.z);
+    rl_rlRotatef(transform.rotation.x, 1, 0, 0);
+    rl_rlRotatef(transform.rotation.y, 0, 1, 0);
+    rl_rlRotatef(transform.rotation.z, 0, 0, 1);
+    rl_rlScalef(transform.scale.x, transform.scale.y, transform.scale.z);
 
-    rl.DrawModel(sphere_shape, {}, 1, color);
+    rl_DrawModel(sphere_shape, {}, 1, color);
 
-    rl.rlPopMatrix();
+    rl_rlPopMatrix();
 }
 
 cube_map_identity :: proc(tex: Texture) -> CubeMap {
@@ -1260,158 +1260,158 @@ cube_map_identity :: proc(tex: Texture) -> CubeMap {
 draw_cube_map :: proc(
     cube_map: CubeMap, transform: Transform, color: Color, lit := false) {
     if (lit) {
-        rl.BeginShaderMode(ecs_world.ray_ctx.shader);
-        rl.rlEnableShader(ecs_world.ray_ctx.shader.id);
+        rl_BeginShaderMode(ecs_world.ray_ctx.shader);
+        rl_rlEnableShader(ecs_world.ray_ctx.shader.id);
     }
 
-    rl.rlPushMatrix();
-    rl.rlTranslatef(transform.position.x, transform.position.y, transform.position.z);
-    rl.rlRotatef(transform.rotation.x, 1, 0, 0);
-    rl.rlRotatef(transform.rotation.y, 0, 1, 0);
-    rl.rlRotatef(transform.rotation.z, 0, 0, 1);
-    rl.rlScalef(transform.scale.x, transform.scale.y, transform.scale.z);
+    rl_rlPushMatrix();
+    rl_rlTranslatef(transform.position.x, transform.position.y, transform.position.z);
+    rl_rlRotatef(transform.rotation.x, 1, 0, 0);
+    rl_rlRotatef(transform.rotation.y, 0, 1, 0);
+    rl_rlRotatef(transform.rotation.z, 0, 0, 1);
+    rl_rlScalef(transform.scale.x, transform.scale.y, transform.scale.z);
 
-    rl.rlColor4ub(color.r, color.g, color.b, color.a);
+    rl_rlColor4ub(color.r, color.g, color.b, color.a);
 
     // front
-    rl.rlSetTexture(cube_map[0].id);
-    rl.rlBegin(rl.RL_QUADS);
-    rl.rlNormal3f(0.0, 0.0, 1.0);
-    rl.rlTexCoord2f(0.0, 1.0); rl.rlVertex3f(-0.5, -0.5, 0.5);
-    rl.rlTexCoord2f(1.0, 1.0); rl.rlVertex3f(0.5, -0.5, 0.5);
-    rl.rlTexCoord2f(1.0, 0.0); rl.rlVertex3f(0.5, 0.5, 0.5);
-    rl.rlTexCoord2f(0.0, 0.0); rl.rlVertex3f(-0.5, 0.5, 0.5);
-    rl.rlEnd();
+    rl_rlSetTexture(cube_map[0].id);
+    rl_rlBegin(rl_RL_QUADS);
+    rl_rlNormal3f(0.0, 0.0, 1.0);
+    rl_rlTexCoord2f(0.0, 1.0); rl_rlVertex3f(-0.5, -0.5, 0.5);
+    rl_rlTexCoord2f(1.0, 1.0); rl_rlVertex3f(0.5, -0.5, 0.5);
+    rl_rlTexCoord2f(1.0, 0.0); rl_rlVertex3f(0.5, 0.5, 0.5);
+    rl_rlTexCoord2f(0.0, 0.0); rl_rlVertex3f(-0.5, 0.5, 0.5);
+    rl_rlEnd();
 
     // back
-    rl.rlSetTexture(cube_map[1].id);
-    rl.rlBegin(rl.RL_QUADS);
-    rl.rlNormal3f(0.0, 0.0, -1.0);
-    rl.rlTexCoord2f(1.0, 1.0); rl.rlVertex3f(-0.5, -0.5, -0.5);
-    rl.rlTexCoord2f(1.0, 0.0); rl.rlVertex3f(-0.5, 0.5, -0.5);
-    rl.rlTexCoord2f(0.0, 0.0); rl.rlVertex3f(0.5, 0.5, -0.5);
-    rl.rlTexCoord2f(0.0, 1.0); rl.rlVertex3f(0.5, -0.5, -0.5);
-    rl.rlEnd();
+    rl_rlSetTexture(cube_map[1].id);
+    rl_rlBegin(rl_RL_QUADS);
+    rl_rlNormal3f(0.0, 0.0, -1.0);
+    rl_rlTexCoord2f(1.0, 1.0); rl_rlVertex3f(-0.5, -0.5, -0.5);
+    rl_rlTexCoord2f(1.0, 0.0); rl_rlVertex3f(-0.5, 0.5, -0.5);
+    rl_rlTexCoord2f(0.0, 0.0); rl_rlVertex3f(0.5, 0.5, -0.5);
+    rl_rlTexCoord2f(0.0, 1.0); rl_rlVertex3f(0.5, -0.5, -0.5);
+    rl_rlEnd();
 
     // right
-    rl.rlSetTexture(cube_map[2].id);
-    rl.rlBegin(rl.RL_QUADS);
-    rl.rlNormal3f(1.0, 0.0, 0.0);
-    rl.rlTexCoord2f(1.0, 1.0); rl.rlVertex3f(0.5, -0.5, -0.5);
-    rl.rlTexCoord2f(1.0, 0.0); rl.rlVertex3f(0.5, 0.5, -0.5);
-    rl.rlTexCoord2f(0.0, 0.0); rl.rlVertex3f(0.5, 0.5, 0.5);
-    rl.rlTexCoord2f(0.0, 1.0); rl.rlVertex3f(0.5, -0.5, 0.5);
-    rl.rlEnd();
+    rl_rlSetTexture(cube_map[2].id);
+    rl_rlBegin(rl_RL_QUADS);
+    rl_rlNormal3f(1.0, 0.0, 0.0);
+    rl_rlTexCoord2f(1.0, 1.0); rl_rlVertex3f(0.5, -0.5, -0.5);
+    rl_rlTexCoord2f(1.0, 0.0); rl_rlVertex3f(0.5, 0.5, -0.5);
+    rl_rlTexCoord2f(0.0, 0.0); rl_rlVertex3f(0.5, 0.5, 0.5);
+    rl_rlTexCoord2f(0.0, 1.0); rl_rlVertex3f(0.5, -0.5, 0.5);
+    rl_rlEnd();
 
     // left
-    rl.rlSetTexture(cube_map[3].id);
-    rl.rlBegin(rl.RL_QUADS);
-    rl.rlNormal3f( -1.0, 0.0, 0.0);
-    rl.rlTexCoord2f(0.0, 1.0); rl.rlVertex3f(-0.5, -0.5, -0.5);
-    rl.rlTexCoord2f(1.0, 1.0); rl.rlVertex3f(-0.5, -0.5, 0.5);
-    rl.rlTexCoord2f(1.0, 0.0); rl.rlVertex3f(-0.5, 0.5, 0.5);
-    rl.rlTexCoord2f(0.0, 0.0); rl.rlVertex3f(-0.5, 0.5, -0.5);
-    rl.rlEnd();
+    rl_rlSetTexture(cube_map[3].id);
+    rl_rlBegin(rl_RL_QUADS);
+    rl_rlNormal3f( -1.0, 0.0, 0.0);
+    rl_rlTexCoord2f(0.0, 1.0); rl_rlVertex3f(-0.5, -0.5, -0.5);
+    rl_rlTexCoord2f(1.0, 1.0); rl_rlVertex3f(-0.5, -0.5, 0.5);
+    rl_rlTexCoord2f(1.0, 0.0); rl_rlVertex3f(-0.5, 0.5, 0.5);
+    rl_rlTexCoord2f(0.0, 0.0); rl_rlVertex3f(-0.5, 0.5, -0.5);
+    rl_rlEnd();
 
     // top
-    rl.rlSetTexture(cube_map[4].id);
-    rl.rlBegin(rl.RL_QUADS);
-    rl.rlNormal3f(0.0, 1.0, 0.0);
-    rl.rlTexCoord2f(0.0, 1.0); rl.rlVertex3f(-0.5, 0.5, -0.5);
-    rl.rlTexCoord2f(0.0, 0.0); rl.rlVertex3f(-0.5, 0.5, 0.5);
-    rl.rlTexCoord2f(1.0, 0.0); rl.rlVertex3f(0.5, 0.5, 0.5);
-    rl.rlTexCoord2f(1.0, 1.0); rl.rlVertex3f(0.5, 0.5, -0.5);
-    rl.rlEnd();
+    rl_rlSetTexture(cube_map[4].id);
+    rl_rlBegin(rl_RL_QUADS);
+    rl_rlNormal3f(0.0, 1.0, 0.0);
+    rl_rlTexCoord2f(0.0, 1.0); rl_rlVertex3f(-0.5, 0.5, -0.5);
+    rl_rlTexCoord2f(0.0, 0.0); rl_rlVertex3f(-0.5, 0.5, 0.5);
+    rl_rlTexCoord2f(1.0, 0.0); rl_rlVertex3f(0.5, 0.5, 0.5);
+    rl_rlTexCoord2f(1.0, 1.0); rl_rlVertex3f(0.5, 0.5, -0.5);
+    rl_rlEnd();
 
     // bottom
-    rl.rlSetTexture(cube_map[5].id);
-    rl.rlBegin(rl.RL_QUADS);
-    rl.rlNormal3f(0.0, -1.0, 0.0);
-    rl.rlTexCoord2f(1.0, 1.0); rl.rlVertex3f(-0.5, -0.5, -0.5);
-    rl.rlTexCoord2f(0.0, 1.0); rl.rlVertex3f(0.5, -0.5, -0.5);
-    rl.rlTexCoord2f(0.0, 0.0); rl.rlVertex3f(0.5, -0.5, 0.5);
-    rl.rlTexCoord2f(1.0, 0.0); rl.rlVertex3f(-0.5, -0.5, 0.5);
-    rl.rlEnd();
+    rl_rlSetTexture(cube_map[5].id);
+    rl_rlBegin(rl_RL_QUADS);
+    rl_rlNormal3f(0.0, -1.0, 0.0);
+    rl_rlTexCoord2f(1.0, 1.0); rl_rlVertex3f(-0.5, -0.5, -0.5);
+    rl_rlTexCoord2f(0.0, 1.0); rl_rlVertex3f(0.5, -0.5, -0.5);
+    rl_rlTexCoord2f(0.0, 0.0); rl_rlVertex3f(0.5, -0.5, 0.5);
+    rl_rlTexCoord2f(1.0, 0.0); rl_rlVertex3f(-0.5, -0.5, 0.5);
+    rl_rlEnd();
 
-    rl.rlPopMatrix();
+    rl_rlPopMatrix();
 
-    rl.rlSetTexture(0);
+    rl_rlSetTexture(0);
 
     if (lit) {
-        rl.rlDisableShader();
-        rl.EndShaderMode();
+        rl_rlDisableShader();
+        rl_EndShaderMode();
     }
 }
 
 draw_cube_texture :: proc(texture: Texture, transform: Transform, color: Color) {
-    rl.rlSetTexture(texture.id);
+    rl_rlSetTexture(texture.id);
 
-    rl.rlPushMatrix();
-    rl.rlTranslatef(transform.position.x, transform.position.y, transform.position.z);
-    rl.rlRotatef(transform.rotation.x, 1, 0, 0);
-    rl.rlRotatef(transform.rotation.y, 0, 1, 0);
-    rl.rlRotatef(transform.rotation.z, 0, 0, 1);
-    rl.rlScalef(transform.scale.x, transform.scale.y, transform.scale.z);
+    rl_rlPushMatrix();
+    rl_rlTranslatef(transform.position.x, transform.position.y, transform.position.z);
+    rl_rlRotatef(transform.rotation.x, 1, 0, 0);
+    rl_rlRotatef(transform.rotation.y, 0, 1, 0);
+    rl_rlRotatef(transform.rotation.z, 0, 0, 1);
+    rl_rlScalef(transform.scale.x, transform.scale.y, transform.scale.z);
 
-    rl.rlBegin(rl.RL_QUADS);
-    rl.rlColor4ub(color.r, color.g, color.b, color.a);
+    rl_rlBegin(rl_RL_QUADS);
+    rl_rlColor4ub(color.r, color.g, color.b, color.a);
 
     // front
-    rl.rlNormal3f(0.0, 0.0, 1.0);
-    rl.rlTexCoord2f(0.0, 1.0); rl.rlVertex3f(-0.5, -0.5, 0.5);
-    rl.rlTexCoord2f(1.0, 1.0); rl.rlVertex3f(0.5, -0.5, 0.5);
-    rl.rlTexCoord2f(1.0, 0.0); rl.rlVertex3f(0.5, 0.5, 0.5);
-    rl.rlTexCoord2f(0.0, 0.0); rl.rlVertex3f(-0.5, 0.5, 0.5);
+    rl_rlNormal3f(0.0, 0.0, 1.0);
+    rl_rlTexCoord2f(0.0, 1.0); rl_rlVertex3f(-0.5, -0.5, 0.5);
+    rl_rlTexCoord2f(1.0, 1.0); rl_rlVertex3f(0.5, -0.5, 0.5);
+    rl_rlTexCoord2f(1.0, 0.0); rl_rlVertex3f(0.5, 0.5, 0.5);
+    rl_rlTexCoord2f(0.0, 0.0); rl_rlVertex3f(-0.5, 0.5, 0.5);
 
     // back
-    rl.rlNormal3f(0.0, 0.0, -1.0);
-    rl.rlTexCoord2f(1.0, 1.0); rl.rlVertex3f(-0.5, -0.5, -0.5);
-    rl.rlTexCoord2f(1.0, 0.0); rl.rlVertex3f(-0.5, 0.5, -0.5);
-    rl.rlTexCoord2f(0.0, 0.0); rl.rlVertex3f(0.5, 0.5, -0.5);
-    rl.rlTexCoord2f(0.0, 1.0); rl.rlVertex3f(0.5, -0.5, -0.5);
+    rl_rlNormal3f(0.0, 0.0, -1.0);
+    rl_rlTexCoord2f(1.0, 1.0); rl_rlVertex3f(-0.5, -0.5, -0.5);
+    rl_rlTexCoord2f(1.0, 0.0); rl_rlVertex3f(-0.5, 0.5, -0.5);
+    rl_rlTexCoord2f(0.0, 0.0); rl_rlVertex3f(0.5, 0.5, -0.5);
+    rl_rlTexCoord2f(0.0, 1.0); rl_rlVertex3f(0.5, -0.5, -0.5);
 
     // top
-    rl.rlNormal3f(0.0, 1.0, 0.0);
-    rl.rlTexCoord2f(0.0, 1.0); rl.rlVertex3f(-0.5, 0.5, -0.5);
-    rl.rlTexCoord2f(0.0, 0.0); rl.rlVertex3f(-0.5, 0.5, 0.5);
-    rl.rlTexCoord2f(1.0, 0.0); rl.rlVertex3f(0.5, 0.5, 0.5);
-    rl.rlTexCoord2f(1.0, 1.0); rl.rlVertex3f(0.5, 0.5, -0.5);
+    rl_rlNormal3f(0.0, 1.0, 0.0);
+    rl_rlTexCoord2f(0.0, 1.0); rl_rlVertex3f(-0.5, 0.5, -0.5);
+    rl_rlTexCoord2f(0.0, 0.0); rl_rlVertex3f(-0.5, 0.5, 0.5);
+    rl_rlTexCoord2f(1.0, 0.0); rl_rlVertex3f(0.5, 0.5, 0.5);
+    rl_rlTexCoord2f(1.0, 1.0); rl_rlVertex3f(0.5, 0.5, -0.5);
 
     // bottom
-    rl.rlNormal3f(0.0, -1.0, 0.0);
-    rl.rlTexCoord2f(1.0, 1.0); rl.rlVertex3f(-0.5, -0.5, -0.5);
-    rl.rlTexCoord2f(0.0, 1.0); rl.rlVertex3f(0.5, -0.5, -0.5);
-    rl.rlTexCoord2f(0.0, 0.0); rl.rlVertex3f(0.5, -0.5, 0.5);
-    rl.rlTexCoord2f(1.0, 0.0); rl.rlVertex3f(-0.5, -0.5, 0.5);
+    rl_rlNormal3f(0.0, -1.0, 0.0);
+    rl_rlTexCoord2f(1.0, 1.0); rl_rlVertex3f(-0.5, -0.5, -0.5);
+    rl_rlTexCoord2f(0.0, 1.0); rl_rlVertex3f(0.5, -0.5, -0.5);
+    rl_rlTexCoord2f(0.0, 0.0); rl_rlVertex3f(0.5, -0.5, 0.5);
+    rl_rlTexCoord2f(1.0, 0.0); rl_rlVertex3f(-0.5, -0.5, 0.5);
 
     // right
-    rl.rlNormal3f(1.0, 0.0, 0.0);
-    rl.rlTexCoord2f(1.0, 1.0); rl.rlVertex3f(0.5, -0.5, -0.5);
-    rl.rlTexCoord2f(1.0, 0.0); rl.rlVertex3f(0.5, 0.5, -0.5);
-    rl.rlTexCoord2f(0.0, 0.0); rl.rlVertex3f(0.5, 0.5, 0.5);
-    rl.rlTexCoord2f(0.0, 1.0); rl.rlVertex3f(0.5, -0.5, 0.5);
+    rl_rlNormal3f(1.0, 0.0, 0.0);
+    rl_rlTexCoord2f(1.0, 1.0); rl_rlVertex3f(0.5, -0.5, -0.5);
+    rl_rlTexCoord2f(1.0, 0.0); rl_rlVertex3f(0.5, 0.5, -0.5);
+    rl_rlTexCoord2f(0.0, 0.0); rl_rlVertex3f(0.5, 0.5, 0.5);
+    rl_rlTexCoord2f(0.0, 1.0); rl_rlVertex3f(0.5, -0.5, 0.5);
 
     // right
-    rl.rlNormal3f( -1.0, 0.0, 0.0);
-    rl.rlTexCoord2f(0.0, 1.0); rl.rlVertex3f(-0.5, -0.5, -0.5);
-    rl.rlTexCoord2f(1.0, 1.0); rl.rlVertex3f(-0.5, -0.5, 0.5);
-    rl.rlTexCoord2f(1.0, 0.0); rl.rlVertex3f(-0.5, 0.5, 0.5);
-    rl.rlTexCoord2f(0.0, 0.0); rl.rlVertex3f(-0.5, 0.5, -0.5);
+    rl_rlNormal3f( -1.0, 0.0, 0.0);
+    rl_rlTexCoord2f(0.0, 1.0); rl_rlVertex3f(-0.5, -0.5, -0.5);
+    rl_rlTexCoord2f(1.0, 1.0); rl_rlVertex3f(-0.5, -0.5, 0.5);
+    rl_rlTexCoord2f(1.0, 0.0); rl_rlVertex3f(-0.5, 0.5, 0.5);
+    rl_rlTexCoord2f(0.0, 0.0); rl_rlVertex3f(-0.5, 0.5, -0.5);
 
-    rl.rlEnd();
+    rl_rlEnd();
 
-    rl.rlPopMatrix();
+    rl_rlPopMatrix();
 
-    rl.rlSetTexture(0);
+    rl_rlSetTexture(0);
 }
 
-draw_cube_texture_rl :: proc(texture: rl.Texture, position: Vec3, width, height, length: f32, color: Color) {
+draw_cube_texture_rl :: proc(texture: rl_Texture, position: Vec3, width, height, length: f32, color: Color) {
     x := position.x;
     y := position.y;
     z := position.z;
 
     // Set desired texture to be enabled while drawing following vertex data
-    rl.rlSetTexture(texture.id);
+    rl_rlSetTexture(texture.id);
 
     // Vertex data transformation can be defined with the commented lines,
     // but in this example we calculate the transformed vertex data directly when calling rlVertex3f()
@@ -1421,48 +1421,48 @@ draw_cube_texture_rl :: proc(texture: rl.Texture, position: Vec3, width, height,
         //rlRotatef(45, 0, 1, 0);
         //rlScalef(2.0f, 2.0f, 2.0f);
 
-        rl.rlBegin(rl.RL_QUADS);
-            rl.rlColor4ub(color.r, color.g, color.b, color.a);
+        rl_rlBegin(rl_RL_QUADS);
+            rl_rlColor4ub(color.r, color.g, color.b, color.a);
             // Front Face
-            rl.rlNormal3f(0.0, 0.0, 1.0);       // Normal Pointing Towards Viewer
-            rl.rlTexCoord2f(0.0, 0.0); rl.rlVertex3f(x - width/2, y - height/2, z + length/2);  // Bottom Left Of The Texture and Quad
-            rl.rlTexCoord2f(1.0, 0.0); rl.rlVertex3f(x + width/2, y - height/2, z + length/2);  // Bottom Right Of The Texture and Quad
-            rl.rlTexCoord2f(1.0, 1.0); rl.rlVertex3f(x + width/2, y + height/2, z + length/2);  // Top Right Of The Texture and Quad
-            rl.rlTexCoord2f(0.0, 1.0); rl.rlVertex3f(x - width/2, y + height/2, z + length/2);  // Top Left Of The Texture and Quad
+            rl_rlNormal3f(0.0, 0.0, 1.0);       // Normal Pointing Towards Viewer
+            rl_rlTexCoord2f(0.0, 0.0); rl_rlVertex3f(x - width/2, y - height/2, z + length/2);  // Bottom Left Of The Texture and Quad
+            rl_rlTexCoord2f(1.0, 0.0); rl_rlVertex3f(x + width/2, y - height/2, z + length/2);  // Bottom Right Of The Texture and Quad
+            rl_rlTexCoord2f(1.0, 1.0); rl_rlVertex3f(x + width/2, y + height/2, z + length/2);  // Top Right Of The Texture and Quad
+            rl_rlTexCoord2f(0.0, 1.0); rl_rlVertex3f(x - width/2, y + height/2, z + length/2);  // Top Left Of The Texture and Quad
             // Back Face
-            rl.rlNormal3f(0.0, 0.0, - 1.0);     // Normal Pointing Away From Viewer
-            rl.rlTexCoord2f(1.0, 0.0); rl.rlVertex3f(x - width/2, y - height/2, z - length/2);  // Bottom Right Of The Texture and Quad
-            rl.rlTexCoord2f(1.0, 1.0); rl.rlVertex3f(x - width/2, y + height/2, z - length/2);  // Top Right Of The Texture and Quad
-            rl.rlTexCoord2f(0.0, 1.0); rl.rlVertex3f(x + width/2, y + height/2, z - length/2);  // Top Left Of The Texture and Quad
-            rl.rlTexCoord2f(0.0, 0.0); rl.rlVertex3f(x + width/2, y - height/2, z - length/2);  // Bottom Left Of The Texture and Quad
+            rl_rlNormal3f(0.0, 0.0, - 1.0);     // Normal Pointing Away From Viewer
+            rl_rlTexCoord2f(1.0, 0.0); rl_rlVertex3f(x - width/2, y - height/2, z - length/2);  // Bottom Right Of The Texture and Quad
+            rl_rlTexCoord2f(1.0, 1.0); rl_rlVertex3f(x - width/2, y + height/2, z - length/2);  // Top Right Of The Texture and Quad
+            rl_rlTexCoord2f(0.0, 1.0); rl_rlVertex3f(x + width/2, y + height/2, z - length/2);  // Top Left Of The Texture and Quad
+            rl_rlTexCoord2f(0.0, 0.0); rl_rlVertex3f(x + width/2, y - height/2, z - length/2);  // Bottom Left Of The Texture and Quad
             // Top Face
-            rl.rlNormal3f(0.0, 1.0, 0.0);       // Normal Pointing Up
-            rl.rlTexCoord2f(0.0, 1.0); rl.rlVertex3f(x - width/2, y + height/2, z - length/2);  // Top Left Of The Texture and Quad
-            rl.rlTexCoord2f(0.0, 0.0); rl.rlVertex3f(x - width/2, y + height/2, z + length/2);  // Bottom Left Of The Texture and Quad
-            rl.rlTexCoord2f(1.0, 0.0); rl.rlVertex3f(x + width/2, y + height/2, z + length/2);  // Bottom Right Of The Texture and Quad
-            rl.rlTexCoord2f(1.0, 1.0); rl.rlVertex3f(x + width/2, y + height/2, z - length/2);  // Top Right Of The Texture and Quad
+            rl_rlNormal3f(0.0, 1.0, 0.0);       // Normal Pointing Up
+            rl_rlTexCoord2f(0.0, 1.0); rl_rlVertex3f(x - width/2, y + height/2, z - length/2);  // Top Left Of The Texture and Quad
+            rl_rlTexCoord2f(0.0, 0.0); rl_rlVertex3f(x - width/2, y + height/2, z + length/2);  // Bottom Left Of The Texture and Quad
+            rl_rlTexCoord2f(1.0, 0.0); rl_rlVertex3f(x + width/2, y + height/2, z + length/2);  // Bottom Right Of The Texture and Quad
+            rl_rlTexCoord2f(1.0, 1.0); rl_rlVertex3f(x + width/2, y + height/2, z - length/2);  // Top Right Of The Texture and Quad
             // Bottom Face
-            rl.rlNormal3f(0.0, - 1.0, 0.0);     // Normal Pointing Down
-            rl.rlTexCoord2f(1.0, 1.0); rl.rlVertex3f(x - width/2, y - height/2, z - length/2);  // Top Right Of The Texture and Quad
-            rl.rlTexCoord2f(0.0, 1.0); rl.rlVertex3f(x + width/2, y - height/2, z - length/2);  // Top Left Of The Texture and Quad
-            rl.rlTexCoord2f(0.0, 0.0); rl.rlVertex3f(x + width/2, y - height/2, z + length/2);  // Bottom Left Of The Texture and Quad
-            rl.rlTexCoord2f(1.0, 0.0); rl.rlVertex3f(x - width/2, y - height/2, z + length/2);  // Bottom Right Of The Texture and Quad
+            rl_rlNormal3f(0.0, - 1.0, 0.0);     // Normal Pointing Down
+            rl_rlTexCoord2f(1.0, 1.0); rl_rlVertex3f(x - width/2, y - height/2, z - length/2);  // Top Right Of The Texture and Quad
+            rl_rlTexCoord2f(0.0, 1.0); rl_rlVertex3f(x + width/2, y - height/2, z - length/2);  // Top Left Of The Texture and Quad
+            rl_rlTexCoord2f(0.0, 0.0); rl_rlVertex3f(x + width/2, y - height/2, z + length/2);  // Bottom Left Of The Texture and Quad
+            rl_rlTexCoord2f(1.0, 0.0); rl_rlVertex3f(x - width/2, y - height/2, z + length/2);  // Bottom Right Of The Texture and Quad
             // Right face
-            rl.rlNormal3f(1.0, 0.0, 0.0);       // Normal Pointing Right
-            rl.rlTexCoord2f(1.0, 0.0); rl.rlVertex3f(x + width/2, y - height/2, z - length/2);  // Bottom Right Of The Texture and Quad
-            rl.rlTexCoord2f(1.0, 1.0); rl.rlVertex3f(x + width/2, y + height/2, z - length/2);  // Top Right Of The Texture and Quad
-            rl.rlTexCoord2f(0.0, 1.0); rl.rlVertex3f(x + width/2, y + height/2, z + length/2);  // Top Left Of The Texture and Quad
-            rl.rlTexCoord2f(0.0, 0.0); rl.rlVertex3f(x + width/2, y - height/2, z + length/2);  // Bottom Left Of The Texture and Quad
+            rl_rlNormal3f(1.0, 0.0, 0.0);       // Normal Pointing Right
+            rl_rlTexCoord2f(1.0, 0.0); rl_rlVertex3f(x + width/2, y - height/2, z - length/2);  // Bottom Right Of The Texture and Quad
+            rl_rlTexCoord2f(1.0, 1.0); rl_rlVertex3f(x + width/2, y + height/2, z - length/2);  // Top Right Of The Texture and Quad
+            rl_rlTexCoord2f(0.0, 1.0); rl_rlVertex3f(x + width/2, y + height/2, z + length/2);  // Top Left Of The Texture and Quad
+            rl_rlTexCoord2f(0.0, 0.0); rl_rlVertex3f(x + width/2, y - height/2, z + length/2);  // Bottom Left Of The Texture and Quad
             // Left Face
-            rl.rlNormal3f( - 1.0, 0.0, 0.0);    // Normal Pointing Left
-            rl.rlTexCoord2f(0.0, 0.0); rl.rlVertex3f(x - width/2, y - height/2, z - length/2);  // Bottom Left Of The Texture and Quad
-            rl.rlTexCoord2f(1.0, 0.0); rl.rlVertex3f(x - width/2, y - height/2, z + length/2);  // Bottom Right Of The Texture and Quad
-            rl.rlTexCoord2f(1.0, 1.0); rl.rlVertex3f(x - width/2, y + height/2, z + length/2);  // Top Right Of The Texture and Quad
-            rl.rlTexCoord2f(0.0, 1.0); rl.rlVertex3f(x - width/2, y + height/2, z - length/2);  // Top Left Of The Texture and Quad
-        rl.rlEnd();
+            rl_rlNormal3f( - 1.0, 0.0, 0.0);    // Normal Pointing Left
+            rl_rlTexCoord2f(0.0, 0.0); rl_rlVertex3f(x - width/2, y - height/2, z - length/2);  // Bottom Left Of The Texture and Quad
+            rl_rlTexCoord2f(1.0, 0.0); rl_rlVertex3f(x - width/2, y - height/2, z + length/2);  // Bottom Right Of The Texture and Quad
+            rl_rlTexCoord2f(1.0, 1.0); rl_rlVertex3f(x - width/2, y + height/2, z + length/2);  // Top Right Of The Texture and Quad
+            rl_rlTexCoord2f(0.0, 1.0); rl_rlVertex3f(x - width/2, y + height/2, z - length/2);  // Top Left Of The Texture and Quad
+        rl_rlEnd();
     //rlPopMatrix();
 
-    rl.rlSetTexture(0);
+    rl_rlSetTexture(0);
 }
 
 draw_heightmap_wireframe :: proc(
@@ -1478,37 +1478,37 @@ draw_heightmap_wireframe :: proc(
     total_width := f32(width - 1) * handle.size.x;
     total_depth := f32(depth - 1) * handle.size.z;
 
-    rl.rlPushMatrix();
-    rl.rlTranslatef(pos.x, pos.y, pos.z);
-    rl.rlRotatef(rot.x, 1, 0, 0);
-    rl.rlRotatef(rot.y, 0, 1, 0);
-    rl.rlRotatef(rot.z, 0, 0, 1);
+    rl_rlPushMatrix();
+    rl_rlTranslatef(pos.x, pos.y, pos.z);
+    rl_rlRotatef(rot.x, 1, 0, 0);
+    rl_rlRotatef(rot.y, 0, 1, 0);
+    rl_rlRotatef(rot.z, 0, 0, 1);
 
-    rl.rlBegin(rl.RL_LINES);
+    rl_rlBegin(rl_RL_LINES);
     for z := 0; z < depth; z += 1 {
         for x := 0; x < width; x += 1 {
             world_x := f32(x) * handle.size.x - total_width / 2.0;
             world_z := f32(z) * handle.size.z - total_depth / 2.0;
             world_y := heightmap[z][x] * handle.size.y - scale.y * 0.5;
 
-            rl.rlVertex3f(world_x, world_y, world_z);
-            rl.DrawSphereWires(
+            rl_rlVertex3f(world_x, world_y, world_z);
+            rl_DrawSphereWires(
                 {world_x, world_y, world_z},
                 0.1, DEF_RINGS, DEF_SLICES, color);
         }
     }
-    rl.rlEnd();
+    rl_rlEnd();
 
-    rl.rlPopMatrix();
+    rl_rlPopMatrix();
 }
 
 draw_slope :: proc(slope: Slope, pos, rot, scale: Vec3, tex: Texture, color: Color) {
-    rl.rlPushMatrix();
-    rl.rlTranslatef(pos.x, pos.y, pos.z);
-    rl.rlRotatef(rot.x, 1, 0, 0);
-    rl.rlRotatef(rot.y, 0, 1, 0);
-    rl.rlRotatef(rot.z, 0, 0, 1);
-    rl.rlScalef(scale.x, scale.y, scale.z);
+    rl_rlPushMatrix();
+    rl_rlTranslatef(pos.x, pos.y, pos.z);
+    rl_rlRotatef(rot.x, 1, 0, 0);
+    rl_rlRotatef(rot.y, 0, 1, 0);
+    rl_rlRotatef(rot.z, 0, 0, 1);
+    rl_rlScalef(scale.x, scale.y, scale.z);
 
     res := slope;
     normal := Vec3 {-1, 1, 0};
@@ -1519,7 +1519,7 @@ draw_slope :: proc(slope: Slope, pos, rot, scale: Vec3, tex: Texture, color: Col
 
     if (slope[0][0] == slope[1][0]) {
         res = rotate_slope(slope);
-        rl.rlRotatef(90, 0, 1, 0);
+        rl_rlRotatef(90, 0, 1, 0);
 
         normal = Vec3 {0, 1, -1};
         if (slope_negative(slope)) {
@@ -1529,90 +1529,90 @@ draw_slope :: proc(slope: Slope, pos, rot, scale: Vec3, tex: Texture, color: Col
     }
 
     // quad
-    rl.rlSetTexture(tex.id);
-    rl.rlBegin(rl.RL_QUADS);
-    rl.rlColor4ub(color.r, color.g, color.b, color.a);
+    rl_rlSetTexture(tex.id);
+    rl_rlBegin(rl_RL_QUADS);
+    rl_rlColor4ub(color.r, color.g, color.b, color.a);
 
 
-    rl.rlNormal3f(normal.x, normal.y, normal.z);
-    rl.rlTexCoord2f(0, 0); rl.rlVertex3f(-0.5, res[0][0] - 0.5, 0.5);
-    rl.rlTexCoord2f(1, 0); rl.rlVertex3f(0.5, res[1][0] - 0.5, 0.5);
-    rl.rlTexCoord2f(1, 1); rl.rlVertex3f(0.5, res[1][1] - 0.5, -0.5);
-    rl.rlTexCoord2f(0, 1); rl.rlVertex3f(-0.5, res[0][1] - 0.5, -0.5);
+    rl_rlNormal3f(normal.x, normal.y, normal.z);
+    rl_rlTexCoord2f(0, 0); rl_rlVertex3f(-0.5, res[0][0] - 0.5, 0.5);
+    rl_rlTexCoord2f(1, 0); rl_rlVertex3f(0.5, res[1][0] - 0.5, 0.5);
+    rl_rlTexCoord2f(1, 1); rl_rlVertex3f(0.5, res[1][1] - 0.5, -0.5);
+    rl_rlTexCoord2f(0, 1); rl_rlVertex3f(-0.5, res[0][1] - 0.5, -0.5);
 
-    rl.rlEnd();
+    rl_rlEnd();
 
     // sides (left then right)
-    rl.rlBegin(rl.RL_TRIANGLES);
-    rl.rlSetTexture(tex.id);
+    rl_rlBegin(rl_RL_TRIANGLES);
+    rl_rlSetTexture(tex.id);
 
     if (slope_negative(slope)) {
-        rl.rlNormal3f(-1, 0, 0);
-        rl.rlTexCoord2f(0, 1); rl.rlVertex3f(-0.5, res[0][1] - 0.5, -0.5);
-        rl.rlTexCoord2f(1, 0); rl.rlVertex3f(0.5, res[1][0] - 0.5, -0.5);
-        rl.rlTexCoord2f(0, 0); rl.rlVertex3f(-0.5, -0.5, -0.5);
+        rl_rlNormal3f(-1, 0, 0);
+        rl_rlTexCoord2f(0, 1); rl_rlVertex3f(-0.5, res[0][1] - 0.5, -0.5);
+        rl_rlTexCoord2f(1, 0); rl_rlVertex3f(0.5, res[1][0] - 0.5, -0.5);
+        rl_rlTexCoord2f(0, 0); rl_rlVertex3f(-0.5, -0.5, -0.5);
 
-        rl.rlNormal3f(1, 0, 0);
-        rl.rlTexCoord2f(0, 1); rl.rlVertex3f(0.5, res[1][0] - 0.5, 0.5);
-        rl.rlTexCoord2f(1, 0); rl.rlVertex3f(-0.5, res[0][1] - 0.5, 0.5);
-        rl.rlTexCoord2f(0, 0); rl.rlVertex3f(-0.5, -0.5, 0.5);
+        rl_rlNormal3f(1, 0, 0);
+        rl_rlTexCoord2f(0, 1); rl_rlVertex3f(0.5, res[1][0] - 0.5, 0.5);
+        rl_rlTexCoord2f(1, 0); rl_rlVertex3f(-0.5, res[0][1] - 0.5, 0.5);
+        rl_rlTexCoord2f(0, 0); rl_rlVertex3f(-0.5, -0.5, 0.5);
     } else {
-        rl.rlNormal3f(-1, 0, 0);
-        rl.rlTexCoord2f(0, 0); rl.rlVertex3f(0.5, -0.5, -0.5);
-        rl.rlTexCoord2f(1, 0); rl.rlVertex3f(-0.5, res[0][1] - 0.5, -0.5);
-        rl.rlTexCoord2f(0, 1); rl.rlVertex3f(0.5, res[1][0] - 0.5, -0.5);
+        rl_rlNormal3f(-1, 0, 0);
+        rl_rlTexCoord2f(0, 0); rl_rlVertex3f(0.5, -0.5, -0.5);
+        rl_rlTexCoord2f(1, 0); rl_rlVertex3f(-0.5, res[0][1] - 0.5, -0.5);
+        rl_rlTexCoord2f(0, 1); rl_rlVertex3f(0.5, res[1][0] - 0.5, -0.5);
 
-        rl.rlNormal3f(1, 0, 0);
-        rl.rlTexCoord2f(0, 1); rl.rlVertex3f(0.5, res[1][0] - 0.5, 0.5);
-        rl.rlTexCoord2f(1, 0); rl.rlVertex3f(-0.5, res[0][1] - 0.5, 0.5);
-        rl.rlTexCoord2f(0, 0); rl.rlVertex3f(0.5, -0.5, 0.5);
+        rl_rlNormal3f(1, 0, 0);
+        rl_rlTexCoord2f(0, 1); rl_rlVertex3f(0.5, res[1][0] - 0.5, 0.5);
+        rl_rlTexCoord2f(1, 0); rl_rlVertex3f(-0.5, res[0][1] - 0.5, 0.5);
+        rl_rlTexCoord2f(0, 0); rl_rlVertex3f(0.5, -0.5, 0.5);
     }
 
-    rl.rlEnd();
+    rl_rlEnd();
 
-    rl.rlSetTexture(0);
+    rl_rlSetTexture(0);
 
-    rl.rlPopMatrix();
+    rl_rlPopMatrix();
 }
 
 draw_slope_wireframe :: proc(slope: Slope, pos, rot, scale: Vec3, color: Color) {
-    rl.rlPushMatrix();
-    rl.rlTranslatef(pos.x, pos.y, pos.z);
-    rl.rlRotatef(rot.x, 1, 0, 0);
-    rl.rlRotatef(rot.y, 0, 1, 0);
-    rl.rlRotatef(rot.z, 0, 0, 1);
-    rl.rlScalef(scale.x, scale.y, scale.z);
+    rl_rlPushMatrix();
+    rl_rlTranslatef(pos.x, pos.y, pos.z);
+    rl_rlRotatef(rot.x, 1, 0, 0);
+    rl_rlRotatef(rot.y, 0, 1, 0);
+    rl_rlRotatef(rot.z, 0, 0, 1);
+    rl_rlScalef(scale.x, scale.y, scale.z);
 
-    rl.DrawPoint3D({}, color);
+    rl_DrawPoint3D({}, color);
 
-    rl.rlColor4ub(color.r, color.g, color.b, color.a);
-    rl.rlBegin(rl.RL_LINES);
+    rl_rlColor4ub(color.r, color.g, color.b, color.a);
+    rl_rlBegin(rl_RL_LINES);
 
     res := slope;
 
     if (slope[0][0] == slope[1][0]) {
         res = rotate_slope(slope);
-        rl.rlRotatef(90, 0, 1, 0);
+        rl_rlRotatef(90, 0, 1, 0);
     }
 
-    rl.rlVertex3f(-0.5, res[0][0] - 0.5, 0.5);
-    rl.rlVertex3f(-0.5, res[0][1] - 0.5, -0.5);
+    rl_rlVertex3f(-0.5, res[0][0] - 0.5, 0.5);
+    rl_rlVertex3f(-0.5, res[0][1] - 0.5, -0.5);
 
-    rl.rlVertex3f(-0.5, res[0][1] - 0.5, -0.5);
-    rl.rlVertex3f(0.5, res[1][0] - 0.5, -0.5);
+    rl_rlVertex3f(-0.5, res[0][1] - 0.5, -0.5);
+    rl_rlVertex3f(0.5, res[1][0] - 0.5, -0.5);
 
-    rl.rlVertex3f(0.5, res[1][0] - 0.5, -0.5);
-    rl.rlVertex3f(0.5, res[1][1] - 0.5, 0.5);
+    rl_rlVertex3f(0.5, res[1][0] - 0.5, -0.5);
+    rl_rlVertex3f(0.5, res[1][1] - 0.5, 0.5);
 
-    rl.rlVertex3f(0.5, res[1][1] - 0.5, 0.5);
-    rl.rlVertex3f(-0.5, res[0][0] - 0.5, 0.5);
+    rl_rlVertex3f(0.5, res[1][1] - 0.5, 0.5);
+    rl_rlVertex3f(-0.5, res[0][0] - 0.5, 0.5);
 
-    rl.rlVertex3f(-0.5, res[0][0] - 0.5, 0.5);
-    rl.rlVertex3f(0.5, res[1][0] - 0.5, -0.5);
+    rl_rlVertex3f(-0.5, res[0][0] - 0.5, 0.5);
+    rl_rlVertex3f(0.5, res[1][0] - 0.5, -0.5);
 
-    rl.rlEnd();
+    rl_rlEnd();
 
-    rl.rlPopMatrix();
+    rl_rlPopMatrix();
 }
 
 @(private = "file")

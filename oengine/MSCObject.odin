@@ -2,7 +2,7 @@ package oengine
 
 import "core:fmt"
 import "core:math"
-import rl "vendor:raylib"
+
 import "core:encoding/json"
 import "core:io"
 import "core:os"
@@ -205,9 +205,9 @@ save_atlas :: proc(atlas: Atlas, path: string) {
 pack_atlas :: proc(atlas: Atlas, path: string) {
     create_dir(path);
 
-    img := rl.LoadImageFromTexture(atlas.texture);
+    img := rl_LoadImageFromTexture(atlas.texture);
     img_path := str_add({path, "/atlas.png"});
-    rl.ExportImage(img, strs.clone_to_cstring(img_path));
+    rl_ExportImage(img, strs.clone_to_cstring(img_path));
 
     data_path := str_add({path, "/atlas.od"});
     res := atlas;
@@ -216,8 +216,8 @@ pack_atlas :: proc(atlas: Atlas, path: string) {
 }
 
 MeshMaterial :: struct {
-    mesh: rl.Mesh,
-    material: rl.Material,
+    mesh: rl_Mesh,
+    material: rl_Material,
     tiling: Vec2,
 }
 
@@ -443,8 +443,8 @@ msc_append_terrain :: proc(
     flipped: bool = false,
     division_level: i32 = 0
 ) {
-    img := rl.LoadImageFromTexture(heightmap);
-    _mesh := rl.GenMeshHeightmap(img, scale);
+    img := rl_LoadImageFromTexture(heightmap);
+    _mesh := rl_GenMeshHeightmap(img, scale);
 
     vertices := _mesh.vertices;
     for j := 0; j < int(_mesh.vertexCount); j += 3 {
@@ -467,8 +467,8 @@ msc_append_terrain :: proc(
         );
     }
 
-    rl.UnloadImage(img);
-    rl.UnloadMesh(_mesh);
+    rl_UnloadImage(img);
+    rl_UnloadMesh(_mesh);
 }
 
 reload_mesh_tris :: proc(using self: ^MSCObject) {
@@ -528,7 +528,7 @@ build_mesh_triplanar :: proc(msc: ^MSCObject) {
     }
 
     for tag, tris in tris_to_add {
-        mesh: rl.Mesh;
+        mesh: rl_Mesh;
         mesh.triangleCount = i32(len(tris));
         mesh.vertexCount = mesh.triangleCount * 3;
         allocate_mesh(&mesh);
@@ -537,10 +537,10 @@ build_mesh_triplanar :: proc(msc: ^MSCObject) {
             gen_tri(msc, mesh, &tris[i], i, false);
         }
 
-        rl.UploadMesh(&mesh, false);
+        rl_UploadMesh(&mesh, false);
 
-        m := rl.LoadMaterialDefault();
-        m.maps[rl.MaterialMapIndex.ALBEDO].texture = get_asset_var(tag, Texture);
+        m := rl_LoadMaterialDefault();
+        m.maps[rl_MaterialMapIndex.ALBEDO].texture = get_asset_var(tag, Texture);
         m.shader = ecs_world.ray_ctx.shader;
 
         append(&msc.meshes, MeshMaterial{mesh, m, {0.5, 0.5}});
@@ -549,7 +549,7 @@ build_mesh_triplanar :: proc(msc: ^MSCObject) {
 
 @(private)
 build_mesh :: proc(msc: ^MSCObject) {
-    mesh: rl.Mesh;
+    mesh: rl_Mesh;
     mesh.triangleCount = i32(len(msc.mesh_tris));
     mesh.vertexCount = mesh.triangleCount * 3;
     allocate_mesh(&mesh);
@@ -558,10 +558,10 @@ build_mesh :: proc(msc: ^MSCObject) {
         gen_tri(msc, mesh, &msc.mesh_tris[i], i);
     }
 
-    rl.UploadMesh(&mesh, false);
+    rl_UploadMesh(&mesh, false);
 
     m := DEFAULT_MATERIAL;
-    m.maps[rl.MaterialMapIndex.ALBEDO].texture = msc.atlas;
+    m.maps[rl_MaterialMapIndex.ALBEDO].texture = msc.atlas;
     m.shader = ecs_world.ray_ctx.shader;
 
     append(&msc.meshes, MeshMaterial{mesh, m, {}});
@@ -569,7 +569,7 @@ build_mesh :: proc(msc: ^MSCObject) {
 
 gen_tri :: proc(
     using self: ^MSCObject, 
-    mesh: rl.Mesh, 
+    mesh: rl_Mesh, 
     t: ^TriangleCollider, 
     #any_int index: i32,
     use_atlas_uvs := true
@@ -649,7 +649,7 @@ msc_from_model :: proc(using self: ^MSCObject, model: Model, offs: Vec3 = {}, sc
         materialIndex := model.meshMaterial[i];
         material := model.materials[materialIndex];
         tag := str_add("mtl", materialIndex);
-        texture := material.maps[rl.MaterialMapIndex.ALBEDO].texture;
+        texture := material.maps[rl_MaterialMapIndex.ALBEDO].texture;
         reg_asset(tag, load_texture(texture));
 
         vertices := mesh.vertices;
@@ -1200,7 +1200,7 @@ msc_load_data_id_od :: proc(tag: string, obj: od.Object) {
 
         reg_tag := str_add("data_id_", _tag);
         if (asset_manager.registry[reg_tag] != nil) { 
-            reg_tag = str_add(reg_tag, rl.GetRandomValue(1000, 9999)); 
+            reg_tag = str_add(reg_tag, rl_GetRandomValue(1000, 9999)); 
         }
 
         if (window.instance_name != EDITOR_INSTANCE) {
@@ -1289,7 +1289,7 @@ msc_load_data_id_od :: proc(tag: string, obj: od.Object) {
 
     reg_tag := str_add("data_id_", tag);
     if (asset_manager.registry[reg_tag] != nil) { 
-        reg_tag = str_add(reg_tag, rl.GetRandomValue(1000, 9999)); 
+        reg_tag = str_add(reg_tag, rl_GetRandomValue(1000, 9999)); 
     }
     
     flags := fa.fixed_array(i32, 16);
@@ -1378,7 +1378,7 @@ msc_load_data_id_json :: proc(tag: string, obj: json.Value) {
     };
 
     reg_tag := str_add("data_id_", tag);
-    if (asset_manager.registry[reg_tag] != nil) do reg_tag = str_add(reg_tag, rl.GetRandomValue(1000, 9999));
+    if (asset_manager.registry[reg_tag] != nil) do reg_tag = str_add(reg_tag, rl_GetRandomValue(1000, 9999));
 
     flags := fa.fixed_array(i32, 16);
     if (obj.(json.Object)["flags"] != nil) {
@@ -1649,7 +1649,7 @@ msc_render :: proc(using self: ^MSCObject, mode: MscRenderMode = .MESH) {
                 ray_set_tiling(mesh_mat.tiling);
                 ray_enable_triplanar();
             }
-            rl.DrawMesh(mesh_mat.mesh, mesh_mat.material, rl.Matrix(1));
+            rl_DrawMesh(mesh_mat.mesh, mesh_mat.material, rl_Matrix(1));
             if (use_triplanar) {
                 ray_reset_tiling();
                 ray_disable_triplanar();
@@ -1661,17 +1661,17 @@ msc_render :: proc(using self: ^MSCObject, mode: MscRenderMode = .MESH) {
         for tri in tris {
             t := tri.pts;
 
-            rl.DrawLine3D(t[0], t[1], rl.YELLOW);
-            rl.DrawLine3D(t[0], t[2], rl.YELLOW);
-            rl.DrawLine3D(t[1], t[2], rl.YELLOW);
+            rl_DrawLine3D(t[0], t[1], rl_YELLOW);
+            rl_DrawLine3D(t[0], t[2], rl_YELLOW);
+            rl_DrawLine3D(t[1], t[2], rl_YELLOW);
 
             normal := tri.normal;
-            rl.DrawLine3D(t[0], t[0] + normal, rl.RED);
-            rl.DrawLine3D(t[1], t[1] + normal, rl.RED);
-            rl.DrawLine3D(t[2], t[2] + normal, rl.RED);
+            rl_DrawLine3D(t[0], t[0] + normal, rl_RED);
+            rl_DrawLine3D(t[1], t[1] + normal, rl_RED);
+            rl_DrawLine3D(t[2], t[2] + normal, rl_RED);
 
             centroid := (t[0] + t[1] + t[2]) / 3;
-            rl.DrawLine3D(centroid, centroid + normal, RED);
+            rl_DrawLine3D(centroid, centroid + normal, RED);
         }
 
         draw_cube_wireframe(
@@ -1710,22 +1710,22 @@ msc_old_render :: proc(using self: ^MSCObject, mode: MscRenderMode = .MESH) {
             
             // fmt.println(uv1, uv2, uv3, tri.texture_tag, at);
 
-            rl.rlColor4ub(color.r, color.g, color.b, color.a);
-            rl.rlBegin(rl.RL_TRIANGLES);
-            rl.rlSetTexture(atlas.texture.id);
+            rl_rlColor4ub(color.r, color.g, color.b, color.a);
+            rl_rlBegin(rl_RL_TRIANGLES);
+            rl_rlSetTexture(atlas.texture.id);
 
             // if (asset_exists(tri.texture_tag)) {
             //     tex := get_asset_var(tri.texture_tag, Texture);
-            //     rl.rlSetTexture(tex.id);
+            //     rl_rlSetTexture(tex.id);
             // }
 
-            rl.rlTexCoord2f(uv1.x, uv1.y); rl.rlVertex3f(v1.x, v1.y, v1.z);
-            rl.rlTexCoord2f(uv2.x, uv2.y); rl.rlVertex3f(v2.x, v2.y, v2.z);
-            rl.rlTexCoord2f(uv3.x, uv3.y); rl.rlVertex3f(v3.x, v3.y, v3.z);
+            rl_rlTexCoord2f(uv1.x, uv1.y); rl_rlVertex3f(v1.x, v1.y, v1.z);
+            rl_rlTexCoord2f(uv2.x, uv2.y); rl_rlVertex3f(v2.x, v2.y, v2.z);
+            rl_rlTexCoord2f(uv3.x, uv3.y); rl_rlVertex3f(v3.x, v3.y, v3.z);
 
-            rl.rlEnd();
+            rl_rlEnd();
 
-            rl.rlSetTexture(0);
+            rl_rlSetTexture(0);
         }
     }
 

@@ -1,7 +1,7 @@
 package oengine
 
 import "core:fmt"
-import rl "vendor:raylib"
+
 
 DEBUG_COLORS := [3]ConsoleColor {
     green,

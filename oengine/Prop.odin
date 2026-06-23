@@ -2,7 +2,7 @@ package oengine
 
 import "core:fmt"
 import str "core:strings"
-import rl "vendor:raylib"
+
 import ecs "ecs"
 import "core:math/linalg"
 import "core:math"
@@ -35,8 +35,7 @@ prop_init :: proc(
                 msc, model, 
                 offs = _position + model_pos_off, scale = model_scale_off, 
                 voxel_size = voxel_size);
-            if (!render_msc) { msc_gen_mesh(msc, true); }
-            else { msc_build(msc); }
+            msc_gen_mesh(msc, true);
         } else {
             add_component(ent, rb_init(p.collider, 1, 0.5, true, ShapeType.BOX));
         }
@@ -44,7 +43,7 @@ prop_init :: proc(
         return;
     }
 
-    rlbb := rl.GetModelBoundingBox(model);
+    rlbb := rl_GetModelBoundingBox(model);
     size := rlbb.max - rlbb.min;
     position := rlbb.min + size * 0.5;
     
@@ -62,8 +61,7 @@ prop_init :: proc(
         msc.render = render_msc;
         simplify_msc_model(
             msc, model, offs = _position, scale = scale, voxel_size = voxel_size);
-        if (!render_msc) { msc_gen_mesh(msc, true); }
-        else { msc_build(msc); }
+        msc_gen_mesh(msc, true);
     } else {
         add_component(ent, rb_init(p.collider, 1, 0.5, true, ShapeType.BOX));
     }
@@ -78,7 +76,7 @@ prop_render :: proc(ctx: ^ecs.Context, ent: ^ecs.Entity) {
 
     t := p.collider;
     draw_cube_wireframe(t.position, t.rotation, t.scale, GREEN);
-    rl.DrawModelWires(p._model, tr.position, 1, GREEN);
+    rl_DrawModelWires(p._model, tr.position, 1, GREEN);
 }
 
 simplify_msc_model :: proc(
@@ -212,7 +210,7 @@ simplify_msc_model :: proc(
             materialIndex := model.meshMaterial[mi]
             material := model.materials[materialIndex]
             tag := str_add("mtl", materialIndex)
-            texture := material.maps[rl.MaterialMapIndex.ALBEDO].texture
+            texture := material.maps[rl_MaterialMapIndex.ALBEDO].texture
             reg_asset(tag, load_texture(texture))
 
             msc_append_tri(

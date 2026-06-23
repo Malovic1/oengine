@@ -3,7 +3,7 @@ package oengine
 import "core:fmt"
 import "core:time"
 import strs "core:strings"
-import rl "vendor:raylib"
+
 import sdl "vendor:sdl2"
 import "vendor:sdl2/ttf"
 import "core:math"
@@ -80,7 +80,7 @@ sdl_color :: proc(color: Color) -> sdl.Color {
     return sdl.Color {color.r, color.g, color.b, color.a};
 }
 
-sdl_rect :: proc(renderer: ^sdl.Renderer, rec: rl.Rectangle, color: Color) {
+sdl_rect :: proc(renderer: ^sdl.Renderer, rec: rl_Rectangle, color: Color) {
     rect := new(sdl.Rect);
     rect.x = i32(rec.x); rect.y = i32(rec.y); rect.w = i32(rec.width); rect.h = i32(rec.height);
     sdl.SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
@@ -97,7 +97,7 @@ sdl_draw_text :: proc(renderer: ^sdl.Renderer, font: ^ttf.Font, text: string, #a
     sdl.RenderCopy(renderer, text_tex, nil, &render_quad);
 }
 
-sdL_text_center_pos :: proc(renderer: ^sdl.Renderer, font: ^ttf.Font, text: string, rec: rl.Rectangle) {
+sdL_text_center_pos :: proc(renderer: ^sdl.Renderer, font: ^ttf.Font, text: string, rec: rl_Rectangle) {
     ctext := strs.clone_to_cstring(text);
     width: i32;
     height: i32;
@@ -122,7 +122,7 @@ sdL_text_center_pos :: proc(renderer: ^sdl.Renderer, font: ^ttf.Font, text: stri
 }
 
 sdl_button :: proc(renderer: ^sdl.Renderer, text: string, font: ^ttf.Font, x, y, w, h: f32) -> bool {
-    rec := rl.Rectangle {
+    rec := rl_Rectangle {
         x = x,
         y = y,
         width = w,
@@ -130,8 +130,8 @@ sdl_button :: proc(renderer: ^sdl.Renderer, text: string, font: ^ttf.Font, x, y,
     };
 
     mp := sdl_mouse_pos();
-    pressed := rl.CheckCollisionPointRec(mp, rec) && sdl_mouse_released(sdl.BUTTON_LMASK);
-    held := rl.CheckCollisionPointRec(mp, rec) && sdl_mouse_down(sdl.BUTTON_LMASK);
+    pressed := rl_CheckCollisionPointRec(mp, rec) && sdl_mouse_released(sdl.BUTTON_LMASK);
+    held := rl_CheckCollisionPointRec(mp, rec) && sdl_mouse_down(sdl.BUTTON_LMASK);
 
     sdl_rect(renderer, {rec.x - gui_bezel_size, rec.y - gui_bezel_size, rec.width + gui_bezel_size * 2, rec.height + gui_bezel_size * 2}, gui_darker_color);
     sdl_rect(renderer, {rec.x - gui_bezel_size, rec.y - gui_bezel_size, rec.width + gui_bezel_size, 

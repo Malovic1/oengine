@@ -7,7 +7,7 @@ import "core:unicode/tools"
 import "core:unicode/utf8"
 import "core:unicode/utf16"
 import strs "core:strings"
-import rl "vendor:raylib"
+
 
 /* simple example
 
@@ -55,7 +55,7 @@ FileMode :: enum {
 }
 
 file_handle :: proc(path: string, mode: FileMode = .READ_AND_WRITE | .CREATE) -> File {
-    handle, ok := os.open(path, int(mode));
+    handle, ok := os.open(path, int(mode), 0o666);
     if (ok != 0) {
         dbg_log(str_add({"Failed to open file ", path}), .WARNING);
         return {};
@@ -72,11 +72,11 @@ create_dir :: proc(path: string) {
 }
 
 file_name :: proc(path: string) -> string {
-    return strs.clone_from_cstring(rl.GetFileName(strs.clone_to_cstring(path)));
+    return strs.clone_from_cstring(rl_GetFileName(strs.clone_to_cstring(path)));
 }
 
 get_files :: proc(path: string) -> [dynamic]string {
-    list := rl.LoadDirectoryFiles(strs.clone_to_cstring(path));
+    list := rl_LoadDirectoryFiles(strs.clone_to_cstring(path));
     
     res := make([dynamic]string);
     for i in 0..<int(list.count) {

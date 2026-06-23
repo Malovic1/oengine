@@ -1,13 +1,13 @@
 package oengine
 
-import rl "vendor:raylib"
+
 import "core:math"
 import "core:math/linalg"
 
 Camera :: struct {
     fov, near, far: f32,
 
-    rl_matrix: rl.Camera,
+    rl_matrix: rl_Camera,
 
     position, rotation, target: Vec3,
     up, right, front: Vec3,
@@ -58,7 +58,7 @@ cm_update :: proc(using self: ^Camera) {
 
 cm_set_fps :: proc(using self: ^Camera, sensitivity: f32, is_mouse_locked: bool) {
     if (is_mouse_locked) {
-        curr_mp = rl.GetMousePosition();
+        curr_mp = rl_GetMousePosition();
         mouseDelta := Vec2 {curr_mp.x - prev_mp.x, -(curr_mp.y - prev_mp.y)};
         rotation.y += mouseDelta.x * sensitivity;
         rotation.x -= mouseDelta.y * sensitivity;
@@ -68,43 +68,43 @@ cm_set_fps :: proc(using self: ^Camera, sensitivity: f32, is_mouse_locked: bool)
         if (rotation.x < -89.0) do rotation.x = -89.0;
 
         prev_mp = curr_mp;
-        rl.SetMousePosition(rl.GetScreenWidth() / 2, rl.GetScreenHeight() / 2);
-        prev_mp = rl.GetMousePosition();
+        rl_SetMousePosition(rl_GetScreenWidth() / 2, rl_GetScreenHeight() / 2);
+        prev_mp = rl_GetMousePosition();
     }
     
-    cameraRotation: Mat4 = mat4_rotate_XYZ(rl.DEG2RAD * rotation.x, rl.DEG2RAD * rotation.y, rl.DEG2RAD * rotation.z);
+    cameraRotation: Mat4 = mat4_rotate_XYZ(rl_DEG2RAD * rotation.x, rl_DEG2RAD * rotation.y, rl_DEG2RAD * rotation.z);
     front = vec3_transform(-vec3_z(), cameraRotation);
     right = vec3_transform(vec3_x(), cameraRotation);
     up = vec3_transform(vec3_y(), cameraRotation);
 }
 
 cm_set_fps_controls :: proc(using self: ^Camera, speed: f32, is_mouse_locked, fly: bool) {
-    if (rl.IsKeyDown(rl.KeyboardKey.W) && is_mouse_locked) {
-        position.x += front.x * speed * rl.GetFrameTime();
-        position.z += front.z * speed * rl.GetFrameTime();
+    if (rl_IsKeyDown(rl_KeyboardKey.W) && is_mouse_locked) {
+        position.x += front.x * speed * rl_GetFrameTime();
+        position.z += front.z * speed * rl_GetFrameTime();
     }
 
-    if (rl.IsKeyDown(rl.KeyboardKey.S) && is_mouse_locked) {
-        position.x -= front.x * speed * rl.GetFrameTime();
-        position.z -= front.z * speed * rl.GetFrameTime();
+    if (rl_IsKeyDown(rl_KeyboardKey.S) && is_mouse_locked) {
+        position.x -= front.x * speed * rl_GetFrameTime();
+        position.z -= front.z * speed * rl_GetFrameTime();
     }
     
-    if (rl.IsKeyDown(rl.KeyboardKey.A) && is_mouse_locked) {
-        position.x -= right.x * speed * rl.GetFrameTime();
-        position.z -= right.z * speed * rl.GetFrameTime();
+    if (rl_IsKeyDown(rl_KeyboardKey.A) && is_mouse_locked) {
+        position.x -= right.x * speed * rl_GetFrameTime();
+        position.z -= right.z * speed * rl_GetFrameTime();
     }
 
-    if (rl.IsKeyDown(rl.KeyboardKey.D) && is_mouse_locked) {
-        position.x += right.x * speed * rl.GetFrameTime();
-        position.z += right.z * speed * rl.GetFrameTime();
+    if (rl_IsKeyDown(rl_KeyboardKey.D) && is_mouse_locked) {
+        position.x += right.x * speed * rl_GetFrameTime();
+        position.z += right.z * speed * rl_GetFrameTime();
     }
     
     if (fly) {
-        if (rl.IsKeyDown(rl.KeyboardKey.SPACE) && is_mouse_locked) {
-            position.y += speed * rl.GetFrameTime();
+        if (rl_IsKeyDown(rl_KeyboardKey.SPACE) && is_mouse_locked) {
+            position.y += speed * rl_GetFrameTime();
         }
-        if (rl.IsKeyDown(rl.KeyboardKey.LEFT_CONTROL) || (rl.IsKeyDown(rl.KeyboardKey.LEFT_SUPER)) && is_mouse_locked) {
-            position.y -= speed * rl.GetFrameTime();
+        if (rl_IsKeyDown(rl_KeyboardKey.LEFT_CONTROL) || (rl_IsKeyDown(rl_KeyboardKey.LEFT_SUPER)) && is_mouse_locked) {
+            position.y -= speed * rl_GetFrameTime();
         }
     }
 }
@@ -131,7 +131,7 @@ cm_set_third_person :: proc(
     distance_from_player: f32,
     offset: Vec3 = {0, 1, 0}) {
     if (is_mouse_locked) {
-        curr_mp = rl.GetMousePosition();
+        curr_mp = rl_GetMousePosition();
         mouseDelta := Vec2 {curr_mp.x - prev_mp.x, -(curr_mp.y - prev_mp.y)};
         rotation.y += mouseDelta.x * sensitivity;
         rotation.x -= mouseDelta.y * sensitivity;
@@ -141,12 +141,12 @@ cm_set_third_person :: proc(
         if (rotation.x < -89.0) do rotation.x = -89.0;
 
         prev_mp = curr_mp;
-        rl.SetMousePosition(rl.GetScreenWidth() / 2, rl.GetScreenHeight() / 2);
-        prev_mp = rl.GetMousePosition();
+        rl_SetMousePosition(rl_GetScreenWidth() / 2, rl_GetScreenHeight() / 2);
+        prev_mp = rl_GetMousePosition();
     }
 
     // Build camera rotation matrix
-    cameraRotation: Mat4 = mat4_rotate_XYZ(rl.DEG2RAD * rotation.x, rl.DEG2RAD * rotation.y, rl.DEG2RAD * rotation.z);
+    cameraRotation: Mat4 = mat4_rotate_XYZ(rl_DEG2RAD * rotation.x, rl_DEG2RAD * rotation.y, rl_DEG2RAD * rotation.z);
     front = vec3_transform(-vec3_z(), cameraRotation); // Direction the camera looks at
     right = vec3_transform(vec3_x(), cameraRotation);
     up = vec3_transform(vec3_y(), cameraRotation);

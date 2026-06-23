@@ -37,7 +37,7 @@ Entity :: struct {
     frustum_type: FrustumType,
     custom_box: AABB,
     use_octree: bool,
-    on_collision: proc(collision: Collision),
+    // on_collision: proc(collision: Collision), deprecated
     use_rb_transform: bool,
     removing: bool,
 }

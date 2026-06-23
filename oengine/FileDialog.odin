@@ -2,7 +2,7 @@ package oengine
 
 import "core:fmt"
 import "core:path/filepath"
-import rl "vendor:raylib"
+
 import sdl "vendor:sdl2"
 import ttf "vendor:sdl2/ttf"
 import strs "core:strings"
@@ -14,8 +14,8 @@ BUTTON_HEIGHT :: 30
 
 fd_file_path :: proc() -> string {
     @static curr_dir: string;
-    @static files: rl.FilePathList;
-    curr_dir, files = fd_dir_and_files(string(rl.GetWorkingDirectory()));
+    @static files: rl_FilePathList;
+    curr_dir, files = fd_dir_and_files(string(rl_GetWorkingDirectory()));
     @static res_path: string;
     res_path = "";
 
@@ -43,7 +43,7 @@ fd_file_path :: proc() -> string {
         for i in 0..<files.count {
             path := string(files.paths[i]);
             if (sdl_button(renderer, filepath.base(path), fd_font, 10, 45 + 35 * f32(i), 500, 25)) {
-                if (rl.DirectoryExists(strs.clone_to_cstring(path))) {
+                if (rl_DirectoryExists(strs.clone_to_cstring(path))) {
                     curr_dir, files = fd_dir_and_files(path);
                 } else {
                     res_path = path;
@@ -62,8 +62,8 @@ fd_file_path :: proc() -> string {
 
 fd_dir :: proc() -> string {
     @static curr_dir: string;
-    @static files: rl.FilePathList;
-    curr_dir, files = fd_dir_and_files(string(rl.GetWorkingDirectory()));
+    @static files: rl_FilePathList;
+    curr_dir, files = fd_dir_and_files(string(rl_GetWorkingDirectory()));
     @static res_path: string;
     res_path = "";
 
@@ -91,7 +91,7 @@ fd_dir :: proc() -> string {
         for i in 0..<files.count {
             path := string(files.paths[i]);
             if (sdl_button(renderer, filepath.base(path), fd_font, 10, 45 + 35 * f32(i), 500, 25)) {
-                if (rl.DirectoryExists(strs.clone_to_cstring(path))) {
+                if (rl_DirectoryExists(strs.clone_to_cstring(path))) {
                     curr_dir, files = fd_dir_and_files(path);
                 }
             }
@@ -110,9 +110,9 @@ fd_dir :: proc() -> string {
     return res_path;
 }
 
-fd_dir_and_files :: proc(dir: string) -> (string, rl.FilePathList) {
+fd_dir_and_files :: proc(dir: string) -> (string, rl_FilePathList) {
     curr_dir, t := strs.replace_all(dir, "\\", "/");
-    files := rl.LoadDirectoryFiles(strs.clone_to_cstring(curr_dir));
+    files := rl_LoadDirectoryFiles(strs.clone_to_cstring(curr_dir));
 
     for i in 0..<files.count {
         path, t := strs.replace_all(string(files.paths[i]), "\\", "/");

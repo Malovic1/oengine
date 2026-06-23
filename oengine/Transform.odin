@@ -1,6 +1,6 @@
 package oengine
 
-import rl "vendor:raylib"
+
 import ecs "ecs"
 import "core:fmt"
 import "core:encoding/json"

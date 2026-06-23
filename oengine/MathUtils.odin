@@ -1,17 +1,17 @@
 package oengine
 
 import "core:fmt"
-import rl "vendor:raylib"
+
 import "core:math"
 import "core:math/linalg"
 import sc "core:strconv"
 
 to_radians :: proc(degrees: f32) -> f32 {
-    return degrees * rl.DEG2RAD;
+    return degrees * rl_DEG2RAD;
 }
 
 to_degrees :: proc(radians: f32) -> f32 {
-    return radians * rl.RAD2DEG;
+    return radians * rl_RAD2DEG;
 }
 
 look_at_vec2 :: proc(pos, target: Vec2) -> f32 {
@@ -537,10 +537,10 @@ square_from_tri :: proc(tri: [3]Vec3) -> [4]Vec3 {
 }
 
 rand_digits :: proc(digit_count: i32) -> i32 {
-    res_str := str_add("", rl.GetRandomValue(0, 9));
+    res_str := str_add("", rl_GetRandomValue(0, 9));
 
     for i in 1..<digit_count {
-        digit := rl.GetRandomValue(0, 9);
+        digit := rl_GetRandomValue(0, 9);
         res_str = str_add(res_str, digit);
     }
 

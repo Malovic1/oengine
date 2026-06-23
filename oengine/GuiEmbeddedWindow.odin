@@ -1,13 +1,13 @@
 package oengine
 
 import "core:fmt"
-import rl "vendor:raylib"
+
 
 GuiEmbeddedWindow :: struct {
     x, y: f32,
     width, height: i32,
     mouse_position: Vec2,
-    target: rl.RenderTexture, 
+    target: rl_RenderTexture, 
 }
 
 gew_init :: proc(w, h: i32) -> GuiEmbeddedWindow {
@@ -15,23 +15,23 @@ gew_init :: proc(w, h: i32) -> GuiEmbeddedWindow {
         x = 0, y = 0,
         width = w, height = h,
         mouse_position = vec2_zero(),
-        target = rl.LoadRenderTexture(w, h),
+        target = rl_LoadRenderTexture(w, h),
     };
 }
 
 gew_begin :: proc(using self: GuiEmbeddedWindow) {
-    rl.BeginTextureMode(self.target);
+    rl_BeginTextureMode(self.target);
 }
 
 gew_end :: proc() {
-    rl.EndTextureMode();
+    rl_EndTextureMode();
 }
 
 gew_finish :: proc(using self: ^GuiEmbeddedWindow, s_x, s_y: f32, new_buffer: bool = false) {
     active := gui_active();
     if (!active.active) do return;
 
-    if (new_buffer) do rl.BeginDrawing();
+    if (new_buffer) do rl_BeginDrawing();
     
     x = s_x;
     y = s_y;
@@ -43,13 +43,13 @@ gew_finish :: proc(using self: ^GuiEmbeddedWindow, s_x, s_y: f32, new_buffer: bo
     mouse_position.x = window.mouse_position.x - rx;
     mouse_position.y = window.mouse_position.y - ry;
 
-    rl.DrawTexturePro(
+    rl_DrawTexturePro(
         target.texture, 
         {0, 0, f32(target.texture.width), f32(-target.texture.height)},
         {rx, ry, f32(rw), f32(rh)}, {}, 0, WHITE
     );
 
-    if (new_buffer) do rl.EndDrawing();
+    if (new_buffer) do rl_EndDrawing();
 }
 
 gew_set_width :: proc(using self: ^GuiEmbeddedWindow, w: i32) {
@@ -63,5 +63,5 @@ gew_set_height :: proc(using self: ^GuiEmbeddedWindow, h: i32) {
 }
 
 gew_reload :: proc(using self: ^GuiEmbeddedWindow) {
-    target = rl.LoadRenderTexture(width, height);
+    target = rl_LoadRenderTexture(width, height);
 }

@@ -3,7 +3,7 @@ package oengine
 import "core:math"
 import "core:math/linalg"
 import "core:fmt"
-import rl "vendor:raylib"
+
 import "fa"
 
 DEFAULT_RESTITUTION :: 0.5

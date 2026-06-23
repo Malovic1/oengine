@@ -1,7 +1,7 @@
 package oengine
 
 import "core:fmt"
-import rl "vendor:raylib"
+
 import "core:os"
 import od "object_data"
 import "core:math/linalg"
@@ -55,7 +55,7 @@ shape_model_load :: proc(tag, path: string) -> ShapeModel {
             shape := od.target_type(v_data["shape"], i32);
             mesh := mesh_loaders[shape]();
 
-            mesh.materials[0].maps[rl.MaterialMapIndex.ALBEDO].color = color;
+            mesh.materials[0].maps[rl_MaterialMapIndex.ALBEDO].color = color;
             mesh.materials[0].shader = world().ray_ctx.shader;
             res.meshes[k] = MeshTransform{mesh, Transform{position, rotation, scale}, pivot};
         }
@@ -86,12 +86,12 @@ shape_model_render :: proc(m: ShapeModel) {
 
         if (OE_DEBUG) {
             draw_cube_wireframe(global.position, global.rotation, global.scale, GREEN);
-            rl.DrawSphere(global.position, 0.1, GREEN);
+            rl_DrawSphere(global.position, 0.1, GREEN);
 
             draw_cube_wireframe(combined.position, combined.rotation, combined.scale, ORANGE);
-            rl.DrawSphere(combined.position, 0.1, ORANGE);
+            rl_DrawSphere(combined.position, 0.1, ORANGE);
 
-            rl.DrawSphere(pivot, 0.1, RED);
+            rl_DrawSphere(pivot, 0.1, RED);
         }
     }
 }

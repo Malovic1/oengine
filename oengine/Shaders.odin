@@ -1,6 +1,6 @@
 package oengine
 
-import rl "vendor:raylib"
+
 import "core:fmt"
 
 WAVE_VERT: cstring = `
@@ -41,11 +41,7 @@ uniform vec4 colDiffuse;
 out vec4 finalColor;
 
 uniform float seconds;
-
-uniform vec2 size;
-uniform vec3 viewPos;
-uniform float fogDensity;
-uniform vec4 fogColor;
+uniform vec2 size; 
 
 uniform float freqX;
 uniform float freqY;
@@ -54,38 +50,34 @@ uniform float ampY;
 uniform float speedX;
 uniform float speedY;
 
-float tex_size = 2.5;
+uniform vec3 viewPos;
+uniform float fogDensity;
+uniform vec4 fogColor;
 
 void main() {
-    float pixelWidth = 1.0 / size.x;
-    float pixelHeight = 1.0 / size.y;
+    float waveX = cos(fragTexCoord.y * freqX + seconds * speedX) * ampX;
+    float waveY = sin(fragTexCoord.x * freqY + seconds * speedY) * ampY;
+    vec2 wave_offset = vec2(waveX, waveY);
 
-    vec2 world_uv = fragTexCoord * size;
-    vec2 tile = floor(world_uv);   // which tile
-    vec2 local = fract(world_uv);  // inside tile
-    vec2 p = local;
+    // We use this specifically to tell the GPU how fast the animation is moving
+    vec2 continuous_moving_uv = (fragTexCoord * size) + wave_offset;
 
-    // make each tile slightly different
-    float tileOffset = tile.x + tile.y;
+    vec2 tiled_uv = fract(fragTexCoord * size);
+    vec2 final_uv = tiled_uv + wave_offset;
 
-    // your original waves, but influenced by tile
-    p.x += cos((local.y + tileOffset) * freqX + seconds * speedX) * ampX;
-    p.y += sin((local.x + tileOffset) * freqY + seconds * speedY) * ampY;
+    // This includes the velocity of the wave but avoids the sharp tile-edge cuts
+    vec2 dx = dFdx(continuous_moving_uv);
+    vec2 dy = dFdy(continuous_moving_uv);
 
-    float angle = tileOffset * 6.2831;
-    vec2 dir = vec2(cos(angle), sin(angle));
-
-    p += dir * sin(dot(local, dir) * freqX + seconds * speedX) * ampX;
-
-    finalColor = texture(texture0, p + tile) * colDiffuse * fragColor;
+    finalColor = textureGrad(texture0, final_uv, dx, dy) * colDiffuse * fragColor;
 
     float dist = length(viewPos - fragPosition);
-    float fogFactor = 1.0/exp((dist*fogDensity)*(dist*fogDensity));
+    float fogFactor = 1.0 / exp((dist * fogDensity) * (dist * fogDensity));
     fogFactor = clamp(fogFactor, 0.0, 1.0);
 
-    vec4 final_texel = mix(fogColor, finalColor, fogFactor);
-    finalColor = final_texel;
-}`;
+    finalColor = mix(fogColor, finalColor, fogFactor);
+}
+`;
 
 DEFAULT_VERT: cstring = `
 #version 330
@@ -349,8 +341,8 @@ SHADOWMAP_FRAG: cstring = `
 void main() { }
 `;
 
-shader_location :: proc(shader: rl.Shader, uniformName: cstring) -> rl.ShaderLocationIndex {
-    loc := rl.GetShaderLocation(shader, uniformName);
+shader_location :: proc(shader: rl_Shader, uniformName: cstring) -> rl_ShaderLocationIndex {
+    loc := rl_GetShaderLocation(shader, uniformName);
     return loc;
 }
 

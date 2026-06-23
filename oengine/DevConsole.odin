@@ -1,6 +1,6 @@
 package oengine
 
-import rl "vendor:raylib"
+
 import strs "core:strings"
 import "core:fmt"
 import "fa"
@@ -11,7 +11,7 @@ MAX_OTP_LINES :: 512
 MAX_COMMANDS :: 32
 
 dev_console: struct {
-    _rec: rl.Rectangle,
+    _rec: rl_Rectangle,
     active: bool,
     _toggle_key: Key,
     command: string,
@@ -115,8 +115,8 @@ console_update :: proc() {
     }
 
     if (animating) {
-        frame_counter += rl.GetFrameTime();
-        _rec.y = rl.EaseLinearNone(frame_counter, 0, f32(w_render_height() / 2), 0.1) - f32(w_render_height() / 2);
+        frame_counter += rl_GetFrameTime();
+        _rec.y = rl_EaseLinearNone(frame_counter, 0, f32(w_render_height() / 2), 0.1) - f32(w_render_height() / 2);
 
         if (frame_counter >= 0.1) {
             frame_counter = 0;
@@ -143,9 +143,9 @@ console_render :: proc() {
     using dev_console;
 
     if (active) {
-        rl.DrawRectangleRec(_rec, {125, 125, 125, 125});
+        rl_DrawRectangleRec(_rec, {125, 125, 125, 125});
 
-        rl.BeginScissorMode(
+        rl_BeginScissorMode(
             i32(_rec.x), i32(_rec.y), i32(_rec.width), i32(_rec.height - 40)
         );
 
@@ -160,7 +160,7 @@ console_render :: proc() {
             gui_text(line, 18, 10, y, standalone = true);
         }
 
-        rl.EndScissorMode();
+        rl_EndScissorMode();
 
         command = gui_text_box(
             "CommandTextBox", 0, 

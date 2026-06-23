@@ -1,17 +1,17 @@
 package oengine
 
 import "core:fmt"
-import rl "vendor:raylib"
+
 import "core:math"
 import strs "core:strings"
 
 GuiWindow :: struct {
     id: u32,
     title: string,
-    using rec: rl.Rectangle,
+    using rec: rl_Rectangle,
     dw, dh: f32,
 
-    top_bar: rl.Rectangle,
+    top_bar: rl_Rectangle,
 
     active, resizing, moving, can_exit: bool,
 
@@ -32,14 +32,14 @@ gw_render :: proc(using self: ^GuiWindow) {
         false,
     ) && can_exit;
 
-    if (mouse_down(.LEFT) && rl.CheckCollisionPointRec(window.mouse_position, top_bar) && !exit) {
+    if (mouse_down(.LEFT) && rl_CheckCollisionPointRec(window.mouse_position, top_bar) && !exit) {
         if (gui._active_window_id == 0 || gui._active_window_id == id) {
             moving = true;
         }
     }
 
-    _mouse_over = rl.CheckCollisionPointRec(window.mouse_position, top_bar) ||
-                rl.CheckCollisionPointRec(window.mouse_position, rec);
+    _mouse_over = rl_CheckCollisionPointRec(window.mouse_position, top_bar) ||
+                rl_CheckCollisionPointRec(window.mouse_position, rec);
 
     if (moving) {
         gui._active_window_id = id;
@@ -82,14 +82,14 @@ gw_render :: proc(using self: ^GuiWindow) {
     top_bar.width = width;
 
     // title
-    rl.DrawTextEx(
+    rl_DrawTextEx(
         gui_default_font, 
         to_cstr(title), 
         Vec2 {top_bar.x + 5, top_bar.y}, 
-        24, gui_text_spacing, rl.WHITE
+        24, gui_text_spacing, rl_WHITE
     );
 
-    rl.BeginScissorMode(
+    rl_BeginScissorMode(
         i32(x), i32(y), i32(width), i32(height)
     );
 }
@@ -114,7 +114,7 @@ gui_begin :: proc(
         instance.moving = false;
         instance.can_exit = can_exit;
 
-        instance.top_bar = rl.Rectangle {
+        instance.top_bar = rl_Rectangle {
             instance.x, instance.y, instance.width, gui_top_bar_height
         };
 
@@ -129,6 +129,6 @@ gui_begin :: proc(
 }
 
 gui_end :: proc() {
-    rl.EndScissorMode();
+    rl_EndScissorMode();
     gui._active = "";
 }

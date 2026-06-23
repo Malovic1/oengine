@@ -1,6 +1,6 @@
 package oengine
 
-import rl "vendor:raylib"
+
 import "core:math"
 import "base:runtime"
 
@@ -12,7 +12,7 @@ SoundFilter :: enum {
 }
 
 @(private = "file")
-sound_filters := [?]rl.AudioCallback {
+sound_filters := [?]rl_AudioCallback {
     nil,
     distort_filter,
     lpf_filter,
@@ -90,10 +90,10 @@ echo_filter :: proc "c" (buffer: rawptr, frames: u32) {
 
 attach_sound_filter :: proc(filter: SoundFilter) {
     if (filter == .NONE) do return;
-    rl.AttachAudioMixedProcessor(sound_filters[i32(filter)]);
+    rl_AttachAudioMixedProcessor(sound_filters[i32(filter)]);
 }
 
 detach_sound_filter :: proc(filter: SoundFilter) {
     if (filter == .NONE) do return;
-    rl.DetachAudioMixedProcessor(sound_filters[i32(filter)]);
+    rl_DetachAudioMixedProcessor(sound_filters[i32(filter)]);
 }

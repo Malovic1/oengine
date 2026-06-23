@@ -2,7 +2,7 @@ package oengine
 
 import "ecs"
 import "core:fmt"
-import rl "vendor:raylib"
+
 import "core:encoding/json"
 import od "object_data"
 
@@ -27,7 +27,7 @@ sa_init :: proc(position: Vec3, s_sound: Sound) -> SpatialAudio {
 }
 
 sa_play :: proc(using self: ^SpatialAudio) {
-    if (!rl.IsSoundPlaying(sound) && can_play) {
+    if (!rl_IsSoundPlaying(sound) && can_play) {
         play_sound(sound);
     }
 }

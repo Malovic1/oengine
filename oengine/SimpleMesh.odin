@@ -4,14 +4,14 @@ import "core:math"
 import "core:math/linalg"
 import "core:fmt"
 import "core:strings"
-import rl "vendor:raylib"
+
 import ecs "ecs"
 import "core:encoding/json"
 import od "object_data"
 import "core:time"
 
 Sprite :: struct {
-    src: rl.Rectangle,
+    src: rl_Rectangle,
     up: Vec3,
     size, origin: Vec2,
     rotation: f32,
@@ -28,7 +28,7 @@ sprite_default :: proc(texture: Texture) -> Sprite {
 }
 
 ModelArmature :: struct {
-    animations: [^]rl.ModelAnimation,
+    animations: [^]rl_ModelAnimation,
     anim_count: i32,
     frame_counter: f32,
     speed: f32,
@@ -36,7 +36,7 @@ ModelArmature :: struct {
 
 ma_load :: proc(path: string, speed: f32 = 100) -> ModelArmature {
     res: ModelArmature;
-    res.animations = rl.LoadModelAnimations(strings.clone_to_cstring(path), &res.anim_count);
+    res.animations = rl_LoadModelAnimations(strings.clone_to_cstring(path), &res.anim_count);
     res.speed = speed;
 
     return res;
@@ -91,14 +91,14 @@ sm_init_all :: proc(using sm: ^SimpleMesh, s_shape: ShapeType, s_color: Color) {
 
     is_lit = true;
     use_fog = OE_FAE;
-    texture = load_texture(rl.LoadTextureFromImage(rl.GenImageColor(16, 16, WHITE)));
+    texture = load_texture(rl_LoadTextureFromImage(rl_GenImageColor(16, 16, WHITE)));
     color = s_color;
     starting_color = color;
     cached = true;
     cast_shadows = true;
 }
 
-sm_init_def :: proc(s_shape: ShapeType = .BOX, s_color: Color = rl.WHITE) -> SimpleMesh {
+sm_init_def :: proc(s_shape: ShapeType = .BOX, s_color: Color = rl_WHITE) -> SimpleMesh {
     sm: SimpleMesh;
 
     sm_init_all(&sm, s_shape, s_color);
@@ -106,18 +106,18 @@ sm_init_def :: proc(s_shape: ShapeType = .BOX, s_color: Color = rl.WHITE) -> Sim
     return sm;
 }
 
-sm_init_tex :: proc(s_texture: Texture, s_shape: ShapeType = .BOX, s_color: Color = rl.WHITE) -> SimpleMesh {
+sm_init_tex :: proc(s_texture: Texture, s_shape: ShapeType = .BOX, s_color: Color = rl_WHITE) -> SimpleMesh {
     sm: SimpleMesh;
 
     sm_init_all(&sm, s_shape, s_color);
 
     sm.texture = s_texture;
-    sm.tex.(Model).materials[0].maps[rl.MaterialMapIndex.ALBEDO].texture = s_texture.data;
+    sm.tex.(Model).materials[0].maps[rl_MaterialMapIndex.ALBEDO].texture = s_texture.data;
 
     return sm;
 }
 
-sm_init_cube :: proc(cube_map: CubeMap, s_color: Color = rl.WHITE) -> SimpleMesh {
+sm_init_cube :: proc(cube_map: CubeMap, s_color: Color = rl_WHITE) -> SimpleMesh {
     sm: SimpleMesh;
 
     sm_init_all(&sm, .CUBEMAP, s_color);
@@ -126,7 +126,7 @@ sm_init_cube :: proc(cube_map: CubeMap, s_color: Color = rl.WHITE) -> SimpleMesh
     return sm;
 }
 
-sm_init_model :: proc(model: Model, s_color: Color = rl.WHITE) -> SimpleMesh {
+sm_init_model :: proc(model: Model, s_color: Color = rl_WHITE) -> SimpleMesh {
     sm: SimpleMesh;
 
     sm_init_all(&sm, .MODEL, s_color);
@@ -135,7 +135,7 @@ sm_init_model :: proc(model: Model, s_color: Color = rl.WHITE) -> SimpleMesh {
     return sm;
 }
 
-sm_init_slope :: proc(slope: Slope, s_color: Color = rl.WHITE) -> SimpleMesh {
+sm_init_slope :: proc(slope: Slope, s_color: Color = rl_WHITE) -> SimpleMesh {
     sm: SimpleMesh;
 
     sm_init_all(&sm, .SLOPE, s_color);
@@ -146,7 +146,7 @@ sm_init_slope :: proc(slope: Slope, s_color: Color = rl.WHITE) -> SimpleMesh {
 
 // temp fix, since the sm_init_tex can also take only a texture as parameter here 
 // you have to pass .SPRITE or any int to distinguish it from sm_init_tex
-sm_init_sprite :: proc(s_texture: Texture, #any_int i: i32, s_color: Color = rl.WHITE) -> SimpleMesh {
+sm_init_sprite :: proc(s_texture: Texture, #any_int i: i32, s_color: Color = rl_WHITE) -> SimpleMesh {
     sm: SimpleMesh;
 
     sm_init_all(&sm, .SPRITE, s_color);
@@ -157,9 +157,9 @@ sm_init_sprite :: proc(s_texture: Texture, #any_int i: i32, s_color: Color = rl.
 }
 
 sm_apply_anim :: proc(using self: ^SimpleMesh, ma: ^ModelArmature, id: i32) {
-    ma.frame_counter += ma.speed * rl.GetFrameTime();
+    ma.frame_counter += ma.speed * rl_GetFrameTime();
     fc := i32(math.floor(ma.frame_counter));
-    rl.UpdateModelAnimation(tex.(Model), ma.animations[id], fc);
+    rl_UpdateModelAnimation(tex.(Model), ma.animations[id], fc);
 
     if (fc >= ma.animations[id].frameCount) {
         ma.frame_counter = 0;
@@ -236,7 +236,7 @@ sm_custom_render :: proc(t: ^Transform, sm: ^SimpleMesh) {
                 texture, color,
             );
         case Sprite:
-            rl.DrawBillboardPro(
+            rl_DrawBillboardPro(
                 ecs_world.camera.rl_matrix, texture,
                 v.src, target.position, v.up,
                 v.size, v.origin, v.rotation,
@@ -266,7 +266,7 @@ sm_tex_is :: proc(using self: ^SimpleMesh, $T: typeid) -> bool {
 sm_texture :: proc(using self: ^SimpleMesh) -> Texture {
     #partial switch v in tex {
         case Model:
-            return load_texture(v.materials[0].maps[rl.MaterialMapIndex.ALBEDO].texture);
+            return load_texture(v.materials[0].maps[rl_MaterialMapIndex.ALBEDO].texture);
     }
 
     return texture;
@@ -277,7 +277,7 @@ sm_set_texture :: proc(using self: ^SimpleMesh, s_texture: Texture) {
 
     #partial switch v in tex {
         case Model:
-            v.materials[0].maps[rl.MaterialMapIndex.ALBEDO].texture = texture.data;
+            v.materials[0].maps[rl_MaterialMapIndex.ALBEDO].texture = texture.data;
     }
 }
 
@@ -286,7 +286,7 @@ sm_set_texture_id :: proc(using self: ^SimpleMesh, s_texture: Texture, mat_id: i
 
     #partial switch v in tex {
         case Model:
-            v.materials[mat_id].maps[rl.MaterialMapIndex.ALBEDO].texture = texture.data;
+            v.materials[mat_id].maps[rl_MaterialMapIndex.ALBEDO].texture = texture.data;
     }
 }
 
@@ -414,13 +414,13 @@ sm_parse :: proc(asset: od.Object) -> rawptr {
             heightmap_tex = get_asset_var(heightmap_tag, Texture);
         }
 
-        img := load_image(rl.LoadImageFromTexture(heightmap_tex));
-        heightmap := load_model(rl.LoadModelFromMesh(rl.GenMeshHeightmap(img.data, {1, 1, 1})));
-        heightmap.materials[0].maps[rl.MaterialMapIndex.ALBEDO].texture = heightmap_tex;
+        img := load_image(rl_LoadImageFromTexture(heightmap_tex));
+        heightmap := load_model(rl_LoadModelFromMesh(rl_GenMeshHeightmap(img.data, {1, 1, 1})));
+        heightmap.materials[0].maps[rl_MaterialMapIndex.ALBEDO].texture = heightmap_tex;
 
         sm := sm_init(heightmap);
         sm.shape = .HEIGHTMAP;
-        rl.UnloadImage(img.data);
+        rl_UnloadImage(img.data);
 
         return new_clone(sm);
     }

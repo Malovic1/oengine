@@ -2,7 +2,7 @@ package oengine
 
 import strs "core:strings"
 import "core:fmt"
-import rl "vendor:raylib"
+
 import ecs "ecs"
 import "core:encoding/json"
 import od "object_data"
@@ -20,9 +20,12 @@ Fluid :: struct {
     amp_y:   f32,
     speed_x: f32,
     speed_y: f32,
+    tex_size_x: f32,
+    tex_size_y: f32,
 
     set: proc(self: ^Fluid, name: string, val: f32),
     user_call: bool, // allows the user to specify when to render it using the render func
+    render_pos: bool,
 }
 
 @(private = "file")
@@ -32,10 +35,10 @@ f_init_all :: proc(using f: ^Fluid, s_texture: Texture) {
     texture = s_texture;
     color = WHITE;
 
-    _shader = load_shader(rl.LoadShaderFromMemory(WAVE_VERT, WAVE_FRAG));
+    _shader = load_shader(rl_LoadShaderFromMemory(WAVE_VERT, WAVE_FRAG));
 
-    mesh = load_model(rl.LoadModelFromMesh(rl.GenMeshPlane(1, 1, 1, 1)));
-    mesh.materials[0].maps[rl.MaterialMapIndex.ALBEDO].texture = texture;
+    mesh = load_model(rl_LoadModelFromMesh(rl_GenMeshPlane(1, 1, 1, 1)));
+    mesh.materials[0].maps[rl_MaterialMapIndex.ALBEDO].texture = texture;
     set_model_shader(&mesh, _shader);
 
     freqXLoc   := shader_location(_shader, "freqX");
@@ -45,21 +48,21 @@ f_init_all :: proc(using f: ^Fluid, s_texture: Texture) {
     speedXLoc  := shader_location(_shader, "speedX");
     speedYLoc  := shader_location(_shader, "speedY");
 
-    freq_x = 25;
-    freq_y = 25;
-    amp_x = 8;
-    amp_y = 8;
-    speed_x = 5;
-    speed_y = 5;
+    freq_x = 1;
+    freq_y = 1;
+    amp_x = 0.08;
+    amp_y = 0.08;
+    speed_x = 2.5;
+    speed_y = 2.5;
     size := Vec2 {f32(texture.width), f32(texture.height)};
 
-    rl.SetShaderValue(_shader, shader_location(_shader, "size"), &size, .VEC2);
-    rl.SetShaderValue(_shader, freqXLoc, &freq_x, rl.ShaderUniformDataType.FLOAT);
-    rl.SetShaderValue(_shader, freqYLoc, &freq_y, rl.ShaderUniformDataType.FLOAT);
-    rl.SetShaderValue(_shader, ampXLoc, &amp_x, rl.ShaderUniformDataType.FLOAT);
-    rl.SetShaderValue(_shader, ampYLoc, &amp_x, rl.ShaderUniformDataType.FLOAT);
-    rl.SetShaderValue(_shader, speedXLoc, &speed_x, rl.ShaderUniformDataType.FLOAT);
-    rl.SetShaderValue(_shader, speedYLoc, &speed_y, rl.ShaderUniformDataType.FLOAT);
+    rl_SetShaderValue(_shader, shader_location(_shader, "size"), &size, .VEC2);
+    rl_SetShaderValue(_shader, freqXLoc, &freq_x, rl_ShaderUniformDataType.FLOAT);
+    rl_SetShaderValue(_shader, freqYLoc, &freq_y, rl_ShaderUniformDataType.FLOAT);
+    rl_SetShaderValue(_shader, ampXLoc, &amp_x, rl_ShaderUniformDataType.FLOAT);
+    rl_SetShaderValue(_shader, ampYLoc, &amp_x, rl_ShaderUniformDataType.FLOAT);
+    rl_SetShaderValue(_shader, speedXLoc, &speed_x, rl_ShaderUniformDataType.FLOAT);
+    rl_SetShaderValue(_shader, speedYLoc, &speed_y, rl_ShaderUniformDataType.FLOAT);
 
     set = f_set;
 }
@@ -84,10 +87,10 @@ f_custom_render :: proc(t: ^Transform, f: ^Fluid) {
     transform = t^;
 
     pos := world().camera.position;
-    rl.SetShaderValue(_shader, shader_location(_shader, "viewPos"), &pos, .VEC3);
+    rl_SetShaderValue(_shader, shader_location(_shader, "viewPos"), &pos, .VEC3);
 
-    seconds := f32(rl.GetTime());
-    rl.SetShaderValue(_shader, shader_location(_shader, "seconds"), &seconds, .FLOAT);
+    seconds := f32(rl_GetTime());
+    rl_SetShaderValue(_shader, shader_location(_shader, "seconds"), &seconds, .FLOAT);
 
     color_loc := shader_location(_shader, "fogColor");
     clr := world().ray_ctx.fog_color;
@@ -97,18 +100,24 @@ f_custom_render :: proc(t: ^Transform, f: ^Fluid) {
         f32(clr.b) / 255,
         f32(clr.a) / 255,
     };
-    rl.SetShaderValue(_shader, color_loc, &color_f, .VEC4);
+    rl_SetShaderValue(_shader, color_loc, &color_f, .VEC4);
 
     density_loc := shader_location(_shader, "fogDensity");
     density_v := world().ray_ctx.fog_density;
-    rl.SetShaderValue(_shader, density_loc, &density_v, .FLOAT);
+    rl_SetShaderValue(_shader, density_loc, &density_v, .FLOAT);
 
-    render_pos := transform.position;
-    render_pos.y = transform.position.y + transform.scale.y * 0.5;
+    _render_pos := transform.position;
+    _render_pos.y = transform.position.y + transform.scale.y * 0.5;
 
-    draw_model(mesh, transform, color);
+    if (render_pos) { 
+        tr := transform;
+        tr.position = _render_pos;
+        draw_model(mesh, tr, color);
+    } else {
+        draw_model(mesh, transform, color);
+    }
 
-    // rl.BeginShaderMode(_shader);
+    // rl_BeginShaderMode(_shader);
     //
     // draw_textured_plane(
     //     texture, 
@@ -118,16 +127,26 @@ f_custom_render :: proc(t: ^Transform, f: ^Fluid) {
     //     color
     // );
     //
-    // rl.EndShaderMode();
+    // rl_EndShaderMode();
 }
 
 f_set :: proc(using self: ^Fluid, name: string, val: f32) {
     value := val;
 
-    rl.SetShaderValue(
+    rl_SetShaderValue(
         _shader, 
         shader_location(_shader, strs.clone_to_cstring(name)),
         &value, .FLOAT
+    );
+}
+
+f_set_size :: proc(using self: ^Fluid, size: Vec2) {
+    value := size;
+
+    rl_SetShaderValue(
+        _shader, 
+        shader_location(_shader, "size"),
+        &value, .VEC2
     );
 }
 

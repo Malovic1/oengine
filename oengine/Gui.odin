@@ -1,6 +1,6 @@
 package oengine
 
-import rl "vendor:raylib"
+
 import strs "core:strings"
 import "core:fmt"
 
@@ -38,7 +38,7 @@ gui_main_color := Color {99, 141, 160, 255};
 gui_accent_color := Color {63, 105, 135, 255};
 gui_darker_color := Color {41, 59, 68, 255};
 gui_lighter_color := Color {119, 169, 191, 255};
-gui_slider_color := rl.WHITE;
+gui_slider_color := rl_WHITE;
 
 gui_font_size: f32 = 16;
 gui_bezel_size: f32 = 2.5;
@@ -46,7 +46,7 @@ gui_text_spacing: f32 = 2;
 gui_top_bar_height: f32 = 30;
 gui_exit_scale: f32 = 25;
 
-gui_default_font: rl.Font;
+gui_default_font: rl_Font;
 
 gui_cursor := "|";
 @private gui_cursor_timer: f32;
@@ -123,7 +123,7 @@ gui_text_active :: proc() -> bool {
     return false;
 }
 
-gui_text :: proc(text: string, size: f32, x: f32 = 10, y: f32 = 10, standalone: bool = false, color := rl.WHITE) {
+gui_text :: proc(text: string, size: f32, x: f32 = 10, y: f32 = 10, standalone: bool = false, color := rl_WHITE) {
     active := gui_active();
     if (active != nil && !active.active && !standalone) do return;
 
@@ -136,7 +136,7 @@ gui_text :: proc(text: string, size: f32, x: f32 = 10, y: f32 = 10, standalone: 
     }
 
     text := to_cstr(text);
-    rl.DrawTextEx(
+    rl_DrawTextEx(
         gui_default_font, 
         text, 
         Vec2 {rx + x, ry + y}, 
@@ -151,24 +151,24 @@ GuiTextPositioning :: enum i32 {
     RIGHT,
 }
 
-text_pos_renders := [?]proc(string, rl.Rectangle, Color) {
+text_pos_renders := [?]proc(string, rl_Rectangle, Color) {
     text_center_pos,
     text_left_pos,
     text_right_pos,
 };
 
-text_center_pos :: proc(text: string, rec: rl.Rectangle, tint := WHITE) {
+text_center_pos :: proc(text: string, rec: rl_Rectangle, tint := WHITE) {
     ctext := to_cstr(text);
-    text_scale := (rec.width - gui_bezel_size * 2) / f32(rl.MeasureText(ctext, i32(gui_font_size)));
+    text_scale := (rec.width - gui_bezel_size * 2) / f32(rl_MeasureText(ctext, i32(gui_font_size)));
 
     if (text_scale * gui_font_size > rec.height - gui_bezel_size * 2) {
         text_scale = (rec.height - gui_bezel_size * 2) / gui_font_size;
     }
 
-    text_x := rec.x + (rec.width - f32(rl.MeasureText(ctext, i32(gui_font_size * text_scale)))) / 2;
+    text_x := rec.x + (rec.width - f32(rl_MeasureText(ctext, i32(gui_font_size * text_scale)))) / 2;
     text_y := rec.y + (rec.height - gui_font_size * text_scale) / 2;
 
-    rl.DrawTextEx(
+    rl_DrawTextEx(
         gui_default_font, 
         ctext, 
         Vec2 {text_x, text_y}, 
@@ -176,7 +176,7 @@ text_center_pos :: proc(text: string, rec: rl.Rectangle, tint := WHITE) {
     );
 }
 
-text_left_pos :: proc(text: string, rec: rl.Rectangle, tint := WHITE) {
+text_left_pos :: proc(text: string, rec: rl_Rectangle, tint := WHITE) {
     ctext := to_cstr(text);
     text_scale := (rec.height - gui_bezel_size * 2) / gui_font_size;
 
@@ -187,7 +187,7 @@ text_left_pos :: proc(text: string, rec: rl.Rectangle, tint := WHITE) {
     text_x := rec.x + gui_bezel_size;
     text_y := rec.y + (rec.height - gui_font_size * text_scale) / 2;
 
-    rl.DrawTextEx(
+    rl_DrawTextEx(
         gui_default_font, 
         ctext, 
         Vec2 {text_x, text_y}, 
@@ -195,7 +195,7 @@ text_left_pos :: proc(text: string, rec: rl.Rectangle, tint := WHITE) {
     );
 }
 
-text_right_pos :: proc(text: string, rec: rl.Rectangle, tint := WHITE) {
+text_right_pos :: proc(text: string, rec: rl_Rectangle, tint := WHITE) {
     ctext := to_cstr(text);
     text_scale := (rec.height - gui_bezel_size * 2) / gui_font_size;
 
@@ -203,10 +203,10 @@ text_right_pos :: proc(text: string, rec: rl.Rectangle, tint := WHITE) {
         text_scale = (rec.width - gui_bezel_size * 2.0) / gui_font_size;
     }
 
-    text_x := rec.x + rec.width - gui_bezel_size * 2 - f32(rl.MeasureText(ctext, i32(gui_font_size * text_scale)));
+    text_x := rec.x + rec.width - gui_bezel_size * 2 - f32(rl_MeasureText(ctext, i32(gui_font_size * text_scale)));
     text_y := rec.y + (rec.height - gui_font_size * text_scale) / 2;
 
-    rl.DrawTextEx(
+    rl_DrawTextEx(
         gui_default_font, 
         ctext, 
         Vec2 {text_x, text_y}, 
@@ -230,34 +230,34 @@ gui_button :: proc(text: string, x: f32 = 10, y: f32 = 10, w: f32 = 50, h: f32 =
         ry = active.y;
     }
 
-    rec := rl.Rectangle {
+    rec := rl_Rectangle {
         x = rx + x,
         y = ry + y,
         width = w,
         height = h,
     };
 
-    pressed := rl.CheckCollisionPointRec(window.mouse_position, rec) && mouse_released(.LEFT);
-    held := rl.CheckCollisionPointRec(window.mouse_position, rec) && mouse_down(.LEFT);
+    pressed := rl_CheckCollisionPointRec(window.mouse_position, rec) && mouse_released(.LEFT);
+    held := rl_CheckCollisionPointRec(window.mouse_position, rec) && mouse_down(.LEFT);
 
     if (texture.path == "empty") {
         if (decorated) {
-            rl.DrawRectangle(i32(rec.x - gui_bezel_size), i32(rec.y - gui_bezel_size), i32(rec.width + gui_bezel_size * 2),
+            rl_DrawRectangle(i32(rec.x - gui_bezel_size), i32(rec.y - gui_bezel_size), i32(rec.width + gui_bezel_size * 2),
                     i32(rec.height + gui_bezel_size * 2), gui_darker_color);
-            rl.DrawRectangle(i32(rec.x - gui_bezel_size), i32(rec.y - gui_bezel_size), i32(rec.width + gui_bezel_size), 
+            rl_DrawRectangle(i32(rec.x - gui_bezel_size), i32(rec.y - gui_bezel_size), i32(rec.width + gui_bezel_size), 
                     i32(rec.height + gui_bezel_size), gui_lighter_color);
 
-            if (!held) do rl.DrawRectangleRec(rec, gui_main_color);
-            else do rl.DrawRectangleRec(rec, gui_accent_color);
+            if (!held) do rl_DrawRectangleRec(rec, gui_main_color);
+            else do rl_DrawRectangleRec(rec, gui_accent_color);
         } else {
             if (draw_bounds) {
-                rl.DrawRectangleLinesEx(rec, 1, WHITE);
+                rl_DrawRectangleLinesEx(rec, 1, WHITE);
             }
         }
 
         text_pos_renders[text_pos](text, rec, tint);
     } else {
-        rl.DrawTexturePro(
+        rl_DrawTexturePro(
             texture, {0, 0, f32(texture.width), f32(texture.height)},
             rec, {0, 0}, 0, WHITE
         );
@@ -267,23 +267,23 @@ gui_button :: proc(text: string, x: f32 = 10, y: f32 = 10, w: f32 = 50, h: f32 =
 }
 
 gui_plain_rec :: proc(x, y, width, height: f32) {
-    rl.DrawRectangle(i32(x - gui_bezel_size), i32(y - gui_bezel_size), i32(width + gui_bezel_size * 2),
+    rl_DrawRectangle(i32(x - gui_bezel_size), i32(y - gui_bezel_size), i32(width + gui_bezel_size * 2),
         i32(height + gui_bezel_size * 2), gui_darker_color);
-    rl.DrawRectangle(i32(x - gui_bezel_size), i32(y - gui_bezel_size), i32(width + gui_bezel_size), i32(height + gui_bezel_size),
+    rl_DrawRectangle(i32(x - gui_bezel_size), i32(y - gui_bezel_size), i32(width + gui_bezel_size), i32(height + gui_bezel_size),
         gui_lighter_color);
-    rl.DrawRectangle(i32(x), i32(y), i32(width), i32(height), gui_main_color);
+    rl_DrawRectangle(i32(x), i32(y), i32(width), i32(height), gui_main_color);
 }
 
 gui_inverse_rec :: proc(x, y, width, height: f32) {
-    rl.DrawRectangle(i32(x - gui_bezel_size), i32(y - gui_bezel_size), i32(width + gui_bezel_size * 2),
+    rl_DrawRectangle(i32(x - gui_bezel_size), i32(y - gui_bezel_size), i32(width + gui_bezel_size * 2),
         i32(height + gui_bezel_size * 2), gui_lighter_color);
-    rl.DrawRectangle(i32(x - gui_bezel_size), i32(y - gui_bezel_size), i32(width + gui_bezel_size), i32(height + gui_bezel_size),
+    rl_DrawRectangle(i32(x - gui_bezel_size), i32(y - gui_bezel_size), i32(width + gui_bezel_size), i32(height + gui_bezel_size),
         gui_darker_color);
-    rl.DrawRectangle(i32(x), i32(y), i32(width), i32(height), gui_main_color);
+    rl_DrawRectangle(i32(x), i32(y), i32(width), i32(height), gui_main_color);
 }
 
 gui_interactive_rec :: proc(icon: GuiIcon, x, y, w, h: f32, press_mode: bool, w_move: bool) -> bool {
-    rec := rl.Rectangle {x, y, w, h};
+    rec := rl_Rectangle {x, y, w, h};
 
     if (w_move) {
         active := gui_active();
@@ -291,7 +291,7 @@ gui_interactive_rec :: proc(icon: GuiIcon, x, y, w, h: f32, press_mode: bool, w_
         rec.y = y + active.y;
     }
 
-    pressed := rl.CheckCollisionPointRec(window.mouse_position, rec) && press_mode;
+    pressed := rl_CheckCollisionPointRec(window.mouse_position, rec) && press_mode;
 
     gui_icon(icon, i32(rec.x), i32(rec.y), i32(rec.width), i32(rec.height));
 
@@ -316,22 +316,22 @@ GuiIconRenders := [?]proc(x, y, w, h: i32) {
 
 @(private = "file")
 exit_icon :: proc(x, y, w, h: i32) {
-    rl.DrawLine(x, y, x + w, y + h, rl.WHITE);
-    rl.DrawLine(x, y + h, x + w, y, rl.WHITE);
+    rl_DrawLine(x, y, x + w, y + h, rl_WHITE);
+    rl_DrawLine(x, y + h, x + w, y, rl_WHITE);
 }
 
 @(private = "file")
 file_icon :: proc(x, y, w, h: i32) {
-    rl.DrawLine(x, y + h, x + w, y + h, rl.WHITE);
-    rl.DrawLine(x + w, y + h, x + w, y, rl.WHITE);
-    rl.DrawLine(x, y, x + w, y, rl.WHITE);
-    rl.DrawLine(x, y, x, y + h, rl.WHITE);
+    rl_DrawLine(x, y + h, x + w, y + h, rl_WHITE);
+    rl_DrawLine(x + w, y + h, x + w, y, rl_WHITE);
+    rl_DrawLine(x, y, x + w, y, rl_WHITE);
+    rl_DrawLine(x, y, x, y + h, rl_WHITE);
 }
 
 @(private = "file")
 resize_icon :: proc(x, y, w, h: i32) {
-    rl.DrawLine(x, y + h, x + w, y, rl.WHITE);
-    rl.DrawLine(x + w/2, y + h, x + w, y + h/2, rl.WHITE);
+    rl_DrawLine(x, y + h, x + w, y, rl_WHITE);
+    rl_DrawLine(x + w/2, y + h, x + w, y + h/2, rl_WHITE);
 }
 
 @(private = "file")
@@ -341,14 +341,14 @@ tick_icon :: proc(x, y, w, h: i32) {
     fw := f32(w);
     fh := f32(h);
 
-    rl.DrawLineEx(
+    rl_DrawLineEx(
         {fx, fy + fh * 0.5},
         {fx + fw * 0.3, fy + fh},
         3,
         WHITE
     );
 
-    rl.DrawLineEx(
+    rl_DrawLineEx(
         {fx + fw * 0.3, fy + fh},
         {fx + fw, fy},
         3,
@@ -383,13 +383,13 @@ gui_tick :: proc(
     if (decorated) {
         gui_inverse_rec(rp.x, rp.y, w, h);
     } else {
-        rl.DrawRectangleLinesEx({rp.x, rp.y, w, h}, 1, tint);
+        rl_DrawRectangleLinesEx({rp.x, rp.y, w, h}, 1, tint);
     }
 
     res := tick
 
-    rec := rl.Rectangle {rp.x, rp.y, w, h};
-    if (rl.CheckCollisionPointRec(window.mouse_position, rec) && mouse_pressed(.LEFT)) {
+    rec := rl_Rectangle {rp.x, rp.y, w, h};
+    if (rl_CheckCollisionPointRec(window.mouse_position, rec) && mouse_pressed(.LEFT)) {
         res = !res;
     }
 

@@ -1,11 +1,11 @@
 package oengine
 
-import rl "vendor:raylib"
+
 import str "core:strings"
 import "core:math/linalg"
 
 Sound :: struct {
-    using data: rl.Sound,
+    using data: rl_Sound,
     path: string,
     volume: f32,
 }
@@ -18,13 +18,13 @@ load_sound :: proc {
 
 load_sound_path :: proc(s_path: string) -> Sound {
     return {
-        data = rl.LoadSound(str.clone_to_cstring(s_path)),
+        data = rl_LoadSound(str.clone_to_cstring(s_path)),
         path = s_path,
         volume = 1.0,
     };
 }
 
-load_sound_data :: proc(s_data: rl.Sound) -> Sound {
+load_sound_data :: proc(s_data: rl_Sound) -> Sound {
     return {
         data = s_data,
         path = DATA_PATH,
@@ -32,7 +32,7 @@ load_sound_data :: proc(s_data: rl.Sound) -> Sound {
     };
 }
 
-load_sound_pro :: proc(s_path: string, s_data: rl.Sound) -> Sound {
+load_sound_pro :: proc(s_path: string, s_data: rl_Sound) -> Sound {
     return {
         data = s_data,
         path = s_path,
@@ -41,13 +41,13 @@ load_sound_pro :: proc(s_path: string, s_data: rl.Sound) -> Sound {
 }
 
 play_sound :: proc(using self: Sound) {
-    rl.PlaySound(self);
+    rl_PlaySound(self);
 }
 
 // 0.0 - 1.0
 set_sound_vol :: proc(using self: ^Sound, s_volume: f32) {
     volume = s_volume;
-    rl.SetSoundVolume(self, volume);
+    rl_SetSoundVolume(self, volume);
 }
 
 position_sound :: proc(
@@ -78,9 +78,9 @@ position_sound :: proc(
     attenuation = linalg.clamp(attenuation, 0, 1);
 
     set_sound_vol(sound, attenuation);
-    rl.SetSoundPan(sound^, pan);
+    rl_SetSoundPan(sound^, pan);
 }
 
 deinit_sound :: proc(sound: Sound) {
-    rl.UnloadSound(sound);
+    rl_UnloadSound(sound);
 }

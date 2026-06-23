@@ -1,6 +1,6 @@
 package oengine
 
-import rl "vendor:raylib"
+
 import ecs "ecs"
 import "fa"
 import "core:fmt"
@@ -48,15 +48,15 @@ ew_init :: proc(s_gravity: Vec3, s_iter: i32 = 8) {
     accumulator = 0;
 
     ray_ctx.shader = load_shader_data(
-        rl.LoadShaderFromMemory(DEFAULT_VERT, DEFAULT_FRAG)
+        rl_LoadShaderFromMemory(DEFAULT_VERT, DEFAULT_FRAG)
     );
-    t_loc := rl.GetShaderLocation(ray_ctx.shader, "tiling");
+    t_loc := rl_GetShaderLocation(ray_ctx.shader, "tiling");
     t_value := vec2_one();
-    rl.SetShaderValue(ray_ctx.shader, t_loc, &t_value, .VEC2);
+    rl_SetShaderValue(ray_ctx.shader, t_loc, &t_value, .VEC2);
 
-    tu_loc := rl.GetShaderLocation(ray_ctx.shader, "use_triplanar");
+    tu_loc := rl_GetShaderLocation(ray_ctx.shader, "use_triplanar");
     tu_value := 0;
-    rl.SetShaderValue(ray_ctx.shader, tu_loc, &tu_value, .INT);
+    rl_SetShaderValue(ray_ctx.shader, tu_loc, &tu_value, .INT);
 
     ray_ambient(ray_ctx.shader, DARK_GRAY);
     ray_view_loc(ray_ctx.shader);
@@ -67,8 +67,8 @@ ew_init :: proc(s_gravity: Vec3, s_iter: i32 = 8) {
     world_fog.density = 0.007;
     world_fog.gradient = 1.5;
 
-    img := rl.GenImageGradientLinear(128, 64, 0, WHITE, BLACK);
-    tag_image = load_texture(rl.LoadTextureFromImage(img));
+    img := rl_GenImageGradientLinear(128, 64, 0, WHITE, BLACK);
+    tag_image = load_texture(rl_LoadTextureFromImage(img));
 
     decals = make([dynamic]^Decal);
     removed_decals = make([dynamic]i32);
@@ -101,7 +101,7 @@ ew_init :: proc(s_gravity: Vec3, s_iter: i32 = 8) {
     cache_init();
 
     shaders = {
-        transparent = load_shader(rl.LoadShaderFromMemory("", TRANSPARENT_FRAG)),
+        transparent = load_shader(rl_LoadShaderFromMemory("", TRANSPARENT_FRAG)),
     };
 }
 
@@ -116,9 +116,9 @@ world :: proc() -> type_of(ecs_world) {
 
 ray_set_tiling :: proc(tiling: Vec2) {
     using ecs_world;
-    t_loc := rl.GetShaderLocation(ray_ctx.shader, "tiling");
+    t_loc := rl_GetShaderLocation(ray_ctx.shader, "tiling");
     t_value := tiling;
-    rl.SetShaderValue(ray_ctx.shader, t_loc, &t_value, .VEC2);
+    rl_SetShaderValue(ray_ctx.shader, t_loc, &t_value, .VEC2);
 }
 
 ray_reset_tiling :: proc() {
@@ -127,16 +127,16 @@ ray_reset_tiling :: proc() {
 
 ray_enable_triplanar :: proc() {
     using ecs_world;
-    tu_loc := rl.GetShaderLocation(ray_ctx.shader, "use_triplanar");
+    tu_loc := rl_GetShaderLocation(ray_ctx.shader, "use_triplanar");
     tu_value := 1;
-    rl.SetShaderValue(ray_ctx.shader, tu_loc, &tu_value, .INT);
+    rl_SetShaderValue(ray_ctx.shader, tu_loc, &tu_value, .INT);
 }
 
 ray_disable_triplanar :: proc() {
     using ecs_world;
-    tu_loc := rl.GetShaderLocation(ray_ctx.shader, "use_triplanar");
+    tu_loc := rl_GetShaderLocation(ray_ctx.shader, "use_triplanar");
     tu_value := 0;
-    rl.SetShaderValue(ray_ctx.shader, tu_loc, &tu_value, .INT);
+    rl_SetShaderValue(ray_ctx.shader, tu_loc, &tu_value, .INT);
 }
 
 ew_clear :: proc() {
@@ -249,16 +249,25 @@ ew_update :: proc() {
     using ecs_world;
     @static candidates: [dynamic]u32;
 
+    clear_now := time.now();
     tr_clear_tree(ent_tree.root);
     clear(&candidates);
+    clear_time := time.since(clear_now);
 
+    fixed_now := time.now();
     ew_fixed_update(window.custom_update);
+    fixed_time := time.since(fixed_now);
 
+    fog_now := time.now();
     fog_update(camera.position);
+    fog_time := time.since(fog_now);
+
+    // fmt.println(clear_time, fixed_time, fog_time);
 
     ray_set_view(ray_ctx.shader, camera^);
     update_light_count(ray_ctx.shader, ray_ctx.light_count);
 
+    system_now := time.now();
     for i in 0..<fa.range(ecs_ctx.entities) {
         entity := ecs_ctx.entities.data[i];
         for j in 0..<fa.range(ecs_ctx._update_systems) {
@@ -270,42 +279,9 @@ ew_update :: proc() {
 
         tr_insert_octree(ent_tree.root, entity.id, tr_get_aabb(entity.id));
     }
+    system_time := time.since(system_now);
 
-    for i in 0..<fa.range(ecs_ctx.entities) {
-        entity := ecs_ctx.entities.data[i];
-
-        clear(&candidates);
-        tr_query_octree(ent_tree.root, tr_get_aabb(entity.id), &candidates);
-        for id in candidates {
-            if (id <= entity.id) { continue; }
-
-            entity2 := ew_get_ent(id);
-            tr := tr_target_transform(entity.id);
-            tr2 := tr_target_transform(entity2.id);
-            contact: CollisionInfo;
-            if (collision_transforms(tr, tr2, &contact)) {
-                if (entity.on_collision != nil) {
-                    collision := ecs.Collision {
-                        entity = entity2,
-                        normal = contact.normal,
-                        depth = contact.depth,
-                        point = contact.point,
-                    };
-                    entity.on_collision(collision);
-                }
-                if (entity2.on_collision != nil) {
-                    collision := ecs.Collision {
-                        entity = entity,
-                        normal = contact.normal,
-                        depth = contact.depth,
-                        point = contact.point,
-                    };
-                    entity2.on_collision(collision);
-                }
-            }
-        }
-    }
-
+    remove_now := time.now();
     for remove_id in ecs_ctx.removed_ents {
         for i := fa.range(ecs_ctx.entities) - 1; i >= 0; i -= 1 {  
             if (i32(ecs_ctx.entities.data[i].id) == remove_id) {
@@ -314,23 +290,33 @@ ew_update :: proc() {
             }
         }
     }
-    clear(&ecs_ctx.removed_ents)
+    clear(&ecs_ctx.removed_ents);
+    remove_time := time.since(remove_now);
 
+    d_remove_now := time.now();
     for i in removed_decals {
         if (int(i) < len(decals)) {
             ordered_remove(&decals, int(i));
         }
     }
     clear(&removed_decals);
+    d_remove_time := time.since(d_remove_now);
+
+    // fmt.println(
+    //     "sys_time", system_time,
+    //     "octree_time", octree_time,
+    //     "remove_time", remove_time,
+    //     "d_remove_time", d_remove_time,
+    // );
 }
 
 @(private = "file")
 ew_fixed_thread :: proc() {
     using ecs_world;
-    last_time := rl.GetTime();
+    last_time := rl_GetTime();
 
-    for (!rl.WindowShouldClose()) {
-        current_time := rl.GetTime();
+    for (!rl_WindowShouldClose()) {
+        current_time := rl_GetTime();
         dt := current_time - last_time;
         phys_tick = dt;
         if (dt >= FIXED_TIME_STEP) {
@@ -349,7 +335,7 @@ ew_fixed_thread :: proc() {
 ew_fixed_update :: proc(custom_update: proc(dt: f32) = nil) {
     using ecs_world;
 
-    dt := rl.GetFrameTime();
+    dt := rl_GetFrameTime();
     accumulator += dt;
 
     for (accumulator >= FIXED_TIME_STEP) {
@@ -371,24 +357,24 @@ ew_render :: proc() {
         if (s_map.light == nil) { continue; }
 
         slot := i32(i) + 1;
-        rl.rlActiveTextureSlot(slot); // avoid 0-4 used by other textures
-        rl.rlEnableTexture(ray_ctx.shadowmaps[i].target.depth.id);
-        rl.SetShaderValue(
+        rl_rlActiveTextureSlot(slot); // avoid 0-4 used by other textures
+        rl_rlEnableTexture(ray_ctx.shadowmaps[i].target.depth.id);
+        rl_SetShaderValue(
             ray_ctx.shader, 
             shader_location(
                 ray_ctx.shader, 
-                rl.TextFormat("shadowMaps[%i]", s_map.light.id)
+                rl_TextFormat("shadowMaps[%i]", s_map.light.id)
             ), 
             &slot, .INT
         );
     }
 
-    rl.rlDisableBackfaceCulling();
+    rl_rlDisableBackfaceCulling();
     for i in 0..<fa.range(physics.mscs) {
         msc_render(physics.mscs.data[i]);
     }
 
-    rl.rlEnableBackfaceCulling();
+    rl_rlEnableBackfaceCulling();
 
     frustum := camera.frustum;
     if (OE_DEBUG) {
@@ -399,7 +385,7 @@ ew_render :: proc() {
     for i in 0..<fa.range(ecs_ctx.entities) {
         entity := ecs_ctx.entities.data[i];
 
-        bbox: rl.BoundingBox;
+        bbox: rl_BoundingBox;
         switch entity.frustum_type {
             case .INTERNAL:
                 tr := get_component(entity, Transform)^;
@@ -417,7 +403,7 @@ ew_render :: proc() {
         }
 
         if (OE_DEBUG) {
-            rl.DrawBoundingBox(bbox, ORANGE);
+            rl_DrawBoundingBox(bbox, ORANGE);
         }
 
         if (FrustumContainsBox(frustum, bbox)) {
@@ -444,7 +430,7 @@ ew_render :: proc() {
         delete(dids);
         draw_debug_axis();
 
-        rl.DrawCubeWiresV({}, vec3_one() * OCTREE_SIZE, GREEN);
+        rl_DrawCubeWiresV({}, vec3_one() * OCTREE_SIZE, GREEN);
 
     }
 }

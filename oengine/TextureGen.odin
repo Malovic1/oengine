@@ -1,7 +1,7 @@
 package oengine
 
 import "core:fmt"
-import rl "vendor:raylib"
+
 
 hex_to_rgb :: proc(#any_int hex: i32) -> Color {
     return Color {
@@ -23,15 +23,15 @@ hex_to_rgb_img :: proc(arr: []i32) -> []Color {
 }
 
 get_tex_from_data :: proc(#any_int w, h: i32, data: [^]Color) -> Texture {
-    rl_image := rl.Image {
+    rl_image := rl_Image {
         data = data,
         width = w,
         height = h,
-        format = rl.PixelFormat.UNCOMPRESSED_R8G8B8A8,
+        format = rl_PixelFormat.UNCOMPRESSED_R8G8B8A8,
         mipmaps = 1
     };
 
-    return load_texture(rl.LoadTextureFromImage(rl_image));
+    return load_texture(rl_LoadTextureFromImage(rl_image));
 }
 
 gen_tex_color :: proc(#any_int w, h: i32, color: Color) -> Texture {
@@ -41,15 +41,15 @@ gen_tex_color :: proc(#any_int w, h: i32, color: Color) -> Texture {
         pixels[i] = color;
     }
 
-    rl_image := rl.Image {
+    rl_image := rl_Image {
         data = pixels,
         width = w,
         height = h,
-        format = rl.PixelFormat.UNCOMPRESSED_R8G8B8A8,
+        format = rl_PixelFormat.UNCOMPRESSED_R8G8B8A8,
         mipmaps = 1
     };
 
-    return load_texture(rl.LoadTextureFromImage(rl_image));
+    return load_texture(rl_LoadTextureFromImage(rl_image));
 }
 
 LOGO_WIDTH :: 132

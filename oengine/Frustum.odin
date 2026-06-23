@@ -1,6 +1,6 @@
 package oengine
 
-import rl "vendor:raylib"
+
 import "core:math/linalg"
 import "core:math"
 
@@ -21,31 +21,31 @@ BoundingBoxCornersFlag :: enum u8 {
 }
 
 Frustum :: struct {
-	up    : rl.Vector4,
-	down  : rl.Vector4,
-	left  : rl.Vector4,
-	right : rl.Vector4,
-	near  : rl.Vector4,
-	far   : rl.Vector4,
+	up    : rl_Vector4,
+	down  : rl_Vector4,
+	left  : rl_Vector4,
+	right : rl_Vector4,
+	near  : rl_Vector4,
+	far   : rl_Vector4,
 }
 
 // Computes the signed distance from a point to a plane.
-PlaneDistanceToPoint :: proc(plane: rl.Vector4, point: rl.Vector3) -> f32 {
+PlaneDistanceToPoint :: proc(plane: rl_Vector4, point: rl_Vector3) -> f32 {
 	d := point.x * plane.x + point.y * plane.y + point.z * plane.z + plane.w
 	e := math.sqrt(plane.x * plane.x + plane.y * plane.y + plane.z * plane.z)
 	return d / e
 }
 
-CheckCollisionPlanePoint :: proc(plane: rl.Vector4, point: rl.Vector3) -> bool {
+CheckCollisionPlanePoint :: proc(plane: rl_Vector4, point: rl_Vector3) -> bool {
 	return PlaneDistanceToPoint(plane, point) <= 0.0
 }
 
-CheckCollisionPlaneSphere :: proc(plane: rl.Vector4, center: rl.Vector3, radius: f32) -> bool {
+CheckCollisionPlaneSphere :: proc(plane: rl_Vector4, center: rl_Vector3, radius: f32) -> bool {
 	return PlaneDistanceToPoint(plane, center) <= radius
 }
 
-CheckCollisionPlaneBox :: proc(plane: rl.Vector4, box: rl.BoundingBox) -> bool {
-	corners := [?]rl.Vector3{
+CheckCollisionPlaneBox :: proc(plane: rl_Vector4, box: rl_BoundingBox) -> bool {
+	corners := [?]rl_Vector3{
 		box.min,
 		box.max,
 		{box.min.x, box.max.y, box.min.z},
@@ -63,7 +63,7 @@ CheckCollisionPlaneBox :: proc(plane: rl.Vector4, box: rl.BoundingBox) -> bool {
 	return false
 }
 
-CheckCollisionPlaneBoxEx :: proc(plane: rl.Vector4, box: rl.BoundingBox) -> BoundingBoxCornersFlag {
+CheckCollisionPlaneBoxEx :: proc(plane: rl_Vector4, box: rl_BoundingBox) -> BoundingBoxCornersFlag {
 	result: BoundingBoxCornersFlag = .BOX_NO_CORNER
 
 	if CheckCollisionPlanePoint(plane, box.min)                                       do result |= .BOX_FRONT_BOTTOM_LEFT
@@ -78,7 +78,7 @@ CheckCollisionPlaneBoxEx :: proc(plane: rl.Vector4, box: rl.BoundingBox) -> Boun
 	return result
 }
 
-FrustumContainsSphere :: proc(frustum: Frustum, center: rl.Vector3, radius: f32) -> bool {
+FrustumContainsSphere :: proc(frustum: Frustum, center: rl_Vector3, radius: f32) -> bool {
 	if PlaneDistanceToPoint(frustum.left,  center) <= -radius do return false
 	if PlaneDistanceToPoint(frustum.right, center) <= -radius do return false
 	if PlaneDistanceToPoint(frustum.up,    center) <= -radius do return false
@@ -88,11 +88,11 @@ FrustumContainsSphere :: proc(frustum: Frustum, center: rl.Vector3, radius: f32)
 	return true
 }
 
-FrustumContainsPoint :: proc(frustum: Frustum, point: rl.Vector3) -> bool {
+FrustumContainsPoint :: proc(frustum: Frustum, point: rl_Vector3) -> bool {
 	return FrustumContainsSphere(frustum, point, 0.0)
 }
 
-FrustumContainsBox :: proc(frustum: Frustum, box: rl.BoundingBox) -> bool {
+FrustumContainsBox :: proc(frustum: Frustum, box: rl_BoundingBox) -> bool {
 	if CheckCollisionPlaneBoxEx(frustum.up,    box) == .BOX_ALL_CORNERS do return false
 	if CheckCollisionPlaneBoxEx(frustum.down,  box) == .BOX_ALL_CORNERS do return false
 	if CheckCollisionPlaneBoxEx(frustum.left,  box) == .BOX_ALL_CORNERS do return false
@@ -102,8 +102,8 @@ FrustumContainsBox :: proc(frustum: Frustum, box: rl.BoundingBox) -> bool {
 	return true
 }
 
-DrawFrustum :: proc(frustum: Frustum, color: rl.Color) {
-	corners := [8]rl.Vector3{}
+DrawFrustum :: proc(frustum: Frustum, color: rl_Color) {
+	corners := [8]rl_Vector3{}
 
 	// We'll define the corners in this order:
 	// 0: near bottom left
@@ -115,17 +115,17 @@ DrawFrustum :: proc(frustum: Frustum, color: rl.Color) {
 	// 6: far top left
 	// 7: far top right
 
-	planes := [6]rl.Vector4{
+	planes := [6]rl_Vector4{
 		frustum.left, frustum.right,
 		frustum.up, frustum.down,
 		frustum.near, frustum.far,
 	}
 
 	// Helper to get 3-plane intersection
-	PlaneIntersection :: proc(p1, p2, p3: rl.Vector4) -> rl.Vector3 {
-		a := rl.Vector3{p1.x, p1.y, p1.z}
-		b := rl.Vector3{p2.x, p2.y, p2.z}
-		c := rl.Vector3{p3.x, p3.y, p3.z}
+	PlaneIntersection :: proc(p1, p2, p3: rl_Vector4) -> rl_Vector3 {
+		a := rl_Vector3{p1.x, p1.y, p1.z}
+		b := rl_Vector3{p2.x, p2.y, p2.z}
+		c := rl_Vector3{p3.x, p3.y, p3.z}
 
 		cross_bc := linalg.cross(b, c)
 		cross_ca := linalg.cross(c, a)
@@ -134,7 +134,7 @@ DrawFrustum :: proc(frustum: Frustum, color: rl.Color) {
 		denom := linalg.dot(a, cross_bc)
 
 		if math.abs(denom) < 0.00001 {
-			return rl.Vector3{0, 0, 0} // fallback
+			return rl_Vector3{0, 0, 0} // fallback
 		}
 
 		numerator := cross_bc * -p1.w + cross_ca * -p2.w + cross_ab * -p3.w;
@@ -161,16 +161,16 @@ DrawFrustum :: proc(frustum: Frustum, color: rl.Color) {
 	}
 
 	for edge in edges {
-		rl.DrawLine3D(corners[edge[0]], corners[edge[1]], color)
+		rl_DrawLine3D(corners[edge[0]], corners[edge[1]], color)
 	}
 }
 
-camera_view_mat :: proc(camera: Camera) -> rl.Matrix {
-	return rl.MatrixLookAt(camera.rl_matrix.position, camera.rl_matrix.target, camera.rl_matrix.up);
+camera_view_mat :: proc(camera: Camera) -> rl_Matrix {
+	return rl_MatrixLookAt(camera.rl_matrix.position, camera.rl_matrix.target, camera.rl_matrix.up);
 }
 
-camera_proj_mat :: proc(camera: Camera, aspect: f32) -> rl.Matrix {
-	return rl.MatrixPerspective(camera.rl_matrix.fovy * Deg2Rad, aspect, camera.near, camera.far);
+camera_proj_mat :: proc(camera: Camera, aspect: f32) -> rl_Matrix {
+	return rl_MatrixPerspective(camera.rl_matrix.fovy * Deg2Rad, aspect, camera.near, camera.far);
 }
 
 // Returns the frustum in world space coordinates
@@ -182,12 +182,12 @@ CameraGetFrustum :: proc(camera: Camera, aspect: f32) -> Frustum {
 	clip := rl_mat_to_mat4(clip_rl);
 
 	// Perspective projection
-	frustum.left  = linalg.normalize(rl.Vector4{clip.m3 + clip.m0, clip.m7 + clip.m4,  clip.m11 + clip.m8,  clip.m15 + clip.m12})
-	frustum.right = linalg.normalize(rl.Vector4{clip.m3 - clip.m0, clip.m7 - clip.m4,  clip.m11 - clip.m8,  clip.m15 - clip.m12})
-	frustum.down  = linalg.normalize(rl.Vector4{clip.m3 + clip.m1, clip.m7 + clip.m5,  clip.m11 + clip.m9,  clip.m15 + clip.m13})
-	frustum.up    = linalg.normalize(rl.Vector4{clip.m3 - clip.m1, clip.m7 - clip.m5,  clip.m11 - clip.m9,  clip.m15 - clip.m13})
-	frustum.near  = linalg.normalize(rl.Vector4{clip.m3 + clip.m2, clip.m7 + clip.m6,  clip.m11 + clip.m10, clip.m15 + clip.m14})
-	frustum.far   = linalg.normalize(rl.Vector4{clip.m3 - clip.m2, clip.m7 - clip.m6,  clip.m11 - clip.m10, clip.m15 - clip.m14})
+	frustum.left  = linalg.normalize(rl_Vector4{clip.m3 + clip.m0, clip.m7 + clip.m4,  clip.m11 + clip.m8,  clip.m15 + clip.m12})
+	frustum.right = linalg.normalize(rl_Vector4{clip.m3 - clip.m0, clip.m7 - clip.m4,  clip.m11 - clip.m8,  clip.m15 - clip.m12})
+	frustum.down  = linalg.normalize(rl_Vector4{clip.m3 + clip.m1, clip.m7 + clip.m5,  clip.m11 + clip.m9,  clip.m15 + clip.m13})
+	frustum.up    = linalg.normalize(rl_Vector4{clip.m3 - clip.m1, clip.m7 - clip.m5,  clip.m11 - clip.m9,  clip.m15 - clip.m13})
+	frustum.near  = linalg.normalize(rl_Vector4{clip.m3 + clip.m2, clip.m7 + clip.m6,  clip.m11 + clip.m10, clip.m15 + clip.m14})
+	frustum.far   = linalg.normalize(rl_Vector4{clip.m3 - clip.m2, clip.m7 - clip.m6,  clip.m11 - clip.m10, clip.m15 - clip.m14})
 
 	return frustum
 }

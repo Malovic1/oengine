@@ -2,7 +2,7 @@ package oengine
 
 import "core:math"
 import "core:fmt"
-import rl "vendor:raylib"
+
 import ecs "ecs"
 import "fa"
 import "core:encoding/json"
@@ -56,6 +56,7 @@ RigidBody :: struct {
     _difference: Transform,
     grounded: bool,
     _down, _front, _up: Raycast,
+    _down_info: MSCCollisionInfo,
     _dir: Vec3,
     _front_dist: f32,
 
@@ -183,7 +184,7 @@ load_heights :: proc(img: Image) -> HeightMap {
     }
 
     colors_len := img.data.width * img.data.height;
-    colors := rl.LoadImageColors(img.data);
+    colors := rl_LoadImageColors(img.data);
 
     for i in 0..<colors_len {
         row := i / img.data.width;
@@ -263,9 +264,9 @@ rb_render :: proc(ctx: ^ecs.Context, ent: ^ecs.Entity) {
         // draw_heightmap_wireframe(shape_variant.(HeightMapHandle), transform.position, transform.rotation, transform.scale, PHYS_DEBUG_COLOR);
     }
 
-    rl.DrawLine3D(_down.position, _down.target, RED);
-    rl.DrawLine3D(_front.position, _front.target, RED);
-    rl.DrawLine3D(_up.position, _up.target, RED);
+    rl_DrawLine3D(_down.position, _down.target, RED);
+    rl_DrawLine3D(_front.position, _front.target, RED);
+    rl_DrawLine3D(_up.position, _up.target, RED);
 }
 
 rb_clear :: proc(using self: ^RigidBody) {

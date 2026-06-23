@@ -1,7 +1,7 @@
 package oengine
 
 import "core:fmt"
-import rl "vendor:raylib"
+
 
 get_particle_data :: proc(data: rawptr, $T: typeid) -> ^T {
     return cast(^T)data;
@@ -22,7 +22,7 @@ gradient_beh :: proc(p: ^Particle) {
     delta_b := i32(p.data.color2.b) - i32(p.data.color1.b);
 
     adjust := proc(speed: f32, comp: u8, delta: i32) -> u8 {
-        step := i32(speed * rl.GetFrameTime());
+        step := i32(speed * rl_GetFrameTime());
         if delta < 0 {
             return max(comp - u8(min(-delta, step)), 0);
         } else {

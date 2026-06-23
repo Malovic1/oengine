@@ -1,10 +1,10 @@
 package oengine
 
-import rl "vendor:raylib"
+
 import strs "core:strings"
 
 Shader :: struct {
-    using data: rl.Shader,
+    using data: rl_Shader,
     v_path, f_path: string,
 }
 
@@ -16,13 +16,13 @@ load_shader :: proc {
 
 load_shader_path :: proc(sv_path, sf_path: string) -> Shader {
     return {
-        data = rl.LoadShader(strs.clone_to_cstring(sv_path), strs.clone_to_cstring(sf_path)),
+        data = rl_LoadShader(strs.clone_to_cstring(sv_path), strs.clone_to_cstring(sf_path)),
         v_path = sv_path,
         f_path = sf_path,
     };
 }
 
-load_shader_data :: proc(s_data: rl.Shader) -> Shader {
+load_shader_data :: proc(s_data: rl_Shader) -> Shader {
     return {
         data = s_data,
         v_path = DATA_PATH,
@@ -30,7 +30,7 @@ load_shader_data :: proc(s_data: rl.Shader) -> Shader {
     };
 }
 
-load_shader_pro :: proc(sv_path, sf_path: string, s_data: rl.Shader) -> Shader {
+load_shader_pro :: proc(sv_path, sf_path: string, s_data: rl_Shader) -> Shader {
     return {
         data = s_data,
         v_path = sv_path,
@@ -39,7 +39,7 @@ load_shader_pro :: proc(sv_path, sf_path: string, s_data: rl.Shader) -> Shader {
 }
 
 deinit_shader :: proc(shader: Shader) {
-    rl.UnloadShader(shader.data);
+    rl_UnloadShader(shader.data);
 }
 
 shader_defined :: proc(using shader: Shader) -> bool {

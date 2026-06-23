@@ -3,7 +3,7 @@ package oengine
 import "core:fmt"
 import strs "core:strings"
 import "core:unicode/utf8"
-import rl "vendor:raylib"
+
 
 GuiTextBox :: struct {
     text: string,
@@ -26,14 +26,14 @@ gui_text_box_render :: proc(using self: ^GuiTextBox, x, y, w, h: f32, decorated:
         ry = w_active.y;
     }
 
-    rec := rl.Rectangle {
+    rec := rl_Rectangle {
         x = rx + x,
         y = ry + y,
         width = w,
         height = h,
     };
 
-    if (rl.CheckCollisionPointRec(window.mouse_position, rec) && mouse_pressed(Mouse.LEFT)) {
+    if (rl_CheckCollisionPointRec(window.mouse_position, rec) && mouse_pressed(Mouse.LEFT)) {
         active = !active;
     }
 
@@ -47,12 +47,12 @@ gui_text_box_render :: proc(using self: ^GuiTextBox, x, y, w, h: f32, decorated:
     text_x := rec.x + 5;
 
     if (decorated) do gui_inverse_rec(rec.x, rec.y, rec.width, rec.height);
-    else do rl.DrawRectangleLinesEx(rec, 1, tint);
+    else do rl_DrawRectangleLinesEx(rec, 1, tint);
 
-    rl.BeginScissorMode(i32(rec.x), i32(rec.y), i32(rec.width), i32(rec.height));
+    rl_BeginScissorMode(i32(rec.x), i32(rec.y), i32(rec.width), i32(rec.height));
    
     if (len(text) > 0) {
-        text_len := rl.MeasureTextEx(
+        text_len := rl_MeasureTextEx(
             gui_default_font, 
             to_cstr(text),
             gui_font_size * text_scale, 2
@@ -60,7 +60,7 @@ gui_text_box_render :: proc(using self: ^GuiTextBox, x, y, w, h: f32, decorated:
 
         symbol := []u8{text[(len(text) - 1) % len(text)]};
 
-        char_len := rl.MeasureTextEx(
+        char_len := rl_MeasureTextEx(
             gui_default_font, to_cstr(string(symbol)),
             gui_font_size, 2
         ).x;
@@ -70,7 +70,7 @@ gui_text_box_render :: proc(using self: ^GuiTextBox, x, y, w, h: f32, decorated:
         }
     }
 
-    rl.DrawTextEx(
+    rl_DrawTextEx(
         gui_default_font, 
         to_cstr(text), 
         {text_x, text_y}, 
@@ -80,7 +80,7 @@ gui_text_box_render :: proc(using self: ^GuiTextBox, x, y, w, h: f32, decorated:
     if (active) {
         if (len(text) > 0) {
             char_len: f32;
-            text_len := rl.MeasureTextEx(
+            text_len := rl_MeasureTextEx(
                 gui_default_font, 
                 to_cstr(text),
                 gui_font_size * text_scale, 2
@@ -88,7 +88,7 @@ gui_text_box_render :: proc(using self: ^GuiTextBox, x, y, w, h: f32, decorated:
 
             if (text_len != 0) {
                 partial_text := text[:len(text) - pos];
-                partial_width := rl.MeasureTextEx(
+                partial_width := rl_MeasureTextEx(
                     gui_default_font,
                     to_cstr(partial_text),
                     gui_font_size * text_scale,
@@ -97,7 +97,7 @@ gui_text_box_render :: proc(using self: ^GuiTextBox, x, y, w, h: f32, decorated:
                 cur_x := text_x + partial_width;
 
                 if (i32(gui_cursor_timer) % 2 == 0) {
-                    rl.DrawTextEx(
+                    rl_DrawTextEx(
                         gui_default_font, 
                         to_cstr(gui_cursor), 
                         {cur_x, text_y}, 
@@ -107,7 +107,7 @@ gui_text_box_render :: proc(using self: ^GuiTextBox, x, y, w, h: f32, decorated:
             }
         } else {            
             if (i32(gui_cursor_timer) % 2 == 0) {
-                rl.DrawTextEx(
+                rl_DrawTextEx(
                     gui_default_font, 
                     to_cstr(gui_cursor), 
                     {text_x, text_y}, 
@@ -117,7 +117,7 @@ gui_text_box_render :: proc(using self: ^GuiTextBox, x, y, w, h: f32, decorated:
         }
     }
 
-    rl.EndScissorMode();
+    rl_EndScissorMode();
 
     MOVE_TIMER_MAX :: 0.75
     @static auto_move_timer: f32 = MOVE_TIMER_MAX;
@@ -127,13 +127,13 @@ gui_text_box_render :: proc(using self: ^GuiTextBox, x, y, w, h: f32, decorated:
         if (key_down(.LEFT_CONTROL) || key_down(.LEFT_SUPER)) {
             if (key_pressed(.V)) { 
                 left := text[:len(text) - pos];
-                copied := string(rl.GetClipboardText());
+                copied := string(rl_GetClipboardText());
                 right := text[len(text) - pos:];
 
                 text = str_add({left, copied, right});
             }
             if (key_pressed(.C)) {
-                rl.SetClipboardText(to_cstr(text));
+                rl_SetClipboardText(to_cstr(text));
             }
         }
 
@@ -213,7 +213,7 @@ gui_text_box_render :: proc(using self: ^GuiTextBox, x, y, w, h: f32, decorated:
 
         
 
-        if (!rl.CheckCollisionPointRec(window.mouse_position, rec) &&
+        if (!rl_CheckCollisionPointRec(window.mouse_position, rec) &&
             mouse_pressed(.LEFT)) { active = false; }
 
         if (key_pressed(.ESCAPE)) do active = false;

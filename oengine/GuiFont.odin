@@ -1,15 +1,15 @@
 package oengine
 
 import "core:fmt"
-import rl "vendor:raylib"
+
 import "core:c/libc"
 
 BIT_CHECK :: proc(a, b: u32le) -> u32le {
     return (a & (1 << b));
 }
 
-load_font_default :: proc() -> rl.Font {
-    default_font: rl.Font;
+load_font_default :: proc() -> rl_Font {
+    default_font: rl_Font;
     default_font.glyphCount = 224;
     default_font.glyphPadding = 0;
 
@@ -71,10 +71,10 @@ load_font_default :: proc() -> rl.Font {
         5, 5, 5, 5, 5, 5, 9, 5, 5, 5, 5, 5, 2, 2, 3, 3, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 3, 5 };
 
 
-    im_font := rl.Image {
+    im_font := rl_Image {
         data = make([^]u32le, 128 * 128 * 2),
         width = 128, height = 128, mipmaps = 1,
-        format = rl.PixelFormat.UNCOMPRESSED_GRAY_ALPHA,
+        format = rl_PixelFormat.UNCOMPRESSED_GRAY_ALPHA,
     };
 
     counter: i32;
@@ -91,10 +91,10 @@ load_font_default :: proc() -> rl.Font {
         counter += 1;
     }
 
-    default_font.texture = rl.LoadTextureFromImage(im_font);
+    default_font.texture = rl_LoadTextureFromImage(im_font);
 
-    default_font.glyphs = make([^]rl.GlyphInfo, default_font.glyphCount);
-    default_font.recs = make([^]rl.Rectangle, default_font.glyphCount);
+    default_font.glyphs = make([^]rl_GlyphInfo, default_font.glyphCount);
+    default_font.recs = make([^]rl_Rectangle, default_font.glyphCount);
 
     curr_line := 0;
     curr_pos_x := chars_divisor;
@@ -125,7 +125,7 @@ load_font_default :: proc() -> rl.Font {
         default_font.glyphs[i].offsetY = 0;
         default_font.glyphs[i].advanceX = 0;
 
-        default_font.glyphs[i].image = rl.ImageFromImage(im_font, default_font.recs[i]);
+        default_font.glyphs[i].image = rl_ImageFromImage(im_font, default_font.recs[i]);
     }
 
     default_font.baseSize = i32(default_font.recs[0].height);

@@ -1,6 +1,6 @@
 package oengine
 
-import rl "vendor:raylib"
+
 import "core:math"
 import "core:math/linalg"
 import "core:fmt"
@@ -10,7 +10,7 @@ Raycast :: struct {
 }
 
 rc_debug :: proc(using self: Raycast) {
-    rl.DrawLine3D(position, target, rl.GREEN);
+    rl_DrawLine3D(position, target, rl_GREEN);
 }
 
 rc_is_colliding :: proc(using self: Raycast, transform: Transform, shape: ShapeType) -> (bool, Vec3) {
@@ -19,9 +19,9 @@ rc_is_colliding :: proc(using self: Raycast, transform: Transform, shape: ShapeT
         
         // apply rotation to ray
         rotationMatrix: Mat4 = mat4_from_yaw_pitch_roll(
-            transform.rotation.y * rl.DEG2RAD,
-            transform.rotation.x * rl.DEG2RAD,
-            transform.rotation.z * rl.DEG2RAD,
+            transform.rotation.y * rl_DEG2RAD,
+            transform.rotation.x * rl_DEG2RAD,
+            transform.rotation.z * rl_DEG2RAD,
         );
 
         rayDirRaw: Vec3 = target - position;
@@ -82,7 +82,15 @@ rc_is_colliding :: proc(using self: Raycast, transform: Transform, shape: ShapeT
             tmax = tzmax;
         }
 
-        if (tmin < 0.0 || tmin > ray_length) {
+        tHit := tmin;
+
+        if (tmin < 0.0) {
+            // Ray starts inside the box → use exit point
+            tHit = tmax;
+        }
+
+        // Reject if completely out of range
+        if (tHit < 0.0 || tHit > ray_length) {
             return false, {};
         }
 
@@ -112,13 +120,28 @@ rc_is_colliding :: proc(using self: Raycast, transform: Transform, shape: ShapeT
         t1 = (-b - sqrtDiscriminant) / (2.0 * a);
         t2 = (-b + sqrtDiscriminant) / (2.0 * a);
 
-        if (t1 >= 0 || t2 >= 0) {
-            // // Calculate contact point for a sphere
-            contactPoint := position + rayDirection * t1; // You can choose either t1 or t2
-            return true, contactPoint;
+        tHit: f32;
+
+        if (t1 >= 0.0) {
+            tHit = t1; // entry point
+        } else if (t2 >= 0.0) {
+            tHit = t2; // exit point (inside case)
+        } else {
+            return false, {};
         }
 
-        return false, {};
+        rayDirRaw: Vec3 = target - position;
+        ray_length := vec3_length(rayDirRaw);
+        if (ray_length <= 0.0001) {
+            return false, {}; // No valid direction
+        }
+
+        if (tHit > ray_length) {
+            return false, {};
+        }
+
+        contactPoint := position + rayDirection * tHit;
+        return true, contactPoint;
     }
 
     return false, {};
@@ -130,9 +153,9 @@ rc_is_colliding_info :: proc(using self: Raycast, transform: Transform, shape: S
         
         // apply rotation to ray
         rotationMatrix: Mat4 = mat4_from_yaw_pitch_roll(
-            transform.rotation.y * rl.DEG2RAD,
-            transform.rotation.x * rl.DEG2RAD,
-            transform.rotation.z * rl.DEG2RAD,
+            transform.rotation.y * rl_DEG2RAD,
+            transform.rotation.x * rl_DEG2RAD,
+            transform.rotation.z * rl_DEG2RAD,
         );
 
         rayDirRaw: Vec3 = target - position;
@@ -264,7 +287,7 @@ MSCCollisionInfo :: struct {
 }
 
 get_mouse_rc :: proc(camera: Camera, scalar: f32 = 100) -> Raycast {
-    rlc := rl.GetMouseRay(window.mouse_position, camera.rl_matrix);
+    rlc := rl_GetMouseRay(window.mouse_position, camera.rl_matrix);
     return Raycast {
         position = rlc.position,
         target = rlc.position + (rlc.direction * scalar),

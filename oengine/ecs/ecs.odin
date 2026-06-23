@@ -1,7 +1,7 @@
 package ecs
 
 import "core:fmt"
-import rl "vendor:raylib"
+
 import "../fa"
 
 MAX_ENTS :: 2048

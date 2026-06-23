@@ -2,7 +2,7 @@ package oengine
 
 import "core:os"
 import "core:fmt"
-import rl "vendor:raylib"
+
 import "core:math"
 import str "core:strings"
 import "core:mem"
@@ -15,9 +15,9 @@ window: struct {
 
     _title: string,
 
-    _config_flags: rl.ConfigFlags,
+    _config_flags: rl_ConfigFlags,
     _trace_log_type: TraceLogType,
-    _trace_log_level: rl.TraceLogLevel,
+    _trace_log_level: rl_TraceLogLevel,
 
     _exit_key: Key,
 
@@ -30,7 +30,7 @@ window: struct {
 
     debug_stats: bool,
 
-    target: rl.RenderTexture,
+    target: rl_RenderTexture,
     instance_name: string,
     custom_update: proc(dt: f32),
 }
@@ -45,7 +45,7 @@ w_create :: proc(name: string = "Game") {
 
     _title = "oengine window";
 
-    _config_flags = {rl.ConfigFlag.WINDOW_RESIZABLE, rl.ConfigFlag.MSAA_4X_HINT};
+    _config_flags = {rl_ConfigFlag.WINDOW_RESIZABLE, rl_ConfigFlag.MSAA_4X_HINT};
     w_set_trace_log_type(.USE_OENGINE);
     dbg_log(str_add("Detected os: ", OSTypeStr[int(sys_os())]));
     dbg_logf("Set config flags: ");
@@ -59,41 +59,41 @@ w_create :: proc(name: string = "Game") {
 
     debug_stats = false;
 
-    rl.SetConfigFlags(_config_flags);
-    rl.SetTraceLogLevel(_trace_log_level);
-    rl.InitWindow(_width, _height, str.clone_to_cstring(_title));
-    if (rl.IsWindowReady()) do dbg_log("Initalized window");
+    rl_SetConfigFlags(_config_flags);
+    rl_SetTraceLogLevel(_trace_log_level);
+    rl_InitWindow(_width, _height, str.clone_to_cstring(_title));
+    if (rl_IsWindowReady()) do dbg_log("Initalized window");
     else do dbg_log("Failed to initialize window", .ERROR);
     exit_key(_exit_key);
     dbg_log(str_add("Set exit key to: ", _exit_key));
-    rl.SetTargetFPS(_target_fps);
-    rl.InitAudioDevice();
-    if (rl.IsAudioDeviceReady()) do dbg_log("Initalized audio device");
+    rl_SetTargetFPS(_target_fps);
+    rl_InitAudioDevice();
+    if (rl_IsAudioDeviceReady()) do dbg_log("Initalized audio device");
     else do dbg_log("Failed to initialize audio device", .ERROR);
 
-    target = rl.LoadRenderTexture(_render_width, _render_height);
+    target = rl_LoadRenderTexture(_render_width, _render_height);
 
     if (target.texture.width <= 0 || target.texture.height <= 0) {
         dbg_log("Failed to load render target, width or height is <= 0", .ERROR);
         return;
     }
 
-    if (rl.IsRenderTextureReady(target)) {
+    if (rl_IsRenderTextureReady(target)) {
         dbg_log("Loaded render target");
     }
 
-    gui_default_font = rl.LoadFont(str.clone_to_cstring(str_add(OE_FONTS_PATH, "default_font.ttf")));
+    gui_default_font = rl_LoadFont(str.clone_to_cstring(str_add(OE_FONTS_PATH, "default_font.ttf")));
     gui_font_size = f32(gui_default_font.baseSize);
     w_set_instance_name(name);
 
     console_init();
 
-    checkered_image = load_texture(rl.LoadTextureFromImage(rl.GenImageChecked(4, 4, 1, 1, WHITE, BLACK)));
+    checkered_image = load_texture(rl_LoadTextureFromImage(rl_GenImageChecked(4, 4, 1, 1, WHITE, BLACK)));
 
-    rl.SetWindowIcon(rl.LoadImageFromTexture(get_tex_from_data(LOGO_WIDTH, LOGO_HEIGHT, raw_data(hex_to_rgb_img(logo[:])))));
+    rl_SetWindowIcon(rl_LoadImageFromTexture(get_tex_from_data(LOGO_WIDTH, LOGO_HEIGHT, raw_data(hex_to_rgb_img(logo[:])))));
     dbg_log("Set window icon");
 
-    DEFAULT_MATERIAL = rl.LoadMaterialDefault();
+    DEFAULT_MATERIAL = rl_LoadMaterialDefault();
     dbg_log("Loaded default material");
 }
 
@@ -111,17 +111,17 @@ w_set_trace_log_type :: proc(type: TraceLogType) {
 
     if (window._trace_log_type == .USE_OENGINE) {
         dbg_log(str_add({"Set trace log type to: ", TRACE_NAMES[int(type)]}));
-        w_set_trace_log_level(rl.TraceLogLevel.NONE);
+        w_set_trace_log_level(rl_TraceLogLevel.NONE);
         return;
     }
 
-    w_set_trace_log_level(rl.TraceLogLevel.ALL);
+    w_set_trace_log_level(rl_TraceLogLevel.ALL);
 
     dbg_log(str_add({"Set trace log type to: ", DEBUG_TYPE_NAMES[int(type)]}));
 }
 
 delta_time :: proc() -> f32 {
-    return rl.GetFrameTime();
+    return rl_GetFrameTime();
 }
 
 w_render_aspect :: proc() -> f32 {
@@ -186,24 +186,24 @@ w_set_size :: proc(w, h: i32) {
     dbg_log(str_add("Set render height: ", window._render_height));
 }
 
-w_config_flags :: proc() -> rl.ConfigFlags {
+w_config_flags :: proc() -> rl_ConfigFlags {
     return window._config_flags;
 }
 
-w_set_config_flags :: proc(flags: rl.ConfigFlags) {
+w_set_config_flags :: proc(flags: rl_ConfigFlags) {
     window._config_flags = flags;
-    rl.SetConfigFlags(window._config_flags);
+    rl_SetConfigFlags(window._config_flags);
     dbg_logf("Set config flags: ");
     dbg_log(window._config_flags, .EMPTY);
 }
 
-w_trace_log_level :: proc() -> rl.TraceLogLevel {
+w_trace_log_level :: proc() -> rl_TraceLogLevel {
     return window._trace_log_level;
 }
 
-w_set_trace_log_level :: proc(level: rl.TraceLogLevel) {
+w_set_trace_log_level :: proc(level: rl_TraceLogLevel) {
     window._trace_log_level = level;
-    rl.SetTraceLogLevel(window._trace_log_level);
+    rl_SetTraceLogLevel(window._trace_log_level);
     dbg_logf("Set trace log level to: ");
     dbg_log(window._trace_log_level, .EMPTY);
 }
@@ -214,7 +214,7 @@ w_title :: proc() -> string {
 
 w_set_title :: proc(t: string) {
     window._title = t;
-    rl.SetWindowTitle(str.clone_to_cstring(window._title));
+    rl_SetWindowTitle(str.clone_to_cstring(window._title));
     dbg_log(str_add({"Set title to: ", window._title}));
 }
 
@@ -234,30 +234,30 @@ w_target_fps :: proc() -> i32 {
 
 w_set_target_fps :: proc(fps: i32) {
     window._target_fps = fps;
-    rl.SetTargetFPS(window._target_fps);
+    rl_SetTargetFPS(window._target_fps);
     dbg_log(str_add("Set target fps to: ", window._target_fps));
 }
 
 w_tick :: proc() -> bool {
     using window;
 
-    if (rl.IsWindowResized()) {
-        _width = rl.GetScreenWidth();
-        _height = rl.GetScreenHeight();
+    if (rl_IsWindowResized()) {
+        _width = rl_GetScreenWidth();
+        _height = rl_GetScreenHeight();
     }
     
-    mouse_position.x = f32(rl.GetMouseX()) * (f32(_render_width) / f32(_width));
-    mouse_position.y = f32(rl.GetMouseY()) * (f32(_render_height) / f32(_height));
+    mouse_position.x = f32(rl_GetMouseX()) * (f32(_render_width) / f32(_width));
+    mouse_position.y = f32(rl_GetMouseY()) * (f32(_render_height) / f32(_height));
 
-    gui_cursor_timer += rl.GetFrameTime() * 2;
+    gui_cursor_timer += rl_GetFrameTime() * 2;
 
     console_update();
 
-    return !rl.WindowShouldClose();
+    return !rl_WindowShouldClose();
 }
 
 w_begin_render :: proc() {
-    rl.BeginTextureMode(window.target);
+    rl_BeginTextureMode(window.target);
 }
 
 DBG_INFO_STAT_COUNT :: 10
@@ -271,7 +271,7 @@ w_end_render :: proc() {
     if (debug_stats) {
         OFFSET :: 20
 
-        text_height := rl.MeasureTextEx(rl.GetFontDefault(), "A", 16.0, 0.5).y;
+        text_height := rl_MeasureTextEx(rl_GetFontDefault(), "A", 16.0, 0.5).y;
 
         dbg_stat_pos := [DBG_INFO_POS_COUNT]Vec2i {
             Vec2i {10, 10},
@@ -294,9 +294,9 @@ w_end_render :: proc() {
 
         current_allocator := context.temp_allocator;
         text_info := [?]string {
-            str_add("fps: ", rl.GetFPS(), allocator = current_allocator),
-            str_add("dt: ", rl.GetFrameTime(), "%v%.5f", allocator = current_allocator),
-            str_add("time: ", rl.GetTime(), "%v%.5f", allocator = current_allocator),
+            str_add("fps: ", rl_GetFPS(), allocator = current_allocator),
+            str_add("dt: ", rl_GetFrameTime(), "%v%.5f", allocator = current_allocator),
+            str_add("time: ", rl_GetTime(), "%v%.5f", allocator = current_allocator),
             str_add("ents: ", ecs_world.ecs_ctx.entities.len, allocator = current_allocator),
             str_add("sys_updts: ", ecs_world.ecs_ctx._update_systems.len, allocator = current_allocator),
             str_add("sys_rndrs: ", ecs_world.ecs_ctx._render_systems.len, allocator = current_allocator),
@@ -309,20 +309,20 @@ w_end_render :: proc() {
 
         for i in 0..<len(text_info) {
             c_str := str.clone_to_cstring(text_info[i], allocator = current_allocator);
-            rl.DrawText(
+            rl_DrawText(
                 c_str, top_left.x, top_left.y + OFFSET * i32(i), 16, YELLOW
             );
         }
     }
 
-    rl.EndTextureMode();
+    rl_EndTextureMode();
     
-    rl.BeginDrawing();
+    rl_BeginDrawing();
     
-    rl.DrawTexturePro(target.texture, {0, 0, f32(target.texture.width), f32(-target.texture.height)}, 
-        {0, 0, f32(rl.GetScreenWidth()), f32(rl.GetScreenHeight())}, vec2_zero(), 0, rl.WHITE);
+    rl_DrawTexturePro(target.texture, {0, 0, f32(target.texture.width), f32(-target.texture.height)}, 
+        {0, 0, f32(rl_GetScreenWidth()), f32(rl_GetScreenHeight())}, vec2_zero(), 0, rl_WHITE);
     
-    rl.EndDrawing();
+    rl_EndDrawing();
 }
 
 w_close :: proc() {
@@ -331,10 +331,10 @@ w_close :: proc() {
 
     ew_deinit();
 
-    rl.CloseAudioDevice();
+    rl_CloseAudioDevice();
     dbg_log("Closed audio device");
 
-    rl.CloseWindow();
+    rl_CloseWindow();
     dbg_log("Closed window");
 
     free_all(context.temp_allocator);
@@ -343,7 +343,7 @@ w_close :: proc() {
 }
 
 w_pos :: proc() -> Vec2 {
-    if (sys_os() == .Windows) do return rl.GetWindowPosition();
+    if (sys_os() == .Windows) do return rl_GetWindowPosition();
 
     return vec2_zero();
 }
@@ -357,28 +357,28 @@ w_transform_changed :: proc() -> bool {
         return true;
     }
 
-    return rl.IsWindowResized();
+    return rl_IsWindowResized();
 }
 
 @(private)
 w_reload_target :: proc() {
-    rl.UnloadRenderTexture(window.target);
-    window.target = rl.LoadRenderTexture(window._render_width, window._render_height);
+    rl_UnloadRenderTexture(window.target);
+    window.target = rl_LoadRenderTexture(window._render_width, window._render_height);
     dev_console._rec = {0, -f32(w_render_height() / 2), f32(w_render_width()), f32(w_render_height() / 2)};
 }
 
 @(private = "file")
 w_reload_window :: proc() {
-    rl.SetWindowSize(window._width, window._height);
+    rl_SetWindowSize(window._width, window._height);
 }
 
 engine_run :: proc(
     width: i32 = 800, height: i32 = 600,
     render_width: i32 = 800, render_height: i32 = 600,
     title: string = "oengine",
-    config_flags: rl.ConfigFlags = {.WINDOW_RESIZABLE, .MSAA_4X_HINT},
+    config_flags: rl_ConfigFlags = {.WINDOW_RESIZABLE, .MSAA_4X_HINT},
     trace_log_type: TraceLogType = .USE_OENGINE,
-    trace_log_level: rl.TraceLogLevel = .NONE,
+    trace_log_level: rl_TraceLogLevel = .NONE,
     exit_key: Key = .KEY_NULL,
     fps: i32 = 60,
     debug_stats: bool = false,
@@ -386,7 +386,7 @@ engine_run :: proc(
     init: proc() = nil,
     update: proc() = nil,
     fixed_update: proc(dt: f32) = nil,
-    render: proc() = proc() { rl.ClearBackground(BLACK); },
+    render: proc() = proc() { rl_ClearBackground(BLACK); },
     render_ui: proc() = nil,
     deinit: proc() = nil,
     shader: Shader = {},
@@ -434,11 +434,11 @@ engine_run :: proc(
         mem.tracking_allocator_clear(&track_allocator);
         if (update != nil) { update(); }
 
-        if (use_shader) { rl.BeginShaderMode(shader); }
+        if (use_shader) { rl_BeginShaderMode(shader); }
         w_begin_render();
         if (render != nil) { render(); }
         w_end_render();
-        if (use_shader) { rl.EndShaderMode(); }
+        if (use_shader) { rl_EndShaderMode(); }
 
         if (render_ui != nil) { render_ui(); }
 

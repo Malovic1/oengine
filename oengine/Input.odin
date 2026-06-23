@@ -1,6 +1,6 @@
 package oengine
 
-import rl "vendor:raylib"
+
 
 Key :: enum {
     KEY_NULL         = 0,             // Key: NULL, used for no key pressed
@@ -122,31 +122,31 @@ Key :: enum {
 // keyboard
 
 key_pressed :: proc(key: Key) -> bool {
-    return rl.IsKeyPressed(rl.KeyboardKey(key));
+    return rl_IsKeyPressed(rl_KeyboardKey(key));
 }
 
 key_down :: proc(key: Key) -> bool {
-    return rl.IsKeyDown(rl.KeyboardKey(key));
+    return rl_IsKeyDown(rl_KeyboardKey(key));
 }
 
 key_released :: proc(key: Key) -> bool {
-    return rl.IsKeyReleased(rl.KeyboardKey(key));
+    return rl_IsKeyReleased(rl_KeyboardKey(key));
 }
 
 key_up :: proc(key: Key) -> bool {
-    return rl.IsKeyUp(rl.KeyboardKey(key));
+    return rl_IsKeyUp(rl_KeyboardKey(key));
 }
 
 keycode_pressed :: proc() -> Key {
-    return Key(rl.GetKeyPressed());
+    return Key(rl_GetKeyPressed());
 }
 
 char_pressed :: proc() -> char {
-    return rl.GetCharPressed();
+    return rl_GetCharPressed();
 }
 
 exit_key :: proc(key: Key) {
-    rl.SetExitKey(rl.KeyboardKey(key));
+    rl_SetExitKey(rl_KeyboardKey(key));
 }
 
 Mouse :: enum {
@@ -162,17 +162,17 @@ Mouse :: enum {
 // mouse
 
 mouse_pressed :: proc(button: Mouse) -> bool {
-    return rl.IsMouseButtonPressed(rl.MouseButton(button));
+    return rl_IsMouseButtonPressed(rl_MouseButton(button));
 }
 
 mouse_down :: proc(button: Mouse) -> bool {
-    return rl.IsMouseButtonDown(rl.MouseButton(button));
+    return rl_IsMouseButtonDown(rl_MouseButton(button));
 }
 
 mouse_released :: proc(button: Mouse) -> bool {
-    return rl.IsMouseButtonReleased(rl.MouseButton(button));
+    return rl_IsMouseButtonReleased(rl_MouseButton(button));
 }
 
 mouse_up :: proc(button: Mouse) -> bool {
-    return rl.IsMouseButtonUp(rl.MouseButton(button));
+    return rl_IsMouseButtonUp(rl_MouseButton(button));
 }

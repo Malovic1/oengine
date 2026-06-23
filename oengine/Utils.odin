@@ -2,7 +2,7 @@ package oengine
 
 import str "core:strings"
 import "core:strconv"
-import rl "vendor:raylib"
+
 import ecs "ecs"
 import "core:math"
 import "core:fmt"
@@ -23,7 +23,7 @@ Vec3i :: [3]i32
 Deg2Rad :: math.PI / 180.0
 Rad2Deg :: 180.0 / math.PI
 
-Color :: rl.Color
+Color :: rl_Color
 char :: rune
 
 F32_MAX :: f32(math.F32_MAX)
@@ -305,9 +305,9 @@ mat4_rotate_XYZ :: proc(x, y, z: f32) -> Mat4 {
     return res;
 }
 
-mat4_to_rl_mat :: proc(mat: Mat4) -> rl.Matrix {
+mat4_to_rl_mat :: proc(mat: Mat4) -> rl_Matrix {
     using mat;
-    return rl.Matrix {
+    return rl_Matrix {
         m0, m4, m8, m12,
         m1, m5, m9, m13,
         m2, m6, m10, m14,
@@ -325,7 +325,7 @@ mat4_to_arr :: proc(mat: Mat4) -> [4*4]f32 {
     };
 }
 
-rl_mat_to_mat4 :: proc(mat: rl.Matrix) -> Mat4 {
+rl_mat_to_mat4 :: proc(mat: rl_Matrix) -> Mat4 {
     return Mat4 {
         m0  = mat[0, 0],
         m4  = mat[0, 1],
@@ -409,22 +409,22 @@ set_model_shader :: proc(m: ^Model, shader: Shader) {
     }
 }
 
-set_model_tex_filter :: proc(m: Model, filter: rl.TextureFilter) {
+set_model_tex_filter :: proc(m: Model, filter: rl_TextureFilter) {
     for i in 0..<m.materialCount {
-        rl.SetTextureFilter(
-            m.materials[i].maps[rl.MaterialMapIndex.ALBEDO].texture, 
+        rl_SetTextureFilter(
+            m.materials[i].maps[rl_MaterialMapIndex.ALBEDO].texture, 
             filter
         );
     }
 }
 
 rand_sign :: proc() -> i32 {
-    val := rl.GetRandomValue(0, 1);
+    val := rl_GetRandomValue(0, 1);
     if (val == 0) { return -1; }
     return 1;
 }
 
-get_sound_length :: proc(sound: rl.Sound) -> f32 {
+get_sound_length :: proc(sound: rl_Sound) -> f32 {
     return f32(sound.frameCount) / f32(sound.sampleRate);
 }
 
@@ -494,8 +494,8 @@ rand_val :: proc(min, max: f32) -> f32 {
     return rand.float32_range(min, max);
 }
 
-transform_to_rl_bb :: proc(transform: Transform) -> rl.BoundingBox {
-    return rl.BoundingBox {
+transform_to_rl_bb :: proc(transform: Transform) -> rl_BoundingBox {
+    return rl_BoundingBox {
         min = transform.position - transform.scale * 0.5,
         max = transform.position + transform.scale * 0.5
     };
